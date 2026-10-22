@@ -5,8 +5,9 @@ import '../theme/dimensions.dart';
 import 'app_pressable.dart';
 import 'app_text.dart';
 
-/// Gefüllt (Hauptaktion), getönt (zweite Aktion) oder schlicht (nur Schrift), wie die iOS-Buttons.
-enum AppButtonVariant { filled, tinted, plain }
+/// Gefüllt (Hauptaktion), getönt (zweite Aktion), schlicht (nur Schrift) oder zerstörend
+/// (rote Schrift, z. B. „Archivieren“), wie die iOS-Buttons.
+enum AppButtonVariant { filled, tinted, plain, destructive }
 
 /// Kapsel-Button in voller Breite (oder [expand] `false` für so breit wie der Inhalt).
 class AppButton extends StatelessWidget {
@@ -26,6 +27,7 @@ class AppButton extends StatelessWidget {
       AppButtonVariant.filled => (enabled ? c.accent : c.fill, enabled ? c.onAccent : c.textTertiary),
       AppButtonVariant.tinted => (c.accentSoft, enabled ? c.accent : c.textTertiary),
       AppButtonVariant.plain => (Colors.transparent, enabled ? c.accent : c.textTertiary),
+      AppButtonVariant.destructive => (Colors.transparent, enabled ? c.danger : c.textTertiary),
     };
     return AppPressable(
       onTap: onPressed,

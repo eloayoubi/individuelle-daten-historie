@@ -27,10 +27,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get comingSoon => 'Kommt bald.';
 
   @override
-  String get placeholderCategories =>
-      'Hier legst du Kategorien an, wählst Vorlagen und baust eigene Felder und Formeln.';
-
-  @override
   String get placeholderInsights =>
       'Verläufe, Jahresvergleiche und Prognosen für jede Kategorie.';
 
@@ -154,10 +150,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get quickAddSoon => 'Das Erfassen kommt im nächsten Schritt.';
 
   @override
-  String get categoryDetailsSoon =>
-      'Die Detailansicht kommt im nächsten Schritt.';
-
-  @override
   String get settingsAppearance => 'Darstellung';
 
   @override
@@ -179,4 +171,511 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsAboutBody =>
       'Deine Zählerstände, Verträge und Kosten an einem Ort – mit Verlauf, Jahresvergleich und Prognose.';
+
+  @override
+  String get actionSave => 'Speichern';
+
+  @override
+  String get actionCancel => 'Abbrechen';
+
+  @override
+  String get actionArchive => 'Archivieren';
+
+  @override
+  String get actionEdit => 'Bearbeiten';
+
+  @override
+  String get actionDone => 'Fertig';
+
+  @override
+  String get errorSave =>
+      'Das hat nicht geklappt. Bitte versuch es noch einmal.';
+
+  @override
+  String get categoriesAdd => 'Kategorie hinzufügen';
+
+  @override
+  String get categoriesChooseTemplate => 'Vorlage wählen';
+
+  @override
+  String get categoriesReorderHint =>
+      'Ziehe Kategorien an die Stelle, an der du sie sehen möchtest.';
+
+  @override
+  String get categoriesArchived => 'Archiviert';
+
+  @override
+  String get categoriesRestore => 'Wiederherstellen';
+
+  @override
+  String categoriesRestored(String name) {
+    return '$name ist wieder da.';
+  }
+
+  @override
+  String categoryTrackers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tracker',
+      one: '1 Tracker',
+      zero: 'Noch keine Tracker',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String categoryFields(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Felder',
+      one: '1 Feld',
+      zero: 'keine Felder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newCategoryTitle => 'Neue Kategorie';
+
+  @override
+  String get newCategoryCustom => 'Eigene Kategorie';
+
+  @override
+  String get newCategoryCustomHint =>
+      'Name, Symbol und Felder selbst festlegen';
+
+  @override
+  String get newCategoryTemplates => 'Vorlagen';
+
+  @override
+  String get setupNameHint => 'Name, z. B. Strom';
+
+  @override
+  String get setupSymbol => 'Symbol';
+
+  @override
+  String get setupColor => 'Farbe';
+
+  @override
+  String get setupFields => 'Felder';
+
+  @override
+  String get setupFieldsHint =>
+      'Abgewählte Felder fehlen nur am Anfang – du kannst später alles ändern und ergänzen.';
+
+  @override
+  String get setupCustomHint =>
+      'Danach legst du Tracker an – z. B. einen Zähler, einen Vertrag oder ein Auto – und gibst ihnen eigene Felder.';
+
+  @override
+  String get setupCreate => 'Kategorie anlegen';
+
+  @override
+  String setupCreated(String name) {
+    return '$name ist angelegt.';
+  }
+
+  @override
+  String get detailEditCategory => 'Kategorie bearbeiten';
+
+  @override
+  String get detailAddTracker => 'Tracker hinzufügen';
+
+  @override
+  String get detailAddField => 'Feld hinzufügen';
+
+  @override
+  String get detailEditTracker => 'Tracker bearbeiten';
+
+  @override
+  String get detailNoTrackersTitle => 'Noch keine Tracker';
+
+  @override
+  String get detailNoTrackersBody =>
+      'Ein Tracker ist z. B. ein Zähler, ein Vertrag oder ein Auto – mit eigenen Feldern.';
+
+  @override
+  String get detailNoFields => 'Noch keine Felder';
+
+  @override
+  String get detailArchive => 'Kategorie archivieren';
+
+  @override
+  String detailArchiveTitle(String name) {
+    return '„$name“ archivieren?';
+  }
+
+  @override
+  String get detailArchiveBody =>
+      'Die Kategorie verschwindet aus Übersicht und Auswertung. Unter „Archiviert“ kannst du sie jederzeit wiederherstellen.';
+
+  @override
+  String detailArchived(String name) {
+    return '$name ist archiviert.';
+  }
+
+  @override
+  String detailReadOnly(String name) {
+    return 'Nur lesen – $name hat diese Kategorie mit dir geteilt.';
+  }
+
+  @override
+  String get detailReadOnlyUnknown =>
+      'Nur lesen – diese Kategorie wurde mit dir geteilt.';
+
+  @override
+  String get detailMissing => 'Diese Kategorie gibt es nicht mehr.';
+
+  @override
+  String get detailTrackerAdded => 'Tracker angelegt.';
+
+  @override
+  String get detailTrackerArchived => 'Tracker archiviert.';
+
+  @override
+  String get trackerNew => 'Neuer Tracker';
+
+  @override
+  String get trackerNameHint => 'Name, z. B. Hauptzähler';
+
+  @override
+  String get trackerArchive => 'Tracker archivieren';
+
+  @override
+  String trackerArchiveTitle(String name) {
+    return '„$name“ archivieren?';
+  }
+
+  @override
+  String get trackerArchiveBody =>
+      'Der Tracker und seine Einträge verschwinden aus Übersicht und Auswertung.';
+
+  @override
+  String get fieldNew => 'Neues Feld';
+
+  @override
+  String get fieldNameHint => 'Name, z. B. Zählerstand';
+
+  @override
+  String get fieldKind => 'Feldtyp';
+
+  @override
+  String get fieldRole => 'Zeitverhalten';
+
+  @override
+  String get fieldRoleFooter =>
+      'Bestimmt, wie Verlauf, Kosten und Prognose mit dem Wert rechnen.';
+
+  @override
+  String get fieldFormulaSoon => 'Kommt mit der Auswertung';
+
+  @override
+  String get fieldKindLocked => 'Passt nicht zu den gespeicherten Werten';
+
+  @override
+  String get fieldUnit => 'Einheit';
+
+  @override
+  String get fieldUnitHint => 'z. B. kWh';
+
+  @override
+  String get fieldMeter => 'Verbrauch';
+
+  @override
+  String get fieldConsumptionUnitLabel => 'Verbrauch in';
+
+  @override
+  String get fieldConsumptionUnitHint => 'wie Einheit';
+
+  @override
+  String get fieldFactorLabel => 'Umrechnungsfaktor';
+
+  @override
+  String get fieldFactorFooter =>
+      'Gas: Brennwert × Zustandszahl von deiner Abrechnung (meist um 10,5). Sonst 1.';
+
+  @override
+  String get fieldFactorInvalid => 'Bitte eine Zahl größer als 0 eingeben.';
+
+  @override
+  String get fieldInterval => 'Fällig';
+
+  @override
+  String get fieldChoices => 'Auswahlwerte';
+
+  @override
+  String get fieldChoiceHint => 'Neuer Wert, z. B. 3 Monate';
+
+  @override
+  String fieldChoiceRemove(String choice) {
+    return '$choice entfernen';
+  }
+
+  @override
+  String get fieldChoicesEmpty => 'Mindestens einen Wert hinzufügen.';
+
+  @override
+  String get fieldArchive => 'Feld entfernen';
+
+  @override
+  String fieldArchiveTitle(String name) {
+    return '„$name“ entfernen?';
+  }
+
+  @override
+  String get fieldArchiveBody =>
+      'Gespeicherte Werte bleiben erhalten, das Feld erscheint aber nicht mehr.';
+
+  @override
+  String get fieldSaved => 'Feld gespeichert.';
+
+  @override
+  String get fieldArchived => 'Feld entfernt.';
+
+  @override
+  String get kindText => 'Text';
+
+  @override
+  String get kindNumber => 'Zahl';
+
+  @override
+  String get kindCurrency => 'Betrag (€)';
+
+  @override
+  String get kindPercent => 'Prozent';
+
+  @override
+  String get kindDate => 'Datum';
+
+  @override
+  String get kindToggle => 'Ja/Nein';
+
+  @override
+  String get kindChoice => 'Auswahl';
+
+  @override
+  String get kindFormula => 'Formel';
+
+  @override
+  String get roleInfo => 'Stammdatum';
+
+  @override
+  String get roleInfoHint => 'Ohne Verlauf, z. B. Zählernummer oder Anbieter';
+
+  @override
+  String get roleSnapshot => 'Momentwert';
+
+  @override
+  String get roleSnapshotHint => 'Gilt am Tag des Eintrags, z. B. Füllstand';
+
+  @override
+  String get roleMeterReading => 'Zählerstand';
+
+  @override
+  String get roleMeterReadingHint =>
+      'Verbrauch ist die Differenz zweier Stände';
+
+  @override
+  String get roleUnitPrice => 'Preis je Einheit';
+
+  @override
+  String get roleUnitPriceHint =>
+      'Gilt ab dem Datum – Verbrauch × Preis ergibt die Kosten';
+
+  @override
+  String get roleRecurringCost => 'Wiederkehrender Betrag';
+
+  @override
+  String get roleRecurringCostHint =>
+      'Gilt ab dem Datum, z. B. Miete, Grundpreis oder Abo';
+
+  @override
+  String get roleOneOffCost => 'Einmaliger Betrag';
+
+  @override
+  String get roleOneOffCostHint =>
+      'Zählt am Tag des Eintrags, z. B. Tanken oder Nachzahlung';
+
+  @override
+  String get roleDeadline => 'Stichtag';
+
+  @override
+  String get roleDeadlineHint => 'Erinnert rechtzeitig, z. B. Vertragsende';
+
+  @override
+  String get intervalMonthly => 'Monatlich';
+
+  @override
+  String get intervalQuarterly => 'Vierteljährlich';
+
+  @override
+  String get intervalYearly => 'Jährlich';
+
+  @override
+  String intervalMonths(int months) {
+    return 'Alle $months Monate';
+  }
+
+  @override
+  String get unitPerMonth => '€/Monat';
+
+  @override
+  String get unitPerYear => '€/Jahr';
+
+  @override
+  String get tplStrom => 'Strom';
+
+  @override
+  String get tplStromHint =>
+      'Zählerstand, Arbeitspreis, Grundpreis und Vertragsende';
+
+  @override
+  String get tplHeizung => 'Heizung';
+
+  @override
+  String get tplHeizungHint =>
+      'Gaszähler mit Umrechnung in kWh, Preise und Vertrag';
+
+  @override
+  String get tplWasser => 'Wasser';
+
+  @override
+  String get tplWasserHint => 'Wasserzähler und Preis je Kubikmeter';
+
+  @override
+  String get tplMiete => 'Miete & Nebenkosten';
+
+  @override
+  String get tplMieteHint => 'Kaltmiete, Vorauszahlung und Abrechnungen';
+
+  @override
+  String get tplAuto => 'Auto';
+
+  @override
+  String get tplAutoHint =>
+      'Kilometerstand, Tanken, Versicherung, Steuer und HU';
+
+  @override
+  String get tplInternet => 'Internet & Mobilfunk';
+
+  @override
+  String get tplInternetHint => 'Verträge mit Preis und Mindestlaufzeit';
+
+  @override
+  String get tplVersicherung => 'Versicherungen';
+
+  @override
+  String get tplVersicherungHint =>
+      'Beiträge, Versicherungsnummer und Fälligkeit';
+
+  @override
+  String get tplAbos => 'Abos & Mitgliedschaften';
+
+  @override
+  String get tplAbosHint =>
+      'Streaming, Fitnessstudio & Co. mit Kündigungsdatum';
+
+  @override
+  String get tplTrackerElectricityMeter => 'Stromzähler';
+
+  @override
+  String get tplTrackerGasMeter => 'Gaszähler';
+
+  @override
+  String get tplTrackerWaterMeter => 'Wasserzähler';
+
+  @override
+  String get tplTrackerFlat => 'Wohnung';
+
+  @override
+  String get tplTrackerCar => 'Mein Auto';
+
+  @override
+  String get tplTrackerInternet => 'Internet';
+
+  @override
+  String get tplTrackerMobile => 'Mobilfunk';
+
+  @override
+  String get tplTrackerLiability => 'Haftpflicht';
+
+  @override
+  String get tplTrackerContents => 'Hausrat';
+
+  @override
+  String get tplTrackerStreaming => 'Streaming';
+
+  @override
+  String get tplFieldReading => 'Zählerstand';
+
+  @override
+  String get tplFieldUnitPrice => 'Arbeitspreis';
+
+  @override
+  String get tplFieldBasePrice => 'Grundpreis';
+
+  @override
+  String get tplFieldInstalment => 'Abschlag';
+
+  @override
+  String get tplFieldProvider => 'Anbieter';
+
+  @override
+  String get tplFieldContractEnd => 'Vertragsende';
+
+  @override
+  String get tplFieldWaterPrice => 'Wasser & Abwasser';
+
+  @override
+  String get tplFieldBaseRent => 'Kaltmiete';
+
+  @override
+  String get tplFieldAdvance => 'Nebenkosten-Vorauszahlung';
+
+  @override
+  String get tplFieldSettlement => 'Nachzahlung / Guthaben';
+
+  @override
+  String get tplFieldLandlord => 'Vermieter';
+
+  @override
+  String get tplFieldFuel => 'Tanken / Laden';
+
+  @override
+  String get tplFieldFuelAmount => 'Menge (l oder kWh)';
+
+  @override
+  String get tplFieldCarInsurance => 'Kfz-Versicherung';
+
+  @override
+  String get tplFieldCarTax => 'Kfz-Steuer';
+
+  @override
+  String get tplFieldWorkshop => 'Werkstatt';
+
+  @override
+  String get tplFieldInspection => 'Hauptuntersuchung';
+
+  @override
+  String get tplFieldMonthlyPrice => 'Monatspreis';
+
+  @override
+  String get tplFieldMinimumTerm => 'Mindestlaufzeit bis';
+
+  @override
+  String get tplFieldPremium => 'Beitrag';
+
+  @override
+  String get tplFieldPolicyNumber => 'Versicherungsnummer';
+
+  @override
+  String get tplFieldDueDate => 'Hauptfälligkeit';
+
+  @override
+  String get tplFieldPrice => 'Preis';
+
+  @override
+  String get tplFieldCancelBy => 'Kündbar bis';
 }

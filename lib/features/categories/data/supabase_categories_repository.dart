@@ -1,45 +1,148 @@
+import 'dart:async';
+
 import '../../../core/network/supabase_api.dart';
 import '../../auth/data/auth_repository.dart';
 import 'categories_repository.dart';
 
-/// Liest Kategorien samt Trackern, Feldern, Einträgen und Werten in einer Abfrage.
-/// Was sichtbar ist, entscheidet RLS: eigene Kategorien und solche, in denen ich Mitglied bin.
+/// Liest Kategorien samt Trackern, Feldern, Einträgen und Werten in einer Abfrage und schreibt
+/// Änderungen direkt in die Tabellen (RLS prüft die Rechte) bzw. per RPC, wo mehrere Zeilen
+/// zusammengehören (`create_category`, `reorder_categories`).
 class SupabaseCategoriesRepository implements CategoriesRepository {
   SupabaseCategoriesRepository(this._api, this._auth);
 
   final SupabaseApi _api;
   final AuthRepository _auth;
+  final _changes = StreamController<void>.broadcast();
 
   static const _select =
-      'id, name, icon, swatch, '
-      'category_members(user_id, role, profiles(display_name)), '
+      'id, name, icon, swatch, template_key, archived_at, '
+      'category_members(user_id, role, sort, profiles(display_name)), '
       'trackers(id, name, sort, '
       'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, sort), '
       'entries(id, occurred_on, note, meter_change, entry_values(field_id, num, txt, dat, flag)))';
 
   @override
+  Stream<void> get changes => _changes.stream;
+
+  @override
   Future<List<Category>> loadCategories() async {
     await _auth.ensureSignedIn();
-    final me = _auth.userId;
-    final rows = await _api
-        .table('categories')
-        .select(_select)
-        .isFilter('archived_at', null)
-        .isFilter('trackers.archived_at', null)
-        .isFilter('trackers.fields.archived_at', null)
-        .order('sort');
-    return [for (final row in rows) _category(row, me)];
+    final rows = await _api.table('categories').select(_select).isFilter('trackers.archived_at', null).isFilter('trackers.fields.archived_at', null);
+    // Reihenfolge ist je Mitglied (category_members.sort), danach nach Name.
+    final sorted = [for (final row in rows) (_mySort(row), _category(row))]
+      ..sort((a, b) => a.$1 != b.$1 ? a.$1.compareTo(b.$1) : a.$2.name.toLowerCase().compareTo(b.$2.name.toLowerCase()));
+    return [for (final (_, category) in sorted) category];
   }
 
-  static Category _category(Map<String, dynamic> row, String? me) {
-    final members = [for (final m in (row['category_members'] as List).cast<Map<String, dynamic>>()) m];
+  @override
+  Future<Category?> loadCategory(String id) async {
+    await _auth.ensureSignedIn();
+    final row = await _api
+        .table('categories')
+        .select(_select)
+        .eq('id', id)
+        .isFilter('trackers.archived_at', null)
+        .isFilter('trackers.fields.archived_at', null)
+        .maybeSingle();
+    return row == null ? null : _category(row);
+  }
+
+  @override
+  Future<String> createCategory(CategoryDraft draft) => _write(() async {
+    final id = await _api.rpc<String>(
+      'create_category',
+      params: {
+        'p_name': draft.name,
+        'p_icon': draft.icon.name,
+        'p_swatch': draft.swatch.name,
+        'p_template_key': draft.templateKey,
+        'p_trackers': [
+          for (final t in draft.trackers) {'name': t.name, 'fields': [for (final f in t.fields) _fieldJson(f)]},
+        ],
+      },
+    );
+    return id;
+  });
+
+  @override
+  Future<void> updateCategory(String id, {required String name, required CategoryIcon icon, required CategorySwatch swatch}) =>
+      _write(() => _api.table('categories').update({'name': name, 'icon': icon.name, 'swatch': swatch.name}).eq('id', id));
+
+  @override
+  Future<void> setCategoryArchived(String id, {required bool archived}) => _write(
+    () => _api.table('categories').update({'archived_at': archived ? DateTime.now().toUtc().toIso8601String() : null}).eq('id', id),
+  );
+
+  @override
+  Future<void> reorderCategories(List<String> ids) => _write(() => _api.rpc<void>('reorder_categories', params: {'p_ids': ids}));
+
+  @override
+  Future<String> createTracker(String categoryId, String name, {required int sort}) => _write(() async {
+    final row = await _api.table('trackers').insert({'category_id': categoryId, 'name': name, 'sort': sort}).select('id').single();
+    return row['id'] as String;
+  });
+
+  @override
+  Future<void> renameTracker(String id, String name) => _write(() => _api.table('trackers').update({'name': name}).eq('id', id));
+
+  @override
+  Future<void> archiveTracker(String id) =>
+      _write(() => _api.table('trackers').update({'archived_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id));
+
+  @override
+  Future<String> createField(String trackerId, FieldDraft draft, {required int sort}) => _write(() async {
+    final row = await _api.table('fields').insert({..._fieldJson(draft), 'tracker_id': trackerId, 'sort': sort}).select('id').single();
+    return row['id'] as String;
+  });
+
+  @override
+  Future<void> updateField(String id, FieldDraft draft) => _write(() => _api.table('fields').update(_fieldJson(draft)).eq('id', id));
+
+  @override
+  Future<void> archiveField(String id) =>
+      _write(() => _api.table('fields').update({'archived_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id));
+
+  /// Angemeldet schreiben, danach alle Ansichten neu laden lassen.
+  Future<T> _write<T>(Future<T> Function() write) async {
+    await _auth.ensureSignedIn();
+    final result = await write();
+    _changes.add(null);
+    return result;
+  }
+
+  static Map<String, dynamic> _fieldJson(FieldDraft f) => {
+    'name': f.name,
+    'kind': _snake(f.kind.name),
+    'role': _snake(f.role.name),
+    'unit': f.unit,
+    'consumption_unit': f.consumptionUnit,
+    'factor': f.factor,
+    'interval_months': f.intervalMonths,
+    'choices': f.choices,
+    'formula': f.formula,
+  };
+
+  int _mySort(Map<String, dynamic> row) {
+    final me = _auth.userId;
+    final mine = (row['category_members'] as List).cast<Map<String, dynamic>>().where((m) => m['user_id'] == me).firstOrNull;
+    return (mine?['sort'] as num?)?.toInt() ?? 0;
+  }
+
+  Category _category(Map<String, dynamic> row) {
+    final me = _auth.userId;
+    final members = (row['category_members'] as List).cast<Map<String, dynamic>>();
     final mine = members.where((m) => m['user_id'] == me).firstOrNull;
-    final trackers = [for (final t in (row['trackers'] as List).cast<Map<String, dynamic>>()) t]..sort(_bySort);
+    final trackers = [...(row['trackers'] as List).cast<Map<String, dynamic>>()]..sort(_bySort);
     return Category(
       id: row['id'] as String,
       name: row['name'] as String,
       icon: _enum(CategoryIcon.values, row['icon'] as String, CategoryIcon.star),
       swatch: _enum(CategorySwatch.values, row['swatch'] as String, CategorySwatch.indigo),
+      templateKey: row['template_key'] as String?,
+      archivedAt: switch (row['archived_at']) {
+        final String iso => DateTime.parse(iso),
+        _ => null,
+      },
       myRole: mine == null ? MemberRole.viewer : _enum(MemberRole.values, mine['role'] as String, MemberRole.viewer),
       sharedWith: [
         for (final m in members)
@@ -55,7 +158,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   }
 
   static Tracker _tracker(Map<String, dynamic> row) {
-    final fields = [for (final f in (row['fields'] as List).cast<Map<String, dynamic>>()) f]..sort(_bySort);
+    final fields = [...(row['fields'] as List).cast<Map<String, dynamic>>()]..sort(_bySort);
     return Tracker(
       id: row['id'] as String,
       name: row['name'] as String,
@@ -109,4 +212,6 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     final key = raw.replaceAll('_', '').toLowerCase();
     return values.where((v) => v.name.toLowerCase() == key).firstOrNull ?? fallback;
   }
+
+  static String _snake(String camel) => camel.replaceAllMapped(RegExp('[A-Z]'), (m) => '_${m[0]!.toLowerCase()}');
 }

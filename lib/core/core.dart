@@ -5,6 +5,7 @@ library;
 export 'di/lookup.dart';
 export 'extensions/category_x.dart';
 export 'extensions/context_extensions.dart';
+export 'extensions/field_x.dart';
 export 'extensions/format_x.dart';
 export 'models/tracking.dart';
 export 'theme/color_config.dart';

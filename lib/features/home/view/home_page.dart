@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../categories/view/category_detail_page.dart';
+import '../../categories/view/category_setup_page.dart';
 import '../../shell/cubit/shell_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../data/home_overview.dart';
@@ -32,7 +34,6 @@ class _HomeView extends StatelessWidget {
         context,
         switch (state.event!.kind) {
           HomeEventKind.captureSoon => context.l10n.quickAddSoon,
-          HomeEventKind.detailsSoon => context.l10n.categoryDetailsSoon,
         },
         icon: CupertinoIcons.hammer_fill,
       ),
@@ -83,7 +84,7 @@ class _Content extends StatelessWidget {
               const SizedBox(height: Spacing.m),
               YearToDateCard(overview: overview),
               SectionHeader(title: l10n.homeCategories, action: l10n.homeSeeAll, onAction: () => context.read<ShellCubit>().select(ShellTab.categories)),
-              CategoryRows(summaries: overview.categories, onTap: (category) => cubit.openCategory(category.id)),
+              CategoryRows(summaries: overview.categories, onTap: (category) => CategoryDetailPage.open(context, category.id)),
               if (overview.reminders.isNotEmpty) ...[
                 SectionHeader(title: l10n.homeNext),
                 ReminderRows(reminders: overview.reminders, onTap: (r) => cubit.capture(r.trackerId)),
@@ -111,6 +112,8 @@ class _Empty extends StatelessWidget {
           AppIconTile(icon: CupertinoIcons.chart_bar_alt_fill, color: c.accent, size: 64),
           AppText(context.l10n.homeEmptyTitle, style: (t) => t.title3, align: TextAlign.center),
           AppText(context.l10n.homeEmptyBody, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
+          const SizedBox(height: Spacing.s),
+          AppButton(label: context.l10n.categoriesChooseTemplate, icon: CupertinoIcons.plus, expand: false, onPressed: () => CategorySetupPage.start(context)),
         ],
       ),
     );

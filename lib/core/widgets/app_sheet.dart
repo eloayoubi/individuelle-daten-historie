@@ -29,39 +29,43 @@ class AppSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return SafeArea(
-      top: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: Spacing.s),
-              width: Sizes.grabber.width,
-              height: Sizes.grabber.height,
-              decoration: ShapeDecoration(color: c.separator, shape: const StadiumBorder()),
+    // Textfelder im Sheet: Inhalt über die Tastatur schieben.
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: Spacing.s),
+                width: Sizes.grabber.width,
+                height: Sizes.grabber.height,
+                decoration: ShapeDecoration(color: c.separator, shape: const StadiumBorder()),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.m, Spacing.l, Spacing.m),
-            child: Row(
-              spacing: Spacing.m,
-              children: [
-                Expanded(child: AppText(title, style: (t) => t.title3)),
-                AppIconButton(
-                  icon: CupertinoIcons.xmark,
-                  semanticLabel: context.l10n.actionClose,
-                  size: 32,
-                  background: c.fill,
-                  foreground: c.textSecondary,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.m, Spacing.l, Spacing.m),
+              child: Row(
+                spacing: Spacing.m,
+                children: [
+                  Expanded(child: AppText(title, style: (t) => t.title3)),
+                  AppIconButton(
+                    icon: CupertinoIcons.xmark,
+                    semanticLabel: context.l10n.actionClose,
+                    size: 32,
+                    background: c.fill,
+                    foreground: c.textSecondary,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Flexible(child: child),
-        ],
+            Flexible(child: child),
+          ],
+        ),
       ),
     );
   }
