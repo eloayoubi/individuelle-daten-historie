@@ -32,7 +32,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   static const _select =
       'id, name, icon, swatch, template_key, archived_at, '
       'category_members(user_id, role, sort, profiles(display_name)), '
-      'trackers(id, name, sort, included_in, '
+      'trackers!trackers_category_id_fkey(id, name, sort, included_in, '
       'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, sort), '
       'entries(id, occurred_on, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
 
