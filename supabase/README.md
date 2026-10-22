@@ -55,6 +55,7 @@ Sichtbar ist, was zu einer Kategorie gehört, in der ich Mitglied bin; schreiben
 | `has_plus()` | angemeldet | hat der Nutzer gerade Plus? |
 | `create_category(p_name, p_icon, p_swatch, p_template_key, p_trackers)` | angemeldet | legt Kategorie, Tracker und Felder (aus einer Vorlage) in einer Transaktion an. Läuft mit den Rechten des Aufrufers; scheitert ein Feld an einem Check, bleibt nichts halb angelegt. Liefert die Id. |
 | `reorder_categories(p_ids)` | angemeldet | speichert die eigene Reihenfolge (Index in `p_ids`) |
+| `save_entry(p_id, p_tracker, p_occurred_on, p_note, p_meter_change, p_values)` | owner, editor | speichert einen Eintrag als Upsert unter der Id vom Gerät, mit allen Werten: Fehlende Felder verlieren ihren Wert, doppeltes Senden ändert nichts. So darf die Offline-Warteschlange beliebig oft wiederholen. |
 
 ## Schutz-Trigger
 
@@ -64,6 +65,7 @@ Diese Trigger gelten für angemeldete Nutzer; Server-Code ohne `auth.uid()` ist 
 |---|---|
 | `categories_guard` | `owner_id` bleibt fest; archivieren und wiederherstellen darf nur der owner (umbenennen auch der editor) |
 | `trackers_guard` | Tracker bleiben in ihrer Kategorie |
+| `entries_guard` | Einträge bleiben in ihrem Tracker |
 | `fields_guard` | Felder bleiben in ihrem Tracker; mit gespeicherten Werten wechselt der Typ nur innerhalb derselben Wertspalte (`field_storage`: Zahl/Betrag/Prozent, Text/Auswahl, Datum, Ja/Nein) |
 
 ## Lokal testen
