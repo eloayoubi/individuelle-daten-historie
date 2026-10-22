@@ -1,6 +1,6 @@
 # Kostenkurve – Implementierungsplan
 
-Stand: 22.10.2026 · Grundgerüst (Meilenstein 0) steht, siehe README.
+Stand: 22.10.2026 · Meilenstein 0 (Grundgerüst) und 1 (Kategorien, Vorlagen, Feld-Editor) sind umgesetzt, siehe README.
 
 ## 1. Idee und Problem
 
@@ -244,7 +244,7 @@ Jeder Meilenstein endet mit grünem `flutter analyze && flutter test` bzw. `test
 | # | Inhalt | Fertig, wenn |
 |---|---|---|
 | **M0** ✅ | Grundgerüst: Flutter (iOS + Android), Stack, Theme hell/dunkel, Fonts, L10n DE/EN, DI, Basis-Widgets, Shell, Übersicht mit Prognose aus Mock-Daten, Kosten-Engine, Supabase-Schema (RLS, Teilen, Belege), Fastlane, Workflows, Doku | erledigt (dieser Stand) |
-| **M1** | **Kategorien & Vorlagen:** Kategorien-Tab (Liste, anlegen, sortieren, archivieren), Vorlagen-Auswahl, Tracker anlegen, **Feld-Editor** (Typ, Zeitverhalten, Einheit, Intervall, Auswahlwerte), Symbol- und Farbwahl; Supabase-Schreibwege (Repository-Methoden + RLS-Tests) | eine Vorlage anlegen und anpassen geht in < 1 Minute |
+| **M1** ✅ | **Kategorien & Vorlagen:** Kategorien-Tab (Liste, anlegen, sortieren je Person, archivieren/wiederherstellen), 8 Vorlagen mit abwählbaren Feldern, Tracker anlegen/umbenennen/archivieren, **Feld-Editor** (Typ, Zeitverhalten, Einheit mit Vorschlägen, Umrechnung, Intervall, Auswahlwerte; Typwechsel nur passend zu gespeicherten Werten), Symbol- und Farbwahl; Supabase: `create_category` (alles in einer Transaktion), `reorder_categories`, Schutz-Trigger, SQL-Tests | erledigt. Offen für später: Felder umsortieren, archivierte Tracker wiederherstellen |
 | **M2** | **Erfassen & Verlauf:** Eingabe-Formular aus den Feldern (Zahlentastatur, Datum, letzter Wert als Hilfe), Schnellerfassung aus der Übersicht, Detailseite je Tracker mit Verlauf (Liste + Graph), Bearbeiten/Löschen, Erinnerungen (Ablesen, Stichtage) als lokale Benachrichtigung, **Offline-Warteschlange** | Zählerstand im Keller ohne Netz eintragen, später synchronisiert |
 | **M3** | **Auswertung, Prognose & Formeln:** Auswertungs-Tab (Jahresvergleich, Kosten je Kategorie, Verbrauch je Monat), **Formel-Feld** mit Parser und Editor, Prognose mit Trend und Spanne, Abschlags-Check, „in anderer Kategorie enthalten“ | Formel `verbrauch * arbeitspreis` rechnet live; Prognose erklärt, woher sie kommt |
 | **M4** | **Konto & Teilen:** Konto sichern (Apple, Google, E-Mail), Kategorie teilen (Code/Link/QR, Universal Link), Mitglieder verwalten, Realtime-Updates, „erfasst von“ | Anna trägt auf ihrem Handy ein, Elias sieht es sofort |

@@ -33,6 +33,9 @@ extension FormatX on BuildContext {
 
   /// `31.03.2027`
   String shortDate(DateTime date) => DateFormat.yMd(_locale).format(date);
+
+  /// Teile einer Zeile mit Mittelpunkt verbinden: `Zählerstand · kWh`. Leere Teile fallen weg.
+  String joinParts(Iterable<String?> parts) => parts.whereType<String>().where((p) => p.isNotEmpty).join(' · ');
 }
 
 extension TrendX on double? {

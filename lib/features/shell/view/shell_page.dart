@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../categories/view/categories_page.dart';
 import '../../home/view/home_page.dart';
 import '../../settings/view/settings_page.dart';
 import '../cubit/shell_cubit.dart';
@@ -35,7 +36,7 @@ class ShellView extends StatelessWidget {
             index: tab.index,
             children: [
               const HomePage(),
-              PlaceholderPage(title: l10n.tabCategories, icon: CupertinoIcons.square_grid_2x2_fill, description: l10n.placeholderCategories),
+              const CategoriesPage(),
               PlaceholderPage(title: l10n.tabInsights, icon: CupertinoIcons.chart_bar_alt_fill, description: l10n.placeholderInsights),
               const SettingsPage(),
             ],

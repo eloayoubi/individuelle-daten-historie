@@ -1,0 +1,126 @@
+part of 'field_editor_cubit.dart';
+
+enum FieldEditorEventKind { saved, archived, failed }
+
+/// Einmaliges Ereignis für Toast und Zurück. Bewusst nicht `const`.
+class FieldEditorEvent {
+  FieldEditorEvent(this.kind);
+
+  final FieldEditorEventKind kind;
+}
+
+class FieldEditorState extends Equatable {
+  const FieldEditorState({
+    required this.isNew,
+    required this.originalKind,
+    required this.hasValues,
+    required this.name,
+    required this.kind,
+    required this.role,
+    this.unit = '',
+    this.consumptionUnit = '',
+    this.factorText = '1',
+    this.intervalMonths = 1,
+    this.choices = const [],
+    this.saving = false,
+    this.event,
+  });
+
+  factory FieldEditorState.of(FieldDefinition? field, {required bool hasValues}) => FieldEditorState(
+    isNew: field == null,
+    originalKind: field?.kind,
+    hasValues: hasValues,
+    name: field?.name ?? '',
+    kind: field?.kind ?? FieldKind.number,
+    role: field?.role ?? FieldRole.snapshot,
+    unit: field?.unit ?? '',
+    consumptionUnit: field?.consumptionUnit ?? '',
+    factorText: _formatFactor(field?.factor ?? 1),
+    intervalMonths: field?.intervalMonths ?? 1,
+    choices: field?.choices ?? const [],
+  );
+
+  /// Grenzen wie in der Datenbank.
+  static const maxName = 60;
+  static const maxUnit = 20;
+  static const maxChoice = 40;
+
+  final bool isNew;
+  final FieldKind? originalKind;
+  final bool hasValues;
+
+  final String name;
+  final FieldKind kind;
+  final FieldRole role;
+  final String unit;
+  final String consumptionUnit;
+
+  /// Umrechnungsfaktor, wie eingetippt (Komma oder Punkt).
+  final String factorText;
+  final int intervalMonths;
+  final List<String> choices;
+  final bool saving;
+  final FieldEditorEvent? event;
+
+  /// Formeln kommen mit der Auswertung (Meilenstein 3); vorhandene Werte begrenzen den Wechsel.
+  bool canPick(FieldKind k) => k != FieldKind.formula && (originalKind?.canBecome(k, hasValues: hasValues) ?? true);
+
+  double? get factor {
+    final value = parseDecimal(factorText);
+    return value != null && value > 0 ? value : null;
+  }
+
+  bool get factorValid => role != FieldRole.meterReading || factor != null;
+
+  bool get canSave =>
+      !saving && name.trim().isNotEmpty && kind != FieldKind.formula && factorValid && (kind != FieldKind.choice || choices.isNotEmpty);
+
+  FieldDraft get draft {
+    final meter = role == FieldRole.meterReading;
+    return FieldDraft(
+      name: name.trim(),
+      kind: kind,
+      role: role,
+      unit: kind.hasUnit && unit.trim().isNotEmpty ? unit.trim() : null,
+      consumptionUnit: meter && consumptionUnit.trim().isNotEmpty ? consumptionUnit.trim() : null,
+      factor: meter ? factor ?? 1 : 1,
+      intervalMonths: role == FieldRole.recurringCost ? intervalMonths : 1,
+      choices: kind == FieldKind.choice ? choices : const [],
+    );
+  }
+
+  /// Kommazahl aus der Eingabe, mit Komma oder Punkt (`10,35` → 10.35).
+  static double? parseDecimal(String text) => double.tryParse(text.trim().replaceAll(' ', '').replaceAll(',', '.'));
+
+  static String _formatFactor(double f) => f == f.roundToDouble() ? f.toInt().toString() : f.toString().replaceAll('.', ',');
+
+  FieldEditorState copyWith({
+    String? name,
+    FieldKind? kind,
+    FieldRole? role,
+    String? unit,
+    String? consumptionUnit,
+    String? factorText,
+    int? intervalMonths,
+    List<String>? choices,
+    bool? saving,
+    FieldEditorEvent? event,
+  }) => FieldEditorState(
+    isNew: isNew,
+    originalKind: originalKind,
+    hasValues: hasValues,
+    name: name ?? this.name,
+    kind: kind ?? this.kind,
+    role: role ?? this.role,
+    unit: unit ?? this.unit,
+    consumptionUnit: consumptionUnit ?? this.consumptionUnit,
+    factorText: factorText ?? this.factorText,
+    intervalMonths: intervalMonths ?? this.intervalMonths,
+    choices: choices ?? this.choices,
+    saving: saving ?? this.saving,
+    event: event,
+  );
+
+  @override
+  List<Object?> get props => [isNew, originalKind, hasValues, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, saving, event];
+}

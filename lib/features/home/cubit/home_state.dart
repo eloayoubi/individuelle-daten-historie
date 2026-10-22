@@ -2,7 +2,7 @@ part of 'home_cubit.dart';
 
 enum HomeStatus { loading, ready, failure }
 
-enum HomeEventKind { captureSoon, detailsSoon }
+enum HomeEventKind { captureSoon }
 
 /// Einmaliges Ereignis für Toasts; die Seite reagiert per `BlocListener`.
 /// Bewusst nicht `const`: Jede Instanz ist neu, so zeigt auch ein zweites gleiches Ereignis einen Toast.

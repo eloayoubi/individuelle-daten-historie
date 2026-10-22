@@ -26,6 +26,7 @@ void main() {
     'meldet einen Fehler, wenn das Laden scheitert',
     build: () {
       final repo = _MockCategories();
+      when(() => repo.changes).thenAnswer((_) => const Stream.empty());
       when(repo.loadCategories).thenThrow(Exception('offline'));
       return HomeCubit(repo, now: now);
     },
@@ -37,6 +38,7 @@ void main() {
     'behält die Übersicht, wenn ein späteres Neuladen scheitert',
     build: () {
       final repo = _MockCategories();
+      when(() => repo.changes).thenAnswer((_) => const Stream.empty());
       var calls = 0;
       when(repo.loadCategories).thenAnswer((_) async {
         if (calls++ > 0) throw Exception('offline');
@@ -59,12 +61,10 @@ void main() {
     build: () => HomeCubit(MockCategoriesRepository(), now: now),
     act: (cubit) => cubit
       ..capture('t-strom')
-      ..capture('t-strom')
-      ..openCategory('c-strom'),
+      ..capture('t-strom'),
     expect: () => [
       isA<HomeState>().having((s) => s.event?.kind, 'event', HomeEventKind.captureSoon),
       isA<HomeState>().having((s) => s.event?.kind, 'event', HomeEventKind.captureSoon),
-      isA<HomeState>().having((s) => s.event?.kind, 'event', HomeEventKind.detailsSoon),
     ],
   );
 }

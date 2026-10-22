@@ -33,7 +33,7 @@ erDiagram
 |---|---|
 | `profiles` | ein Eintrag je Auth-Nutzer (auch anonym), Anzeigename fürs Teilen. Legt der Trigger `on_auth_user_created` an. |
 | `categories` | Strom, Miete, Auto … – Einheit des Teilens. `icon`/`swatch` sind Schlüssel aus der App, `template_key` die Vorlage. |
-| `category_members` | Rolle je Person: `owner` (alles, teilt, löscht), `editor` (Tracker, Felder, Einträge), `viewer` (nur lesen). Der owner kommt per Trigger dazu. |
+| `category_members` | Rolle je Person: `owner` (alles, teilt, löscht), `editor` (Tracker, Felder, Einträge), `viewer` (nur lesen). Der owner kommt per Trigger dazu. `sort` ist die Reihenfolge **je Person**: geteilte Kategorien sortiert jeder für sich. |
 | `category_invites` | Einladungscode (10 Zeichen, 7 Tage, einmalig) – über `create_category_invite` / `accept_category_invite`. |
 | `trackers` | ein Zähler, Vertrag, Auto … innerhalb einer Kategorie. |
 | `fields` | frei definierte Felder: `kind` (Text, Zahl, Betrag, Prozent, Datum, Ja/Nein, Auswahl, Formel) und `role` (Zeitverhalten: Stammdatum, Momentwert, Zählerstand, Arbeitspreis, wiederkehrender/einmaliger Betrag, Stichtag). Ein Check erzwingt passende Kombinationen. |
@@ -53,6 +53,18 @@ Sichtbar ist, was zu einer Kategorie gehört, in der ich Mitglied bin; schreiben
 | `create_category_invite(p_category, p_role = 'editor')` | owner | neuer Code (`text`) |
 | `accept_category_invite(p_code)` | angemeldet | tritt bei, liefert die Kategorie-Id; Code danach verbraucht |
 | `has_plus()` | angemeldet | hat der Nutzer gerade Plus? |
+| `create_category(p_name, p_icon, p_swatch, p_template_key, p_trackers)` | angemeldet | legt Kategorie, Tracker und Felder (aus einer Vorlage) in einer Transaktion an. Läuft mit den Rechten des Aufrufers; scheitert ein Feld an einem Check, bleibt nichts halb angelegt. Liefert die Id. |
+| `reorder_categories(p_ids)` | angemeldet | speichert die eigene Reihenfolge (Index in `p_ids`) |
+
+## Schutz-Trigger
+
+Diese Trigger gelten für angemeldete Nutzer; Server-Code ohne `auth.uid()` ist ausgenommen.
+
+| Trigger | Regel |
+|---|---|
+| `categories_guard` | `owner_id` bleibt fest; archivieren und wiederherstellen darf nur der owner (umbenennen auch der editor) |
+| `trackers_guard` | Tracker bleiben in ihrer Kategorie |
+| `fields_guard` | Felder bleiben in ihrem Tracker; mit gespeicherten Werten wechselt der Typ nur innerhalb derselben Wertspalte (`field_storage`: Zahl/Betrag/Prozent, Text/Auswahl, Datum, Ja/Nein) |
 
 ## Lokal testen
 

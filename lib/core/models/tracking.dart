@@ -3,6 +3,35 @@ import 'package:equatable/equatable.dart';
 /// Wie ein Feld eingegeben und angezeigt wird.
 enum FieldKind { text, number, currency, percent, date, toggle, choice, formula }
 
+/// In welcher Wertspalte ein Feldtyp speichert (`entry_values.num/txt/dat/flag`); Formeln speichern nichts.
+enum FieldStorage { number, text, date, flag, none }
+
+extension FieldKindRules on FieldKind {
+  FieldStorage get storage => switch (this) {
+    FieldKind.number || FieldKind.currency || FieldKind.percent => FieldStorage.number,
+    FieldKind.text || FieldKind.choice => FieldStorage.text,
+    FieldKind.date => FieldStorage.date,
+    FieldKind.toggle => FieldStorage.flag,
+    FieldKind.formula => FieldStorage.none,
+  };
+
+  /// Zeitverhalten, die zu diesem Typ passen – wie der Check `fields_role_fits_kind` in der Datenbank.
+  List<FieldRole> get roles => switch (this) {
+    FieldKind.number => const [FieldRole.meterReading, FieldRole.snapshot, FieldRole.info],
+    FieldKind.currency => const [FieldRole.recurringCost, FieldRole.oneOffCost, FieldRole.unitPrice, FieldRole.snapshot, FieldRole.info],
+    FieldKind.percent => const [FieldRole.snapshot, FieldRole.info],
+    FieldKind.date => const [FieldRole.deadline, FieldRole.info],
+    FieldKind.formula => const [FieldRole.recurringCost, FieldRole.oneOffCost, FieldRole.unitPrice, FieldRole.snapshot, FieldRole.info],
+    FieldKind.text || FieldKind.choice || FieldKind.toggle => const [FieldRole.info],
+  };
+
+  /// Ein Feld mit gespeicherten Werten darf nur zu einem Typ mit derselben Wertspalte wechseln.
+  bool canBecome(FieldKind other, {required bool hasValues}) => !hasValues || other.storage == storage;
+
+  /// Einheit eintragen? Bei Prozent ist sie fest, bei Text, Datum, Ja/Nein und Auswahl gibt es keine.
+  bool get hasUnit => this == FieldKind.number || this == FieldKind.currency || this == FieldKind.formula;
+}
+
 /// Wie sich ein Feld über die Zeit verhält – entscheidet, wie Verlauf, Kosten und Prognose rechnen.
 enum FieldRole {
   /// Stammdaten ohne Verlauf (Zählernummer, Anbieter, Vertragsnummer).
@@ -124,6 +153,12 @@ class Tracker extends Equatable {
 
   FieldDefinition? firstWithRole(FieldRole role) => withRole(role).firstOrNull;
 
+  /// Hat das Feld schon gespeicherte Werte? Dann darf sich sein Typ nur eingeschränkt ändern.
+  bool hasValues(String fieldId) => entries.any((e) => e.values.containsKey(fieldId));
+
+  Tracker copyWith({String? name, List<FieldDefinition>? fields, List<Entry>? entries}) =>
+      Tracker(id: id, name: name ?? this.name, fields: fields ?? this.fields, entries: entries ?? this.entries);
+
   @override
   List<Object?> get props => [id, name, fields, entries];
 }
@@ -150,6 +185,8 @@ class Category extends Equatable {
     this.trackers = const [],
     this.sharedWith = const [],
     this.myRole = MemberRole.owner,
+    this.templateKey,
+    this.archivedAt,
   });
 
   final String id;
@@ -162,8 +199,45 @@ class Category extends Equatable {
   final List<CategoryMember> sharedWith;
   final MemberRole myRole;
 
+  /// Vorlage, aus der die Kategorie entstand (`strom`, `miete` …), `null` bei eigenen.
+  final String? templateKey;
+
+  /// Archivierte Kategorien fehlen in Übersicht und Auswertung, lassen sich aber wiederherstellen.
+  final DateTime? archivedAt;
+
   bool get isShared => sharedWith.isNotEmpty;
 
+  bool get isArchived => archivedAt != null;
+
+  /// Tracker, Felder und Einträge bearbeiten (owner und editor).
+  bool get canEdit => myRole != MemberRole.viewer;
+
+  /// Teilen, archivieren, löschen (nur owner).
+  bool get isOwner => myRole == MemberRole.owner;
+
+  int get fieldCount => trackers.fold(0, (sum, t) => sum + t.fields.length);
+
+  /// Wer geteilt hat (für viewer und editor), sonst `null`.
+  CategoryMember? get sharedBy => isOwner ? null : sharedWith.where((m) => m.role == MemberRole.owner).firstOrNull;
+
+  Category copyWith({
+    String? name,
+    CategoryIcon? icon,
+    CategorySwatch? swatch,
+    List<Tracker>? trackers,
+    DateTime? Function()? archivedAt,
+  }) => Category(
+    id: id,
+    name: name ?? this.name,
+    icon: icon ?? this.icon,
+    swatch: swatch ?? this.swatch,
+    trackers: trackers ?? this.trackers,
+    sharedWith: sharedWith,
+    myRole: myRole,
+    templateKey: templateKey,
+    archivedAt: archivedAt == null ? this.archivedAt : archivedAt(),
+  );
+
   @override
-  List<Object?> get props => [id, name, icon, swatch, trackers, sharedWith, myRole];
+  List<Object?> get props => [id, name, icon, swatch, trackers, sharedWith, myRole, templateKey, archivedAt];
 }
