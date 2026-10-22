@@ -17,6 +17,14 @@ void main() {
       expect(TrackerHistory.metricsFor(const Tracker(id: 't', name: 'Leer')), isEmpty);
     });
 
+    test('beginnt erst mit dem Monat des ersten Eintrags', () {
+      const price = FieldDefinition(id: 'p', name: 'Preis', kind: FieldKind.currency, role: FieldRole.oneOffCost);
+      final t = Tracker(id: 't', name: 'Spiele', fields: const [price], entries: [Entry(id: 'e', date: DateTime.utc(2026, 9, 3), values: const {'p': 80})]);
+      final h = TrackerHistory.build(t, now, HistoryMetric.cost);
+      expect([for (final m in h.months) m.month], [DateTime.utc(2026, 9), DateTime.utc(2026, 10)]);
+      expect(h.months.first.value, closeTo(80, 1e-9));
+    });
+
     test('zwölf Monate bis zum laufenden, mit Vorjahr und Prognose', () {
       final h = TrackerHistory.build(tracker('c-heizung'), now, HistoryMetric.consumption);
       expect(h.months, hasLength(12));

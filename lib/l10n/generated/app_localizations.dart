@@ -1376,6 +1376,12 @@ abstract class AppLocalizations {
   /// **'Verlauf und Einträge'**
   String get trackerHistory;
 
+  /// No description provided for @trackerSince.
+  ///
+  /// In de, this message translates to:
+  /// **'seit {date}'**
+  String trackerSince(String date);
+
   /// No description provided for @trackerLast12.
   ///
   /// In de, this message translates to:
@@ -1423,12 +1429,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Aktuelle Werte'**
   String get trackerCurrentValues;
-
-  /// No description provided for @trackerSince.
-  ///
-  /// In de, this message translates to:
-  /// **'seit {date}'**
-  String trackerSince(String date);
 
   /// No description provided for @trackerEntries.
   ///

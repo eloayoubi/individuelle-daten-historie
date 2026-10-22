@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/models/tracking.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/insights/cubit/insights_cubit.dart';
 import 'package:kostenkurve/features/insights/data/insights.dart';
@@ -10,6 +11,26 @@ void main() {
 
   group('Insights', () {
     final i = Insights.build(categories, now, 2026);
+
+    test('vergleicht kein volles Jahr mit einem unterjährig angefangenen', () {
+      const rent = FieldDefinition(id: 'miete', name: 'Miete', kind: FieldKind.currency, role: FieldRole.recurringCost);
+      final wohnung = Category(
+        id: 'c',
+        name: 'Wohnung',
+        icon: CategoryIcon.house,
+        swatch: CategorySwatch.brown,
+        trackers: [
+          Tracker(id: 't', name: 'Miete', fields: const [rent], entries: [Entry(id: 'e', date: DateTime.utc(2026, 10, 1), values: const {'miete': 1400})]),
+        ],
+      );
+      final next = Insights.build([wohnung], DateTime(2027, 6, 1), 2027);
+      final row = next.comparisons.single;
+      expect(row.previous, closeTo(3 * 1400, 1e-6));
+      expect(row.change, isNull);
+      expect(next.change, isNull);
+      expect(Insights.build([wohnung], DateTime(2026, 10, 22), 2026).firstMonth, 9);
+      expect(next.firstMonth, 0);
+    });
 
     test('Jahresvergleich nach Kosten, Summe aus den Monaten', () {
       expect(i.comparisons.first.category.id, 'c-miete');

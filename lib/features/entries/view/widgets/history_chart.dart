@@ -31,9 +31,12 @@ class _HistoryChartState extends State<HistoryChart> {
     if (old.history.metric != widget.history.metric) _selected = widget.history.months.length - 1;
   }
 
+  /// Plätze für Balken: wenige Monate stehen links und werden nicht breit gezogen.
+  static int _slots(int count) => math.max(count, 6);
+
   void _select(Offset position, double width) {
     final count = widget.history.months.length;
-    setState(() => _selected = (position.dx / width * count).floor().clamp(0, count - 1));
+    setState(() => _selected = (position.dx / width * _slots(count)).floor().clamp(0, count - 1));
   }
 
   @override
@@ -60,7 +63,7 @@ class _HistoryChartState extends State<HistoryChart> {
                 height: _height,
                 width: double.infinity,
                 child: CustomPaint(
-                  painter: _BarsPainter(months: months, selected: _selected, color: widget.color, ghost: c.textTertiary, grid: c.separator),
+                  painter: _BarsPainter(months: months, slots: _slots(months.length), selected: _selected, color: widget.color, ghost: c.textTertiary, grid: c.separator),
                 ),
               ),
             ),
@@ -77,6 +80,7 @@ class _HistoryChartState extends State<HistoryChart> {
                   align: TextAlign.center,
                 ),
               ),
+            if (_slots(months.length) > months.length) Spacer(flex: _slots(months.length) - months.length),
           ],
         ),
       ],
@@ -85,9 +89,10 @@ class _HistoryChartState extends State<HistoryChart> {
 }
 
 class _BarsPainter extends CustomPainter {
-  _BarsPainter({required this.months, required this.selected, required this.color, required this.ghost, required this.grid});
+  _BarsPainter({required this.months, required this.slots, required this.selected, required this.color, required this.ghost, required this.grid});
 
   final List<HistoryMonth> months;
+  final int slots;
   final int selected;
   final Color color;
   final Color ghost;
@@ -98,7 +103,7 @@ class _BarsPainter extends CustomPainter {
     final top = [for (final m in months) math.max(m.value, m.previousYear ?? 0)].fold(0.0, math.max);
     canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height), Paint()..color = grid..strokeWidth = 1);
     if (top <= 0) return;
-    final slot = size.width / months.length;
+    final slot = size.width / slots;
     final barWidth = slot * 0.56;
     double y(double v) => size.height - (v.clamp(0, double.infinity) / (top * 1.08)) * size.height;
     for (final (i, m) in months.indexed) {
@@ -124,5 +129,5 @@ class _BarsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BarsPainter old) => old.months != months || old.selected != selected || old.color != color || old.ghost != ghost || old.grid != grid;
+  bool shouldRepaint(_BarsPainter old) => old.months != months || old.slots != slots || old.selected != selected || old.color != color || old.ghost != ghost || old.grid != grid;
 }

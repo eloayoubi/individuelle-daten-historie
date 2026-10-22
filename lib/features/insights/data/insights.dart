@@ -7,7 +7,9 @@ import '../../../core/utils/cost_engine.dart';
 
 /// Kosten einer Kategorie im gewählten Jahr gegen das Vorjahr.
 class YearComparison extends Equatable {
-  const YearComparison({required this.category, required this.total, required this.previous});
+  const YearComparison({required this.category, required this.total, required this.previous, double? sameTotal, double? samePrevious})
+    : sameTotal = sameTotal ?? total,
+      samePrevious = samePrevious ?? previous;
 
   final Category category;
 
@@ -15,11 +17,18 @@ class YearComparison extends Equatable {
   final double total;
   final double previous;
 
-  double? get change => previous.abs() < 0.01 ? null : (total - previous) / previous;
+  /// Nur Tracker, die das ganze Vorjahr erfasst waren: Wer unterjährig angefangen hat, würde
+  /// sonst ein volles Jahr mit ein paar Monaten vergleichen.
+  final double sameTotal;
+  final double samePrevious;
+
+  double? get change => _change(sameTotal, samePrevious);
 
   @override
-  List<Object?> get props => [category, total, previous];
+  List<Object?> get props => [category, total, previous, sameTotal, samePrevious];
 }
+
+double? _change(double now, double before) => before.abs() < 0.01 ? null : (now - before) / before;
 
 /// Verbrauch eines Zählers im gewählten Jahr gegen denselben Zeitraum im Vorjahr.
 class ConsumptionComparison extends Equatable {
@@ -104,6 +113,7 @@ class Insights extends Equatable {
     required this.year,
     required this.today,
     required this.months,
+    this.firstMonth = 0,
     required this.total,
     required this.previousTotal,
     required this.comparisons,
@@ -122,6 +132,9 @@ class Insights extends Equatable {
 
   /// Je Monat: Kosten je Kategorie-Id.
   final List<Map<String, double>> months;
+
+  /// Erster Monat (0 = Januar) mit Daten, wenn erst in diesem Jahr angefangen; davor keine Balken.
+  final int firstMonth;
   final double total;
   final double previousTotal;
   final List<YearComparison> comparisons;
@@ -140,12 +153,32 @@ class Insights extends Equatable {
 
   bool get isEmpty => comparisons.isEmpty;
 
-  double? get change => previousTotal.abs() < 0.01 ? null : (total - previousTotal) / previousTotal;
+  double? get change => _change(
+    comparisons.fold(0.0, (sum, c) => sum + c.sameTotal),
+    comparisons.fold(0.0, (sum, c) => sum + c.samePrevious),
+  );
 
   /// Monate nach dem laufenden sind hochgerechnet.
   bool isProjected(int monthIndex) => isCurrentYear && monthIndex + 1 > today.month;
 
   double monthTotal(int monthIndex) => months[monthIndex].values.fold(0.0, (a, b) => a + b);
+
+  static int _firstMonth(List<Category> categories, int year) {
+    DateTime? first;
+    for (final c in categories) {
+      for (final t in c.trackers) {
+        for (final e in t.entries) {
+          final d = e.hasPeriod ? e.periodStart! : e.date;
+          if (first == null || d.isBefore(first)) first = d;
+        }
+      }
+    }
+    return first == null || first.year != year ? 0 : first.month - 1;
+  }
+
+  /// Hat [tracker] einen Eintrag am oder vor [start]?
+  static bool _trackedSince(Tracker tracker, DateTime start) =>
+      tracker.entries.any((e) => !CostEngine.day(e.hasPeriod ? e.periodStart! : e.date).isAfter(start));
 
   /// Jahre mit Daten (älteste zuerst), höchstens die letzten drei.
   static List<int> yearsOf(List<Category> categories, DateTime now) {
@@ -181,19 +214,26 @@ class Insights extends Equatable {
     var rangeSquares = 0.0;
 
     for (final category in categories) {
-      var total = 0.0, previous = 0.0, forecast = 0.0, categoryRange = 0.0;
+      var total = 0.0, previous = 0.0, forecast = 0.0, categoryRange = 0.0, sameTotal = 0.0, samePrevious = 0.0;
       for (final tracker in category.trackers) {
         final engine = CostEngine(tracker, today: today);
         final into = tracker.includedIn == null ? null : byId[tracker.includedIn];
         if (tracker.includedIn != null) {
           if (into != null) included.add(IncludedNote(tracker: tracker, category: category, into: into, cost: engine.costInYear(year)));
         } else {
+          var trackerTotal = 0.0;
           for (var m = 1; m <= 12; m++) {
             final v = engine.costInMonth(year, m);
             months[m - 1][category.id] = (months[m - 1][category.id] ?? 0) + v;
-            total += v;
+            trackerTotal += v;
           }
-          previous += engine.costInYear(year - 1);
+          final trackerPrevious = engine.costInYear(year - 1);
+          total += trackerTotal;
+          previous += trackerPrevious;
+          if (_trackedSince(tracker, DateTime.utc(year - 1))) {
+            sameTotal += trackerTotal;
+            samePrevious += trackerPrevious;
+          }
           if (current) {
             final parts = engine.parts(DateTime.utc(year + 1), DateTime.utc(year + 2));
             final range = engine.uncertainty(parts);
@@ -225,7 +265,9 @@ class Insights extends Equatable {
           if (paid > 0) instalments.add(InstalmentCheck(category: category, tracker: tracker, paid: paid, cost: cost, monthly: paid / 12));
         }
       }
-      if (total.abs() > 0.004 || previous.abs() > 0.004) comparisons.add(YearComparison(category: category, total: total, previous: previous));
+      if (total.abs() > 0.004 || previous.abs() > 0.004) {
+        comparisons.add(YearComparison(category: category, total: total, previous: previous, sameTotal: sameTotal, samePrevious: samePrevious));
+      }
       if (current && forecast.abs() > 0.004) categoryForecasts.add(CategoryForecast(category: category, total: forecast, range: math.sqrt(categoryRange)));
     }
 
@@ -235,6 +277,7 @@ class Insights extends Equatable {
       year: year,
       today: today,
       months: months,
+      firstMonth: _firstMonth(categories, year),
       total: comparisons.fold(0.0, (sum, c) => sum + c.total),
       previousTotal: comparisons.fold(0.0, (sum, c) => sum + c.previous),
       comparisons: comparisons,
