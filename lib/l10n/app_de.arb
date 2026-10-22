@@ -1,0 +1,90 @@
+{
+  "@@locale": "de",
+  "appTitle": "Kostenkurve",
+
+  "tabOverview": "Übersicht",
+  "tabCategories": "Kategorien",
+  "tabInsights": "Auswertung",
+  "tabSettings": "Einstellungen",
+
+  "comingSoon": "Kommt bald.",
+  "placeholderCategories": "Hier legst du Kategorien an, wählst Vorlagen und baust eigene Felder und Formeln.",
+  "placeholderInsights": "Verläufe, Jahresvergleiche und Prognosen für jede Kategorie.",
+
+  "actionBack": "Zurück",
+  "actionClose": "Schließen",
+  "actionRetry": "Erneut versuchen",
+  "errorLoad": "Deine Daten konnten nicht geladen werden.",
+
+  "homeQuickAdd": "Eintrag erfassen",
+  "homeForecastTitle": "Prognose {year}",
+  "@homeForecastTitle": {
+    "placeholders": {"year": {"type": "String"}}
+  },
+  "homeForecastHint": "Hochrechnung aus deinen Verläufen und den gültigen Preisen.",
+  "homeForecastDelta": "{change} ggü. {year}",
+  "@homeForecastDelta": {
+    "placeholders": {"change": {"type": "String"}, "year": {"type": "String"}}
+  },
+  "homeCurveActual": "Ist {year}",
+  "@homeCurveActual": {
+    "placeholders": {"year": {"type": "String"}}
+  },
+  "homeCurveForecast": "Prognose {year}",
+  "@homeCurveForecast": {
+    "placeholders": {"year": {"type": "String"}}
+  },
+  "homeYearToDate": "Kosten {year} bis heute",
+  "@homeYearToDate": {
+    "placeholders": {"year": {"type": "String"}}
+  },
+  "homeYearToDateCompare": "{change} ggü. Vorjahreszeitraum",
+  "@homeYearToDateCompare": {
+    "placeholders": {"change": {"type": "String"}}
+  },
+  "homeCategories": "Kategorien",
+  "homeSeeAll": "Alle",
+  "homeNext": "Als Nächstes",
+  "homePerMonth": "Ø {amount} pro Monat",
+  "@homePerMonth": {
+    "placeholders": {"amount": {"type": "String"}}
+  },
+  "homeConsumptionToDate": "{value} bisher",
+  "@homeConsumptionToDate": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "homeSharedWith": "Geteilt mit {name}",
+  "@homeSharedWith": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "homeReadMeter": "{tracker} ablesen",
+  "@homeReadMeter": {
+    "placeholders": {"tracker": {"type": "String"}}
+  },
+  "homeReadMeterDue": "{days, plural, =1{Letzter Stand vor einem Tag} other{Letzter Stand vor {days} Tagen}}",
+  "@homeReadMeterDue": {
+    "placeholders": {"days": {"type": "int"}}
+  },
+  "homeDeadlineTitle": "{field} · {tracker}",
+  "@homeDeadlineTitle": {
+    "placeholders": {"field": {"type": "String"}, "tracker": {"type": "String"}}
+  },
+  "homeDeadlineDue": "{days, plural, =0{Heute} =1{Morgen} other{Am {date} · in {days} Tagen}}",
+  "@homeDeadlineDue": {
+    "placeholders": {"days": {"type": "int"}, "date": {"type": "String"}}
+  },
+  "homeEmptyTitle": "Noch keine Kategorien",
+  "homeEmptyBody": "Starte mit einer Vorlage wie Strom, Wasser oder Miete – oder baue dir eine eigene.",
+
+  "quickAddTitle": "Wofür möchtest du etwas eintragen?",
+  "quickAddSoon": "Das Erfassen kommt im nächsten Schritt.",
+  "categoryDetailsSoon": "Die Detailansicht kommt im nächsten Schritt.",
+
+  "settingsAppearance": "Darstellung",
+  "appearanceSystem": "Automatisch",
+  "appearanceLight": "Hell",
+  "appearanceDark": "Dunkel",
+  "settingsAppearanceHint": "„Automatisch“ folgt der Einstellung deines Geräts.",
+  "settingsAbout": "Über Kostenkurve",
+  "settingsAboutBody": "Deine Zählerstände, Verträge und Kosten an einem Ort – mit Verlauf, Jahresvergleich und Prognose."
+}
