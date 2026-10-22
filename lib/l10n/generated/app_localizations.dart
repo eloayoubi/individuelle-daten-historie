@@ -1813,6 +1813,1050 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'± {range}'**
   String insightsRangeOnly(String range);
+
+  /// No description provided for @accountTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto'**
+  String get accountTitle;
+
+  /// No description provided for @accountSecuredToast.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto gesichert'**
+  String get accountSecuredToast;
+
+  /// No description provided for @accountSignedInToast.
+  ///
+  /// In de, this message translates to:
+  /// **'Angemeldet'**
+  String get accountSignedInToast;
+
+  /// No description provided for @accountNameSaved.
+  ///
+  /// In de, this message translates to:
+  /// **'Name gespeichert'**
+  String get accountNameSaved;
+
+  /// No description provided for @accountSignedOutToast.
+  ///
+  /// In de, this message translates to:
+  /// **'Abgemeldet'**
+  String get accountSignedOutToast;
+
+  /// No description provided for @accountAlreadyUsedTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto gibt es schon'**
+  String get accountAlreadyUsedTitle;
+
+  /// No description provided for @accountAlreadyUsedBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Diese Apple-ID gehört schon zu einem Konto. Möchtest du dich dort anmelden? Was du bisher ohne Konto erfasst hast, kommt nicht mit.'**
+  String get accountAlreadyUsedBody;
+
+  /// No description provided for @accountSignIn.
+  ///
+  /// In de, this message translates to:
+  /// **'Anmelden'**
+  String get accountSignIn;
+
+  /// No description provided for @accountInvalidCode.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Code stimmt nicht oder ist abgelaufen.'**
+  String get accountInvalidCode;
+
+  /// No description provided for @accountSignInTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit bestehendem Konto anmelden?'**
+  String get accountSignInTitle;
+
+  /// No description provided for @accountSignInBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Du wechselst zu deinem Konto. Was du auf diesem Gerät ohne Konto erfasst hast, kommt nicht mit.'**
+  String get accountSignInBody;
+
+  /// No description provided for @accountSignOutTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Abmelden?'**
+  String get accountSignOutTitle;
+
+  /// No description provided for @accountSignOutBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Daten bleiben im Konto. Danach startest du auf diesem Gerät neu ohne Konto.'**
+  String get accountSignOutBody;
+
+  /// No description provided for @accountSignOut.
+  ///
+  /// In de, this message translates to:
+  /// **'Abmelden'**
+  String get accountSignOut;
+
+  /// No description provided for @accountAnonymousTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Nur auf diesem Gerät'**
+  String get accountAnonymousTitle;
+
+  /// No description provided for @accountAnonymousBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Daten liegen in einem Konto ohne Anmeldung. Sichere es, damit sie ein neues Handy überstehen und du Kategorien teilen kannst.'**
+  String get accountAnonymousBody;
+
+  /// No description provided for @accountSecuredTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto gesichert'**
+  String get accountSecuredTitle;
+
+  /// No description provided for @accountSecuredBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Angemeldet mit {login}. Deine Daten sind auf jedem Gerät da.'**
+  String accountSecuredBody(String login);
+
+  /// No description provided for @accountApple.
+  ///
+  /// In de, this message translates to:
+  /// **'Apple'**
+  String get accountApple;
+
+  /// No description provided for @accountSecure.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto sichern'**
+  String get accountSecure;
+
+  /// No description provided for @accountSecureApple.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Apple sichern'**
+  String get accountSecureApple;
+
+  /// No description provided for @accountSecureEmail.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit E-Mail sichern'**
+  String get accountSecureEmail;
+
+  /// No description provided for @accountSecureFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles, was du schon erfasst hast, bleibt erhalten. Ohne Passwort: Apple oder ein Code per E-Mail.'**
+  String get accountSecureFooter;
+
+  /// No description provided for @accountExisting.
+  ///
+  /// In de, this message translates to:
+  /// **'Schon ein Konto?'**
+  String get accountExisting;
+
+  /// No description provided for @accountSignInApple.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Apple anmelden'**
+  String get accountSignInApple;
+
+  /// No description provided for @accountSignInEmail.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit E-Mail anmelden'**
+  String get accountSignInEmail;
+
+  /// No description provided for @accountName.
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Name'**
+  String get accountName;
+
+  /// No description provided for @accountNameHint.
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. Alex'**
+  String get accountNameHint;
+
+  /// No description provided for @accountNameFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Sehen alle, mit denen du Kategorien teilst – auch an deinen Einträgen.'**
+  String get accountNameFooter;
+
+  /// No description provided for @accountEmailHint.
+  ///
+  /// In de, this message translates to:
+  /// **'name@beispiel.de'**
+  String get accountEmailHint;
+
+  /// No description provided for @accountCodeSent.
+  ///
+  /// In de, this message translates to:
+  /// **'Code an {email} geschickt. Schau auch im Spam-Ordner.'**
+  String accountCodeSent(String email);
+
+  /// No description provided for @accountCodeHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Code aus der E-Mail'**
+  String get accountCodeHint;
+
+  /// No description provided for @accountConfirm.
+  ///
+  /// In de, this message translates to:
+  /// **'Bestätigen'**
+  String get accountConfirm;
+
+  /// No description provided for @accountResend.
+  ///
+  /// In de, this message translates to:
+  /// **'Neuen Code senden'**
+  String get accountResend;
+
+  /// No description provided for @accountSendCode.
+  ///
+  /// In de, this message translates to:
+  /// **'Code senden'**
+  String get accountSendCode;
+
+  /// No description provided for @shareRemoved.
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernt'**
+  String get shareRemoved;
+
+  /// No description provided for @shareLeft.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie verlassen'**
+  String get shareLeft;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In de, this message translates to:
+  /// **'Besitzer'**
+  String get roleOwner;
+
+  /// No description provided for @roleEditor.
+  ///
+  /// In de, this message translates to:
+  /// **'Bearbeiten'**
+  String get roleEditor;
+
+  /// No description provided for @roleViewer.
+  ///
+  /// In de, this message translates to:
+  /// **'Nur ansehen'**
+  String get roleViewer;
+
+  /// No description provided for @roleEditorHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Darf Einträge erfassen, ändern und löschen.'**
+  String get roleEditorHint;
+
+  /// No description provided for @roleViewerHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Sieht Verlauf und Kosten, ändert aber nichts.'**
+  String get roleViewerHint;
+
+  /// No description provided for @shareNoName.
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Namen'**
+  String get shareNoName;
+
+  /// No description provided for @shareRemove.
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get shareRemove;
+
+  /// No description provided for @shareRemoveTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} entfernen?'**
+  String shareRemoveTitle(String name);
+
+  /// No description provided for @shareRemoveBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Person sieht die Kategorie danach nicht mehr. Ihre Einträge bleiben.'**
+  String get shareRemoveBody;
+
+  /// No description provided for @shareLeaveTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'„{category}“ verlassen?'**
+  String shareLeaveTitle(String category);
+
+  /// No description provided for @shareLeaveBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Du siehst die Kategorie danach nicht mehr. Deine Einträge bleiben für die anderen.'**
+  String get shareLeaveBody;
+
+  /// No description provided for @shareLeave.
+  ///
+  /// In de, this message translates to:
+  /// **'Verlassen'**
+  String get shareLeave;
+
+  /// No description provided for @shareTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Teilen'**
+  String get shareTitle;
+
+  /// No description provided for @shareMembers.
+  ///
+  /// In de, this message translates to:
+  /// **'Mitglieder'**
+  String get shareMembers;
+
+  /// No description provided for @shareYou.
+  ///
+  /// In de, this message translates to:
+  /// **'Du'**
+  String get shareYou;
+
+  /// No description provided for @shareYouNamed.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} (du)'**
+  String shareYouNamed(String name);
+
+  /// No description provided for @shareInvite.
+  ///
+  /// In de, this message translates to:
+  /// **'Einladen'**
+  String get shareInvite;
+
+  /// No description provided for @shareSecureFirst.
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Teilen brauchst du ein gesichertes Konto – so weiß dein Partner, mit wem er teilt, und nichts geht verloren.'**
+  String get shareSecureFirst;
+
+  /// No description provided for @shareCreateInvite.
+  ///
+  /// In de, this message translates to:
+  /// **'Einladung erstellen'**
+  String get shareCreateInvite;
+
+  /// No description provided for @shareSend.
+  ///
+  /// In de, this message translates to:
+  /// **'Einladung senden'**
+  String get shareSend;
+
+  /// No description provided for @shareMessage.
+  ///
+  /// In de, this message translates to:
+  /// **'Ich teile „{category}“ in Kostenkurve mit dir. Öffne den Link oder gib in der App unter Kategorien › + › Einladung annehmen den Code {code} ein: {link}'**
+  String shareMessage(String category, String code, String link);
+
+  /// No description provided for @shareValidity.
+  ///
+  /// In de, this message translates to:
+  /// **'Gilt 7 Tage für eine Person.'**
+  String get shareValidity;
+
+  /// No description provided for @joinTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Einladung annehmen'**
+  String get joinTitle;
+
+  /// No description provided for @joinRowHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie eines Partners beitreten'**
+  String get joinRowHint;
+
+  /// No description provided for @joinDone.
+  ///
+  /// In de, this message translates to:
+  /// **'Beigetreten'**
+  String get joinDone;
+
+  /// No description provided for @joinInvalid.
+  ///
+  /// In de, this message translates to:
+  /// **'Code unbekannt, abgelaufen oder schon benutzt.'**
+  String get joinInvalid;
+
+  /// No description provided for @joinBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.'**
+  String get joinBody;
+
+  /// No description provided for @joinHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Code, z. B. K7Q2M9X4TA'**
+  String get joinHint;
+
+  /// No description provided for @joinAction.
+  ///
+  /// In de, this message translates to:
+  /// **'Beitreten'**
+  String get joinAction;
+
+  /// No description provided for @entryBy.
+  ///
+  /// In de, this message translates to:
+  /// **'von {name}'**
+  String entryBy(String name);
+
+  /// No description provided for @accountDelete.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto löschen'**
+  String get accountDelete;
+
+  /// No description provided for @accountDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto und alle Daten löschen?'**
+  String get accountDeleteTitle;
+
+  /// No description provided for @accountDeleteBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Konto, deine Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Plus-Abo kündigst du separat in den iOS-Einstellungen.'**
+  String get accountDeleteBody;
+
+  /// No description provided for @accountDeleteFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Exportiere vorher deine Daten, wenn du sie behalten willst (Einstellungen › Daten exportieren).'**
+  String get accountDeleteFooter;
+
+  /// No description provided for @accountDeletedToast.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto gelöscht'**
+  String get accountDeletedToast;
+
+  /// No description provided for @attachmentsTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Belege'**
+  String get attachmentsTitle;
+
+  /// No description provided for @attachmentsAdd.
+  ///
+  /// In de, this message translates to:
+  /// **'Hinzufügen'**
+  String get attachmentsAdd;
+
+  /// No description provided for @attachmentsAdded.
+  ///
+  /// In de, this message translates to:
+  /// **'Beleg hinzugefügt'**
+  String get attachmentsAdded;
+
+  /// No description provided for @attachmentsDeleted.
+  ///
+  /// In de, this message translates to:
+  /// **'Beleg gelöscht'**
+  String get attachmentsDeleted;
+
+  /// No description provided for @attachmentsAfterSave.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach dem Speichern kannst du Rechnung, Vertrag oder Zählerfoto anhängen.'**
+  String get attachmentsAfterSave;
+
+  /// No description provided for @attachmentsEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Belege. Häng Rechnung, Vertrag oder ein Foto vom Zähler an.'**
+  String get attachmentsEmpty;
+
+  /// No description provided for @attachmentsEmptyPlus.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Plus hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.'**
+  String get attachmentsEmptyPlus;
+
+  /// No description provided for @attachmentsOffline.
+  ///
+  /// In de, this message translates to:
+  /// **'Belege sind gerade nicht erreichbar.'**
+  String get attachmentsOffline;
+
+  /// No description provided for @attachmentsCamera.
+  ///
+  /// In de, this message translates to:
+  /// **'Foto aufnehmen'**
+  String get attachmentsCamera;
+
+  /// No description provided for @attachmentsPhotos.
+  ///
+  /// In de, this message translates to:
+  /// **'Aus Fotos wählen'**
+  String get attachmentsPhotos;
+
+  /// No description provided for @attachmentsPdf.
+  ///
+  /// In de, this message translates to:
+  /// **'PDF wählen'**
+  String get attachmentsPdf;
+
+  /// No description provided for @attachmentsNeedsPlus.
+  ///
+  /// In de, this message translates to:
+  /// **'Belege hinzufügen geht mit Plus und Bearbeiten-Rechten.'**
+  String get attachmentsNeedsPlus;
+
+  /// No description provided for @attachmentsTooLarge.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Datei ist größer als 20 MB.'**
+  String get attachmentsTooLarge;
+
+  /// No description provided for @attachmentsQuota.
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Speicher für Belege ist voll (5 GB).'**
+  String get attachmentsQuota;
+
+  /// No description provided for @attachmentsType.
+  ///
+  /// In de, this message translates to:
+  /// **'Nur Fotos (JPEG, PNG, HEIC) und PDFs.'**
+  String get attachmentsType;
+
+  /// No description provided for @attachmentsNotSynced.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Eintrag ist noch nicht gesendet – gleich noch mal versuchen.'**
+  String get attachmentsNotSynced;
+
+  /// No description provided for @attachmentsNoAccess.
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Zugriff – erlaube Kamera oder Fotos in den Einstellungen.'**
+  String get attachmentsNoAccess;
+
+  /// No description provided for @attachmentsPhotoTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Foto'**
+  String get attachmentsPhotoTitle;
+
+  /// No description provided for @attachmentsPdfTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'PDF'**
+  String get attachmentsPdfTitle;
+
+  /// No description provided for @attachmentsShare.
+  ///
+  /// In de, this message translates to:
+  /// **'Teilen'**
+  String get attachmentsShare;
+
+  /// No description provided for @attachmentsOpenPdf.
+  ///
+  /// In de, this message translates to:
+  /// **'Öffnen oder sichern'**
+  String get attachmentsOpenPdf;
+
+  /// No description provided for @attachmentsDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Beleg löschen?'**
+  String get attachmentsDeleteTitle;
+
+  /// No description provided for @attachmentsDeleteBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Datei wird für alle gelöscht, die die Kategorie sehen.'**
+  String get attachmentsDeleteBody;
+
+  /// No description provided for @entryPeriod.
+  ///
+  /// In de, this message translates to:
+  /// **'Abrechnungszeitraum'**
+  String get entryPeriod;
+
+  /// No description provided for @entryPeriodFrom.
+  ///
+  /// In de, this message translates to:
+  /// **'Von'**
+  String get entryPeriodFrom;
+
+  /// No description provided for @entryPeriodTo.
+  ///
+  /// In de, this message translates to:
+  /// **'Bis'**
+  String get entryPeriodTo;
+
+  /// No description provided for @entryPeriodHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Nachzahlung oder Guthaben für einen Zeitraum: Der Betrag verteilt sich auf dessen Tage statt auf den Stichtag.'**
+  String get entryPeriodHint;
+
+  /// No description provided for @entryPeriodInvalid.
+  ///
+  /// In de, this message translates to:
+  /// **'Das Ende liegt vor dem Anfang.'**
+  String get entryPeriodInvalid;
+
+  /// No description provided for @exportCategory.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie'**
+  String get exportCategory;
+
+  /// No description provided for @exportTracker.
+  ///
+  /// In de, this message translates to:
+  /// **'Tracker'**
+  String get exportTracker;
+
+  /// No description provided for @exportField.
+  ///
+  /// In de, this message translates to:
+  /// **'Feld'**
+  String get exportField;
+
+  /// No description provided for @exportValue.
+  ///
+  /// In de, this message translates to:
+  /// **'Wert'**
+  String get exportValue;
+
+  /// No description provided for @exportUnit.
+  ///
+  /// In de, this message translates to:
+  /// **'Einheit'**
+  String get exportUnit;
+
+  /// No description provided for @exportNote.
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz'**
+  String get exportNote;
+
+  /// No description provided for @exportSubject.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenkurve-Export'**
+  String get exportSubject;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Export ging nicht – bist du online?'**
+  String get exportFailed;
+
+  /// No description provided for @legalPrivacy.
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutz'**
+  String get legalPrivacy;
+
+  /// No description provided for @legalTerms.
+  ///
+  /// In de, this message translates to:
+  /// **'Nutzungsbedingungen'**
+  String get legalTerms;
+
+  /// No description provided for @legalImprint.
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum'**
+  String get legalImprint;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Kosten.\nEine Kurve.'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Zählerstände, Verträge und Abschläge an einem Ort – mit Verlauf und Prognose fürs nächste Jahr.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingPointTrack.
+  ///
+  /// In de, this message translates to:
+  /// **'Erfassen in Sekunden'**
+  String get onboardingPointTrack;
+
+  /// No description provided for @onboardingPointTrackBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Strom, Gas, Wasser, Miete – mit eigenen Feldern und Formeln.'**
+  String get onboardingPointTrackBody;
+
+  /// No description provided for @onboardingPointForecast.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Nachzahlung mehr'**
+  String get onboardingPointForecast;
+
+  /// No description provided for @onboardingPointForecastBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Prognose mit Spanne und Abschlags-Check.'**
+  String get onboardingPointForecastBody;
+
+  /// No description provided for @onboardingPointShare.
+  ///
+  /// In de, this message translates to:
+  /// **'Gemeinsam im Haushalt'**
+  String get onboardingPointShare;
+
+  /// No description provided for @onboardingPointShareBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Teile Kategorien mit deinem Partner.'**
+  String get onboardingPointShareBody;
+
+  /// No description provided for @onboardingStart.
+  ///
+  /// In de, this message translates to:
+  /// **'Los geht\'s'**
+  String get onboardingStart;
+
+  /// No description provided for @onboardingTemplatesTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Was möchtest du verfolgen?'**
+  String get onboardingTemplatesTitle;
+
+  /// No description provided for @onboardingTemplatesBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle Vorlagen – Felder kannst du später jederzeit anpassen.'**
+  String get onboardingTemplatesBody;
+
+  /// No description provided for @onboardingCreate.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Kategorie anlegen} other{{count} Kategorien anlegen}}'**
+  String onboardingCreate(int count);
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Vorlage weiter'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingSelected.
+  ///
+  /// In de, this message translates to:
+  /// **'Ausgewählt'**
+  String get onboardingSelected;
+
+  /// No description provided for @onboardingRemindersTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Nichts vergessen'**
+  String get onboardingRemindersTitle;
+
+  /// No description provided for @onboardingRemindersBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Wir erinnern dich ans Ablesen und an Kündigungsfristen – auf deinem Gerät, ohne Werbung.'**
+  String get onboardingRemindersBody;
+
+  /// No description provided for @onboardingRemindersAllow.
+  ///
+  /// In de, this message translates to:
+  /// **'Erinnerungen erlauben'**
+  String get onboardingRemindersAllow;
+
+  /// No description provided for @onboardingLater.
+  ///
+  /// In de, this message translates to:
+  /// **'Später'**
+  String get onboardingLater;
+
+  /// No description provided for @plusTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenkurve Plus'**
+  String get plusTitle;
+
+  /// No description provided for @plusSubtitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Belege da, wo die Kosten sind.'**
+  String get plusSubtitle;
+
+  /// No description provided for @plusBenefitReceipts.
+  ///
+  /// In de, this message translates to:
+  /// **'Belege am Eintrag'**
+  String get plusBenefitReceipts;
+
+  /// No description provided for @plusBenefitReceiptsBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Rechnungen, Verträge und Zählerfotos als Foto oder PDF.'**
+  String get plusBenefitReceiptsBody;
+
+  /// No description provided for @plusBenefitStorage.
+  ///
+  /// In de, this message translates to:
+  /// **'5 GB Speicher'**
+  String get plusBenefitStorage;
+
+  /// No description provided for @plusBenefitStorageBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Sicher gespeichert und auf jedem Gerät da.'**
+  String get plusBenefitStorageBody;
+
+  /// No description provided for @plusBenefitShared.
+  ///
+  /// In de, this message translates to:
+  /// **'Für den ganzen Haushalt'**
+  String get plusBenefitShared;
+
+  /// No description provided for @plusBenefitSharedBody.
+  ///
+  /// In de, this message translates to:
+  /// **'In geteilten Kategorien sieht dein Partner die Belege – ohne eigenes Abo.'**
+  String get plusBenefitSharedBody;
+
+  /// No description provided for @plusYearly.
+  ///
+  /// In de, this message translates to:
+  /// **'Jährlich'**
+  String get plusYearly;
+
+  /// No description provided for @plusMonthly.
+  ///
+  /// In de, this message translates to:
+  /// **'Monatlich'**
+  String get plusMonthly;
+
+  /// No description provided for @plusPerYear.
+  ///
+  /// In de, this message translates to:
+  /// **'{price}/Jahr'**
+  String plusPerYear(String price);
+
+  /// No description provided for @plusPerMonth.
+  ///
+  /// In de, this message translates to:
+  /// **'{price}/Monat'**
+  String plusPerMonth(String price);
+
+  /// No description provided for @plusYearlyDetail.
+  ///
+  /// In de, this message translates to:
+  /// **'{price} pro Monat, jährlich abgerechnet'**
+  String plusYearlyDetail(String price);
+
+  /// No description provided for @plusMonthlyDetail.
+  ///
+  /// In de, this message translates to:
+  /// **'Monatlich kündbar'**
+  String get plusMonthlyDetail;
+
+  /// No description provided for @plusSave.
+  ///
+  /// In de, this message translates to:
+  /// **'Spare {percent} %'**
+  String plusSave(int percent);
+
+  /// No description provided for @plusSubscribe.
+  ///
+  /// In de, this message translates to:
+  /// **'Abo starten'**
+  String get plusSubscribe;
+
+  /// No description provided for @plusFinePrint.
+  ///
+  /// In de, this message translates to:
+  /// **'Verlängert sich automatisch, wenn du nicht mindestens 24 Stunden vor Ablauf kündigst. Abgerechnet über deinen Apple-Account, kündbar in dessen Einstellungen.'**
+  String get plusFinePrint;
+
+  /// No description provided for @plusRestore.
+  ///
+  /// In de, this message translates to:
+  /// **'Käufe wiederherstellen'**
+  String get plusRestore;
+
+  /// No description provided for @plusAppleEula.
+  ///
+  /// In de, this message translates to:
+  /// **'Lizenzvertrag (EULA)'**
+  String get plusAppleEula;
+
+  /// No description provided for @plusWelcome.
+  ///
+  /// In de, this message translates to:
+  /// **'Willkommen bei Plus'**
+  String get plusWelcome;
+
+  /// No description provided for @plusNothingToRestore.
+  ///
+  /// In de, this message translates to:
+  /// **'Kein aktives Abo gefunden.'**
+  String get plusNothingToRestore;
+
+  /// No description provided for @plusPending.
+  ///
+  /// In de, this message translates to:
+  /// **'Kauf wartet auf Freigabe.'**
+  String get plusPending;
+
+  /// No description provided for @plusFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Kauf ging nicht – bitte später noch mal.'**
+  String get plusFailed;
+
+  /// No description provided for @plusOtherAccount.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Abo gehört zu einem anderen Kostenkurve-Konto. Melde dich dort an (Einstellungen › Konto).'**
+  String get plusOtherAccount;
+
+  /// No description provided for @plusUnavailable.
+  ///
+  /// In de, this message translates to:
+  /// **'Abos sind gerade nicht erreichbar. Prüfe deine Verbindung und versuch es später noch mal.'**
+  String get plusUnavailable;
+
+  /// No description provided for @plusOnlyIos.
+  ///
+  /// In de, this message translates to:
+  /// **'Plus schließt du derzeit in der iPhone-App ab – es gilt dann auch hier.'**
+  String get plusOnlyIos;
+
+  /// No description provided for @plusActive.
+  ///
+  /// In de, this message translates to:
+  /// **'Plus ist aktiv.'**
+  String get plusActive;
+
+  /// No description provided for @plusActiveUntil.
+  ///
+  /// In de, this message translates to:
+  /// **'Plus ist aktiv – verlängert sich am {date}.'**
+  String plusActiveUntil(String date);
+
+  /// No description provided for @plusManage.
+  ///
+  /// In de, this message translates to:
+  /// **'Abo verwalten'**
+  String get plusManage;
+
+  /// No description provided for @plusBadge.
+  ///
+  /// In de, this message translates to:
+  /// **'Plus'**
+  String get plusBadge;
+
+  /// No description provided for @plusBadgeActive.
+  ///
+  /// In de, this message translates to:
+  /// **'Aktiv'**
+  String get plusBadgeActive;
+
+  /// No description provided for @settingsAccountAnonymous.
+  ///
+  /// In de, this message translates to:
+  /// **'Nur auf diesem Gerät – jetzt sichern'**
+  String get settingsAccountAnonymous;
+
+  /// No description provided for @settingsPlusHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Belege für Rechnungen und Verträge'**
+  String get settingsPlusHint;
+
+  /// No description provided for @settingsStorage.
+  ///
+  /// In de, this message translates to:
+  /// **'{used} von {total} belegt'**
+  String settingsStorage(String used, String total);
+
+  /// No description provided for @settingsData.
+  ///
+  /// In de, this message translates to:
+  /// **'Daten'**
+  String get settingsData;
+
+  /// No description provided for @settingsExport.
+  ///
+  /// In de, this message translates to:
+  /// **'Daten exportieren'**
+  String get settingsExport;
+
+  /// No description provided for @settingsExportFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Kategorien und Einträge als CSV (für Tabellen) und JSON.'**
+  String get settingsExportFooter;
+
+  /// No description provided for @settingsLegal.
+  ///
+  /// In de, this message translates to:
+  /// **'Rechtliches'**
+  String get settingsLegal;
+
+  /// No description provided for @whatIfTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Was wäre wenn …'**
+  String get whatIfTitle;
+
+  /// No description provided for @whatIfRowHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Preise durchspielen, z. B. vor einem Wechsel'**
+  String get whatIfRowHint;
+
+  /// No description provided for @whatIfBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag neue Preise ein – sie gelten ab 1. Januar. Die Prognose für {year} rechnet mit deinem Verbrauch.'**
+  String whatIfBody(String year);
+
+  /// No description provided for @whatIfCurrent.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute: {value}'**
+  String whatIfCurrent(String value);
+
+  /// No description provided for @whatIfDelta.
+  ///
+  /// In de, this message translates to:
+  /// **'{change} ggü. {before} mit heutigen Preisen'**
+  String whatIfDelta(String change, String before);
+
+  /// No description provided for @whatIfSame.
+  ///
+  /// In de, this message translates to:
+  /// **'Wie mit heutigen Preisen'**
+  String get whatIfSame;
+
+  /// No description provided for @whatIfEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Für Was-wäre-wenn braucht es einen Tracker mit Arbeitspreis oder festen Kosten.'**
+  String get whatIfEmpty;
 }
 
 class _AppLocalizationsDelegate

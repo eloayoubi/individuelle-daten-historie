@@ -3,11 +3,14 @@ import 'package:flutter/cupertino.dart';
 import '../../../core/core.dart';
 import '../data/category_templates.dart';
 
-/// Ergebnis der Auswahl: eine Vorlage oder `template == null` für eine eigene Kategorie.
+/// Ergebnis der Auswahl: eine Vorlage, `template == null` für eine eigene Kategorie oder [join].
 class AddCategoryChoice {
-  const AddCategoryChoice(this.template);
+  const AddCategoryChoice(this.template, {this.join = false});
 
   final CategoryTemplate? template;
+
+  /// Einladung annehmen statt anlegen.
+  final bool join;
 }
 
 /// „Neue Kategorie“: eigene oder aus einer der Startvorlagen.
@@ -33,6 +36,12 @@ class AddCategorySheet extends StatelessWidget {
               title: l10n.newCategoryCustom,
               subtitle: l10n.newCategoryCustomHint,
               onTap: () => Navigator.of(context).pop(const AddCategoryChoice(null)),
+            ),
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.person_2_fill, color: c.swatch(CategorySwatch.teal)),
+              title: l10n.joinTitle,
+              subtitle: l10n.joinRowHint,
+              onTap: () => Navigator.of(context).pop(const AddCategoryChoice(null, join: true)),
             ),
           ],
         ),

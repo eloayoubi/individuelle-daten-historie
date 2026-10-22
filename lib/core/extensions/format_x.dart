@@ -14,6 +14,9 @@ extension FormatX on BuildContext {
   /// Euro mit Cent, für einzelne Beträge.
   String eurosExact(double value) => NumberFormat.currency(locale: _locale, symbol: '€', decimalDigits: 2).format(value);
 
+  /// Preis aus dem Store in seiner Währung (`1,67 €`), z. B. das Jahresabo je Monat.
+  String price(double value, String? currency) => NumberFormat.simpleCurrency(locale: _locale, name: currency ?? 'EUR').format(value);
+
   /// Menge mit Einheit, z. B. `1.912 kWh`.
   String amount(double value, String unit, {int decimals = 0}) {
     final number = NumberFormat.decimalPatternDigits(locale: _locale, decimalDigits: decimals).format(value);
@@ -28,6 +31,16 @@ extension FormatX on BuildContext {
       1 => '+$text',
       -1 => '−$text',
       _ => text,
+    };
+  }
+
+  /// Dateigröße: `840 KB`, `2,4 MB`, `1,2 GB`.
+  String fileSize(int bytes) {
+    const kb = 1024, mb = kb * 1024, gb = mb * 1024;
+    return switch (bytes) {
+      < mb => amount(bytes / kb, 'KB'),
+      < gb => amount(bytes / mb, 'MB', decimals: 1),
+      _ => amount(bytes / gb, 'GB', decimals: 1),
     };
   }
 

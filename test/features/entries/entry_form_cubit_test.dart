@@ -101,6 +101,42 @@ void main() {
     },
   );
 
+  group('Abrechnungszeitraum', () {
+    final miete = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-miete');
+    final wohnung = miete.trackers.single;
+    EntryFormCubit rent({Entry? entry}) => EntryFormCubit(repo, EntryFormArgs(category: miete, tracker: wohnung, entry: entry), now: now);
+
+    test('nur mit Einmalkosten-Feld; an = Vorjahr', () {
+      expect(form().state.hasOneOff, isFalse);
+      final cubit = rent()..setPeriodEnabled(true);
+      expect(cubit.state.hasOneOff, isTrue);
+      expect(cubit.state.periodStart, DateTime.utc(2025));
+      expect(cubit.state.periodEnd, DateTime.utc(2025, 12, 31));
+      cubit.setPeriodEnabled(false);
+      expect(cubit.state.hasPeriod, isFalse);
+    });
+
+    test('landet im Eintrag, Ende vor Anfang blockiert', () {
+      final cubit = rent()
+        ..setText('f-miete-abrechnung', '-62')
+        ..setPeriodEnabled(true)
+        ..setPeriodStart(DateTime(2025, 3, 1));
+      expect(cubit.state.toEntry().periodStart, DateTime.utc(2025, 3));
+      expect(cubit.state.toEntry().periodEnd, DateTime.utc(2025, 12, 31));
+      expect(cubit.state.canSave, isTrue);
+      cubit.setPeriodEnd(DateTime(2025, 2, 1));
+      expect(cubit.state.periodInvalid, isTrue);
+      expect(cubit.state.canSave, isFalse);
+    });
+
+    test('Bearbeiten behält den gespeicherten Zeitraum', () {
+      final settlement = wohnung.entries.firstWhere((e) => e.id == 'e-miete-2');
+      final cubit = rent(entry: settlement)..setNote('geprüft');
+      expect(cubit.state.toEntry().periodStart, settlement.periodStart);
+      expect(cubit.state.toEntry().periodEnd, settlement.periodEnd);
+    });
+  });
+
   blocTest<EntryFormCubit, EntryFormState>(
     'löscht einen vorhandenen Eintrag',
     build: () => form(entry: strom.trackers.single.entries.last),

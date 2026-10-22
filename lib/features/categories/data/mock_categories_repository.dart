@@ -116,6 +116,78 @@ class MockCategoriesRepository implements CategoriesRepository {
   Future<void> deleteEntry(String trackerId, String entryId) async =>
       _updateTracker(trackerId, (t) => t.copyWith(entries: [...t.entries.where((e) => e.id != entryId)]));
 
+  /// Ein Code, den der Mock-Modus annimmt: legt eine von Anna geteilte Kategorie an.
+  static const demoInvite = 'K7Q2M9X4TA';
+
+  @override
+  Future<String> createInvite(String categoryId, MemberRole role) async => demoInvite;
+
+  @override
+  Future<String> acceptInvite(String code) async {
+    if (code.trim().toUpperCase() != demoInvite) throw const WriteRejected('invalid_invite');
+    final existing = _items.where((c) => c.id == 'c-ferien').firstOrNull;
+    if (existing != null) return existing.id;
+    const owner = CategoryMember(userId: '00000000-0000-4000-8000-000000000002', name: 'Anna', role: MemberRole.owner);
+    _items.add(
+      Category(
+        id: 'c-ferien',
+        name: 'Ferienwohnung',
+        icon: CategoryIcon.house,
+        swatch: CategorySwatch.teal,
+        myRole: MemberRole.viewer,
+        sharedWith: const [owner],
+        trackers: [
+          Tracker(
+            id: 't-ferien',
+            name: 'Strom Ostsee',
+            fields: const [FieldDefinition(id: 'f-ferien-stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh')],
+            entries: _readings('e-ferien', 'f-ferien-stand', start: 8120, yearly: const {2024: 900, 2025: 880, 2026: 870}, season: _flat, until: _d(2026, 9, 3)),
+          ),
+        ],
+      ),
+    );
+    _changed();
+    return 'c-ferien';
+  }
+
+  @override
+  Future<void> setMemberRole(String categoryId, String userId, MemberRole role) async => _updateCategory(
+    categoryId,
+    (c) => Category(
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+      swatch: c.swatch,
+      trackers: c.trackers,
+      myRole: c.myRole,
+      templateKey: c.templateKey,
+      archivedAt: c.archivedAt,
+      sharedWith: [for (final m in c.sharedWith) m.userId == userId ? CategoryMember(userId: m.userId, name: m.name, role: role) : m],
+    ),
+  );
+
+  @override
+  Future<void> removeMember(String categoryId, String userId) async => _updateCategory(
+    categoryId,
+    (c) => Category(
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+      swatch: c.swatch,
+      trackers: c.trackers,
+      myRole: c.myRole,
+      templateKey: c.templateKey,
+      archivedAt: c.archivedAt,
+      sharedWith: [...c.sharedWith.where((m) => m.userId != userId)],
+    ),
+  );
+
+  @override
+  Future<void> leaveCategory(String categoryId) async {
+    _items.removeWhere((c) => c.id == categoryId);
+    _changed();
+  }
+
   @override
   SyncState get syncState => const SyncState();
 
@@ -250,10 +322,24 @@ class MockCategoriesRepository implements CategoriesRepository {
     ],
     entries: [
       Entry(id: 'e-miete-1', date: _d(2024, 1, 1), values: const {'f-miete-kalt': 890, 'f-miete-nk': 210}),
-      Entry(id: 'e-miete-2', date: _d(2025, 5, 20), values: const {'f-miete-abrechnung': 148}, note: 'Nebenkostenabrechnung 2024'),
+      Entry(
+        id: 'e-miete-2',
+        date: _d(2025, 5, 20),
+        values: const {'f-miete-abrechnung': 148},
+        note: 'Nebenkostenabrechnung 2024',
+        periodStart: _d(2024, 1, 1),
+        periodEnd: _d(2024, 12, 31),
+      ),
       Entry(id: 'e-miete-3', date: _d(2025, 7, 1), values: const {'f-miete-kalt': 920}, note: 'Mieterhöhung nach Mietspiegel'),
       Entry(id: 'e-miete-4', date: _d(2026, 1, 1), values: const {'f-miete-nk': 235}),
-      Entry(id: 'e-miete-5', date: _d(2026, 5, 18), values: const {'f-miete-abrechnung': -62}, note: 'Nebenkostenabrechnung 2025'),
+      Entry(
+        id: 'e-miete-5',
+        date: _d(2026, 5, 18),
+        values: const {'f-miete-abrechnung': -62},
+        note: 'Nebenkostenabrechnung 2025',
+        periodStart: _d(2025, 1, 1),
+        periodEnd: _d(2025, 12, 31),
+      ),
     ],
   );
 

@@ -82,6 +82,9 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   TextStyle get numberL => _display(22, _bold, height: 1.15, spacing: -0.3, tabular: true);
   TextStyle get numberM => _text(17, _semibold, spacing: -0.2, tabular: true);
 
+  /// Einladungscodes: groß, gesperrt, gleich breite Zeichen.
+  TextStyle get code => _display(28, _bold, height: 1.2, spacing: 4, tabular: true);
+
   /// Grundlage für das Material-[TextTheme], damit auch Standard-Widgets (Dialoge, Snackbars,
   /// Textfelder) die App-Schrift nutzen.
   TextTheme toTextTheme() => TextTheme(

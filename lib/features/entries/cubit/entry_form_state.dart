@@ -19,6 +19,8 @@ class EntryFormState extends Equatable {
     this.inputs = const {},
     this.note = '',
     this.meterChange = false,
+    this.periodStart,
+    this.periodEnd,
     this.saving = false,
     this.event,
   });
@@ -33,6 +35,8 @@ class EntryFormState extends Equatable {
       decimalSeparator: args.decimalSeparator,
       note: entry?.note ?? '',
       meterChange: entry?.meterChange ?? false,
+      periodStart: entry?.periodStart,
+      periodEnd: entry?.periodEnd,
       inputs: {
         for (final MapEntry(:key, :value) in (entry?.values ?? const <String, Object>{}).entries)
           key: value is num ? formatNumberInput(value, decimalSeparator: args.decimalSeparator) : value,
@@ -56,6 +60,11 @@ class EntryFormState extends Equatable {
   final Map<String, Object?> inputs;
   final String note;
   final bool meterChange;
+
+  /// Abrechnungszeitraum einer Einmalzahlung (z. B. Nachzahlung für 2025): Die Kosten verteilen
+  /// sich über diese Tage statt auf den Stichtag. Beide `null` = kein Zeitraum.
+  final DateTime? periodStart;
+  final DateTime? periodEnd;
   final bool saving;
   final EntryFormEvent? event;
 
@@ -63,6 +72,13 @@ class EntryFormState extends Equatable {
   List<FieldDefinition> get fields => [for (final f in tracker.fields) if (f.kind != FieldKind.formula) f];
 
   bool get hasMeter => tracker.firstWithRole(FieldRole.meterReading) != null;
+
+  /// Nur mit Einmalkosten-Feld gibt es einen Abrechnungszeitraum.
+  bool get hasOneOff => tracker.firstWithRole(FieldRole.oneOffCost) != null;
+
+  bool get hasPeriod => periodStart != null && periodEnd != null;
+
+  bool get periodInvalid => hasPeriod && periodEnd!.isBefore(periodStart!);
 
   /// Gespeicherter Wert des Felds, `null` bei leerer oder ungültiger Eingabe.
   Object? valueOf(FieldDefinition f) => switch ((f.kind, inputs[f.id])) {
@@ -84,7 +100,7 @@ class EntryFormState extends Equatable {
       if (valueOf(f) case final Object v) f.id: v,
   };
 
-  bool get canSave => !saving && values.isNotEmpty && invalid.isEmpty;
+  bool get canSave => !saving && values.isNotEmpty && invalid.isEmpty && !periodInvalid;
 
   /// Letzter Wert des Felds vor diesem Datum (ohne diesen Eintrag).
   (DateTime, Object)? previous(FieldDefinition f) {
@@ -116,22 +132,34 @@ class EntryFormState extends Equatable {
     values: values,
     note: note.trim().isEmpty ? null : note.trim(),
     meterChange: hasMeter && meterChange,
+    periodStart: hasOneOff && hasPeriod ? periodStart : null,
+    periodEnd: hasOneOff && hasPeriod ? periodEnd : null,
   );
 
-  EntryFormState copyWith({DateTime? date, Map<String, Object?>? inputs, String? note, bool? meterChange, bool? saving, EntryFormEvent? event}) =>
-      EntryFormState(
-        tracker: tracker,
-        entryId: entryId,
-        isNew: isNew,
-        date: date ?? this.date,
-        decimalSeparator: decimalSeparator,
-        inputs: inputs ?? this.inputs,
-        note: note ?? this.note,
-        meterChange: meterChange ?? this.meterChange,
-        saving: saving ?? this.saving,
-        event: event,
-      );
+  /// [period] ersetzt beide Grenzen (auch durch `null`), ohne bleibt der Zeitraum.
+  EntryFormState copyWith({
+    DateTime? date,
+    Map<String, Object?>? inputs,
+    String? note,
+    bool? meterChange,
+    ({DateTime? start, DateTime? end})? period,
+    bool? saving,
+    EntryFormEvent? event,
+  }) => EntryFormState(
+    tracker: tracker,
+    entryId: entryId,
+    isNew: isNew,
+    date: date ?? this.date,
+    decimalSeparator: decimalSeparator,
+    inputs: inputs ?? this.inputs,
+    note: note ?? this.note,
+    meterChange: meterChange ?? this.meterChange,
+    periodStart: period == null ? periodStart : period.start,
+    periodEnd: period == null ? periodEnd : period.end,
+    saving: saving ?? this.saving,
+    event: event,
+  );
 
   @override
-  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, inputs, note, meterChange, saving, event];
+  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, inputs, note, meterChange, periodStart, periodEnd, saving, event];
 }

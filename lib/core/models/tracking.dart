@@ -115,7 +115,16 @@ class FieldDefinition extends Equatable {
 
 /// Ein Eintrag zu einem Datum; trägt Werte für einige oder alle Felder des [Tracker]s.
 class Entry extends Equatable {
-  const Entry({required this.id, required this.date, this.values = const {}, this.note, this.meterChange = false});
+  const Entry({
+    required this.id,
+    required this.date,
+    this.values = const {},
+    this.note,
+    this.meterChange = false,
+    this.periodStart,
+    this.periodEnd,
+    this.createdBy,
+  });
 
   final String id;
 
@@ -130,6 +139,16 @@ class Entry extends Equatable {
   /// Neuer Zähler ab diesem Eintrag: Der Verbrauch seit dem letzten Stand ist unbekannt.
   final bool meterChange;
 
+  /// Abrechnungszeitraum (z. B. Nebenkosten 2025, gezahlt 2026): Einmalige Beträge werden auf
+  /// diese Tage verteilt statt auf den Zahltag.
+  final DateTime? periodStart;
+  final DateTime? periodEnd;
+
+  /// Nutzer-Id, wer den Eintrag erfasst hat (nur aus Supabase).
+  final String? createdBy;
+
+  bool get hasPeriod => periodStart != null && periodEnd != null && !periodEnd!.isBefore(periodStart!);
+
   num? number(String fieldId) => switch (values[fieldId]) {
     final num n => n,
     _ => null,
@@ -140,8 +159,19 @@ class Entry extends Equatable {
     _ => null,
   };
 
+  Entry copyWith({Map<String, Object>? values}) => Entry(
+    id: id,
+    date: date,
+    values: values ?? this.values,
+    note: note,
+    meterChange: meterChange,
+    periodStart: periodStart,
+    periodEnd: periodEnd,
+    createdBy: createdBy,
+  );
+
   @override
-  List<Object?> get props => [id, date, values, note, meterChange];
+  List<Object?> get props => [id, date, values, note, meterChange, periodStart, periodEnd, createdBy];
 }
 
 /// Etwas, das verfolgt wird – ein Zähler, ein Vertrag, ein Auto – mit eigenen Feldern und Einträgen.

@@ -61,7 +61,8 @@ void main() {
       expect((error('2 # 3').kind, error('2 # 3').position), (FormulaErrorKind.unexpectedCharacter, 2));
       expect(error('(1 + 2').kind, FormulaErrorKind.missingParenthesis);
       expect(error('1 + 2)').kind, FormulaErrorKind.unexpectedToken);
-      expect(error('summe(1)').kind, FormulaErrorKind.unknownFunction);
+      expect(error('teile(1)').kind, FormulaErrorKind.unknownFunction);
+      expect(error('summe(3; 30)').kind, FormulaErrorKind.argumentCount);
       expect(error('wenn(1; 2)').kind, FormulaErrorKind.argumentCount);
       expect(error('1 < 2 < 3').kind, FormulaErrorKind.unexpectedToken);
       expect(error('${'(' * 60}1${')' * 60}').kind, FormulaErrorKind.tooDeep);
@@ -119,6 +120,24 @@ void main() {
       expect(check.error!.position, 8);
       expect(Formulas.check('liter / verbrauch * 100', golf).isValid, isTrue);
       expect(Formulas.check('liter / consumption * 100', golf).isValid, isTrue);
+    });
+
+    test('summe und schnitt über die letzten Tage bis zum Eintrag', () {
+      final tank = Formulas.apply(
+        golf.copyWith(
+          fields: [
+            ...golf.fields,
+            const FieldDefinition(id: 'f-monat', name: 'Monat', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'summe(tanken; 30)'),
+            const FieldDefinition(id: 'f-schnitt', name: 'Schnitt', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'schnitt(liter; 365)'),
+          ],
+        ),
+      );
+      final entry = tank.entries.firstWhere((e) => e.id == 'e-golf-10');
+      // Alle 21 Tage getankt: in 30 Tagen bis zum Eintrag zwei Tankfüllungen.
+      final previous = golf.entries.firstWhere((e) => e.id == 'e-golf-9').values['f-golf-tanken']! as num;
+      final own = entry.values['f-golf-tanken']! as num;
+      expect(entry.values['f-monat'], closeTo(previous + own, 1e-9));
+      expect(entry.values['f-schnitt'], inInclusiveRange(34.5, 40.5));
     });
 
     test('Vorschau rechnet mit dem neuesten passenden Eintrag', () {

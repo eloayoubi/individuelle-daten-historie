@@ -3,10 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../account/cubit/account_cubit.dart';
+import '../../account/view/account_page.dart';
+import '../../attachments/data/attachments_repository.dart';
+import '../../categories/data/categories_repository.dart';
+import '../../legal/data/legal_document.dart';
+import '../../legal/view/legal_page.dart';
+import '../../plus/cubit/plus_cubit.dart';
+import '../../plus/view/paywall_page.dart';
 import '../../reminders/cubit/reminders_cubit.dart';
 import '../cubit/appearance_cubit.dart';
+import '../data/data_export.dart';
 
-/// Einstellungen: Darstellung (Automatisch / Hell / Dunkel), Erinnerungen und ein Satz zur App.
+/// Einstellungen: Konto und Plus, Darstellung (Automatisch / Hell / Dunkel), Erinnerungen,
+/// Datenexport, Rechtliches und ein Satz zur App.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -18,6 +28,7 @@ class SettingsPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: Spacing.tabBarClearance),
       children: [
         AppHeader(title: l10n.tabSettings),
+        const _AccountGroup(),
         SectionHeader(title: l10n.settingsAppearance),
         Padding(
           padding: Spacing.screen,
@@ -59,12 +70,133 @@ class SettingsPage extends StatelessWidget {
             ],
           ),
         ),
+        SectionHeader(title: l10n.settingsData),
+        AppListGroup(footer: l10n.settingsExportFooter, children: const [_ExportRow()]),
+        SectionHeader(title: l10n.settingsLegal),
+        AppListGroup(
+          children: [
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.hand_raised_fill, color: c.accent),
+              title: l10n.legalPrivacy,
+              onTap: () => LegalPage.open(context, LegalDocument.privacy),
+            ),
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.doc_text_fill, color: c.textSecondary),
+              title: l10n.legalTerms,
+              onTap: () => LegalPage.open(context, LegalDocument.terms),
+            ),
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.info_circle_fill, color: c.textSecondary),
+              title: l10n.legalImprint,
+              onTap: () => LegalPage.open(context, LegalDocument.imprint),
+            ),
+          ],
+        ),
         SectionHeader(title: l10n.settingsAbout),
         Padding(
           padding: Spacing.screen,
           child: AppCard(child: AppText(l10n.settingsAboutBody, style: (t) => t.subheadline, color: c.textSecondary)),
         ),
       ],
+    );
+  }
+}
+
+/// Konto (anonym oder gesichert) und Kostenkurve Plus mit belegtem Speicher.
+class _AccountGroup extends StatelessWidget {
+  const _AccountGroup();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final account = context.select((AccountCubit a) => a.state.account);
+    final plus = context.watch<PlusCubit>().state;
+    return AppListGroup(
+      children: [
+        AppListRow(
+          leading: AppIconTile(icon: CupertinoIcons.person_crop_circle_fill, color: account.isAnonymous ? c.warning : c.success),
+          title: account.displayName.isEmpty ? l10n.accountTitle : account.displayName,
+          subtitle: account.isAnonymous ? l10n.settingsAccountAnonymous : (account.email ?? l10n.accountSecuredTitle),
+          onTap: () => AccountPage.open(context),
+        ),
+        AppListRow(
+          leading: AppIconTile(icon: CupertinoIcons.sparkles, color: c.accent),
+          title: l10n.plusTitle,
+          subtitleWidget: plus.active ? const _Usage() : null,
+          subtitle: plus.active ? null : l10n.settingsPlusHint,
+          trailing: plus.active ? AppChip(label: l10n.plusBadgeActive, background: c.accentSoft, foreground: c.accent) : null,
+          onTap: () => PaywallPage.open(context),
+        ),
+      ],
+    );
+  }
+}
+
+class _Usage extends StatelessWidget {
+  const _Usage();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return FutureBuilder(
+      future: lookup<AttachmentsRepository>().usage(),
+      builder: (context, snap) => AppText(
+        context.l10n.settingsStorage(context.fileSize(snap.data ?? 0), context.fileSize(AttachmentsRepository.quotaBytes)),
+        style: (t) => t.footnote,
+        color: c.textSecondary,
+      ),
+    );
+  }
+}
+
+class _ExportRow extends StatefulWidget {
+  const _ExportRow();
+
+  @override
+  State<_ExportRow> createState() => _ExportRowState();
+}
+
+class _ExportRowState extends State<_ExportRow> {
+  var _busy = false;
+
+  Future<void> _export() async {
+    final l10n = context.l10n;
+    setState(() => _busy = true);
+    try {
+      final labels = ExportLabels(
+        header: [
+          l10n.exportCategory,
+          l10n.exportTracker,
+          l10n.entryDate,
+          l10n.exportField,
+          l10n.exportValue,
+          l10n.exportUnit,
+          l10n.exportNote,
+          l10n.entryPeriodFrom,
+          l10n.entryPeriodTo,
+        ],
+        yes: l10n.toggleYes,
+        no: l10n.toggleNo,
+        decimalSeparator: context.decimalSeparator,
+      );
+      final files = await DataExport.files(lookup<CategoriesRepository>(), labels);
+      if (mounted) await AppShare.files(context, files, subject: l10n.exportSubject);
+    } catch (_) {
+      if (mounted) AppToast.show(context, l10n.exportFailed, icon: CupertinoIcons.exclamationmark_circle_fill);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return AppListRow(
+      leading: AppIconTile(icon: CupertinoIcons.square_arrow_up_fill, color: c.success),
+      title: context.l10n.settingsExport,
+      trailing: _busy ? const CupertinoActivityIndicator() : null,
+      onTap: _busy ? null : _export,
     );
   }
 }

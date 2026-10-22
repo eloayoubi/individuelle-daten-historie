@@ -162,4 +162,19 @@ abstract interface class CategoriesRepository {
 
   /// Abgelehnte Einträge zur Kenntnis genommen.
   void acknowledgeRejected();
+
+  // Teilen (nur online)
+
+  /// Einladungscode für [categoryId] (nur owner), 7 Tage gültig, einmal einlösbar.
+  Future<String> createInvite(String categoryId, MemberRole role);
+
+  /// Code einlösen; liefert die Kategorie-Id. [WriteRejected], wenn er ungültig oder abgelaufen ist.
+  Future<String> acceptInvite(String code);
+
+  Future<void> setMemberRole(String categoryId, String userId, MemberRole role);
+
+  Future<void> removeMember(String categoryId, String userId);
+
+  /// Eine mit mir geteilte Kategorie verlassen.
+  Future<void> leaveCategory(String categoryId);
 }

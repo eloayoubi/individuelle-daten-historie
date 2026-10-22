@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/core.dart';
 import '../cubit/category_detail_cubit.dart';
 import '../../entries/view/tracker_page.dart';
+import '../../sharing/view/share_page.dart';
 import '../cubit/field_editor_cubit.dart';
 import 'field_editor_page.dart';
 import 'widgets/category_sheets.dart';
@@ -133,6 +134,7 @@ class _Content extends StatelessWidget {
           onBack: () => Navigator.of(context).pop(),
           actions: [
             AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch), size: Sizes.iconTileLarge),
+            AppIconButton(icon: CupertinoIcons.person_2_fill, semanticLabel: l10n.shareTitle, onPressed: () => SharePage.open(context, category.id)),
             if (editable) AppIconButton(icon: CupertinoIcons.pencil, semanticLabel: l10n.detailEditCategory, onPressed: () => _edit(context)),
           ],
         ),

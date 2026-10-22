@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
@@ -80,7 +82,7 @@ void main() {
     expect(repo.syncState, const SyncState(pending: 1));
     expect((await strom(repo)).entries.last, reading);
     expect((await strom(remote..online = true)).entries.where((e) => e.id == 'neu-1'), isEmpty);
-    expect(await queue.read(), hasLength(1));
+    expect((await queue.read())! as Map, containsPair('writes', hasLength(1)));
   });
 
   test('wird nachgesendet, sobald wieder Netz da ist – auch nach einem Neustart', () async {
@@ -95,7 +97,7 @@ void main() {
     expect(restarted.syncState, const SyncState());
     expect(remote.saves, 1);
     expect((await strom(remote)).entries.last.id, 'neu-1');
-    expect(await queue.read(), isEmpty);
+    expect((await queue.read())! as Map, containsPair('writes', isEmpty));
   });
 
   test('mehrfaches Senden schadet nicht: die Id kommt vom Gerät', () async {
@@ -130,6 +132,41 @@ void main() {
     expect(repo.syncState, const SyncState());
     await pumpEventQueue();
     expect(changes, isNotEmpty);
+  });
+
+  test('Cache und Warteschlange eines anderen Kontos gelten nicht', () async {
+    var user = 'a';
+    final mine = OfflineCategoriesRepository(remote, cache: cache, queue: queue, userId: () => user, retryEvery: const Duration(hours: 1));
+    await mine.loadCategories();
+    remote.online = false;
+    await mine.saveEntry('t-strom', reading);
+    await pumpEventQueue();
+    user = 'b';
+    final other = OfflineCategoriesRepository(remote, cache: cache, queue: queue, userId: () => user);
+    await expectLater(other.loadCategories(), throwsException);
+    expect(other.syncState.pending, 0);
+    // Wechsel während die App läuft: alter Stand wird verworfen.
+    await expectLater(mine.loadCategories(), throwsException);
+    expect(mine.syncState.pending, 0);
+  });
+
+  test('Kontowechsel über den Strom: alter Stand sofort weg, Ansichten laden neu', () async {
+    var user = 'a';
+    final switches = StreamController<Object?>();
+    final mine = OfflineCategoriesRepository(remote, cache: cache, queue: queue, userId: () => user, accountChanges: switches.stream);
+    await mine.loadCategories();
+    final changes = <void>[];
+    mine.changes.listen(changes.add);
+    // Gleiches Konto (z. B. Name geändert): nichts passiert.
+    switches.add(null);
+    await pumpEventQueue();
+    expect(changes, isEmpty);
+    user = 'b';
+    switches.add(null);
+    await pumpEventQueue();
+    expect(changes, hasLength(1));
+    expect(await cache.read(), isNull);
+    await switches.close();
   });
 
   test('Kategorien und Felder ändern geht direkt an den Server', () async {

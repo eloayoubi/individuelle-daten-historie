@@ -13,4 +13,10 @@ abstract final class AppConfig {
   /// Eigenes URL-Schema für Rücksprünge (Einladungslinks, Mail-Bestätigung).
   static const appScheme = 'de.eloayoubi.kostenkurve';
   static const authRedirect = '$appScheme://login-callback';
+
+  /// Apples Standard-Nutzungsvertrag (EULA) für Abos – Link auf der Abo-Seite.
+  static const appleEulaUrl = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+
+  /// Abos verwalten und kündigen (App Store).
+  static const manageSubscriptionsUrl = 'https://apps.apple.com/account/subscriptions';
 }
