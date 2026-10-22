@@ -40,7 +40,7 @@ lib/
     utils/cost_engine.dart  Verbrauch, Kosten und Prognose je Tracker, Tag für Tag
     widgets/             AppText, AppCard, AppButton, AppIconButton, AppChip, AppHeader, SectionHeader,
                          AppSheet, AppToast, PlaceholderPage, AppListGroup/AppListRow, AppIconTile,
-                         AppSegmented, AppPressable, GlassSurface
+                         AppSegmented, AppPressable, GlassSurface, AppTextField, AppSwitch, AppDialog
     network/             SupabaseApi (rpc, invoke, table, stream)
     config/              Werte aus --dart-define (SUPABASE_URL, SUPABASE_ANON_KEY)
   features/<feature>/
@@ -51,7 +51,17 @@ lib/
   l10n/                  app_de.arb (Vorlage), app_en.arb, generated/ (eingecheckt, vom Analyzer ausgeschlossen)
 ```
 
-Features heute: `shell` (Tab-Leiste, `ShellCubit`), `home` (Übersicht), `categories` (Daten), `settings` (Darstellung), `auth` (anonyme Anmeldung). Kategorien und Auswertung sind noch `PlaceholderPage`.
+Features heute:
+
+- `shell`: Tab-Leiste, `ShellCubit`.
+- `home`: Übersicht.
+- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite, Feld-Editor; dazu das Repository mit allen Schreibwegen.
+- `settings`: Darstellung.
+- `auth`: anonyme Anmeldung.
+
+Nur die Auswertung ist noch eine `PlaceholderPage`.
+
+Cubits mit Parameter (z. B. die Kategorie-Id) sind per `registerFactoryParam` registriert und kommen über `lookup<T>(param1: …)`. Nach jeder Änderung meldet `CategoriesRepository.changes` ein Ereignis, darauf laden Übersicht, Kategorien-Tab und Detailseite neu.
 
 **Mock oder Supabase:** Ohne dart-defines läuft die App komplett mit den Mock-Repositories (Beispieldaten aus dem Design, `MockCategoriesRepository`). Mit `SUPABASE_URL` und `SUPABASE_ANON_KEY` registriert `configureDependencies()` die Supabase-Varianten.
 
