@@ -58,10 +58,17 @@ Features heute:
 - `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite, Feld-Editor; dazu das Repository mit allen Schreibwegen und der Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge).
 - `entries`: Eingabe-Formular aus den Feldern eines Trackers, Verlauf je Tracker mit Graph, aktuelle Werte und Einträge.
 - `reminders`: lokale Benachrichtigungen ans Ablesen und an Stichtage (`flutter_local_notifications`), an- und ausschaltbar in den Einstellungen.
+- `insights`: Auswertung des Jahres: Kosten je Monat und Kategorie, Jahresvergleich, Verbrauch, Prognose mit Spanne und Erklärung, Abschlags-Check.
 - `settings`: Darstellung.
 - `auth`: anonyme Anmeldung.
 
-Nur die Auswertung ist noch eine `PlaceholderPage`.
+**Rechnen:** Rechenlogik liegt in `core/utils/`:
+
+- `cost_engine.dart`: Verbrauch, Kosten nach Herkunft, Trend, Spanne, Abschläge.
+- `formula.dart`: eigener Parser für Formel-Felder.
+- `formulas.dart`: Formel-Werte je Eintrag (`verbrauch`, `tage`, `monate`, Feld-Kurznamen).
+
+Ein Tracker kann seine Kosten einer anderen Kategorie zuordnen (`includedIn`, z. B. Wasser in den Nebenkosten): gezeigt, nie doppelt gezählt.
 
 **Offline:** Mit Supabase liest die App ohne Netz aus dem Cache des letzten Abrufs. Einträge landen zuerst in einer Warteschlange auf dem Gerät und erscheinen sofort. Gesendet wird gleich, beim Zurückkehren in die App und alle 30 Sekunden, solange etwas wartet. Die Id vergibt das Gerät, daher landet ein Eintrag auch bei doppeltem Senden nur einmal (`save_entry` ist ein Upsert). Die Übersicht zeigt, was noch wartet oder abgelehnt wurde. Kategorien, Tracker und Felder ändern geht nur online.
 
