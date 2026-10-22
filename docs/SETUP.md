@@ -93,6 +93,8 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
    - verteilt an die Gruppe „Tester“ (die Gruppe in TestFlight einmal anlegen)
    - setzt den Tag `testflight/<nr>`
 
+**Stand:** App, Abo-Gruppe, Server-Benachrichtigungen und die externe Gruppe „Tester“ sind angelegt. Öffentlicher Testlink: https://testflight.apple.com/join/92YxVdPT
+
 ## C. Vor der Einreichung im App Store
 
 - **Platzhalter ersetzen:** In `assets/legal/*.md` stehen Name, Anschrift und E-Mail in eckigen Klammern. Gesetzlich nötig sind Impressum und Verantwortlicher.

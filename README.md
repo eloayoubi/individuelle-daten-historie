@@ -127,6 +127,8 @@ Plus lässt sich auf Android noch nicht kaufen; ein im App Store gekauftes Abo g
 
 ## TestFlight
 
+**Öffentlicher Testlink:** https://testflight.apple.com/join/92YxVdPT (externe Gruppe „Tester“, ohne Teilnehmergrenze). Er nimmt Tester auf, sobald ein Build die Beta-Prüfung von Apple bestanden hat.
+
 ```sh
 cd ios && fastlane beta                              # testen, bauen, hochladen, an „Tester“ verteilen
 cd ios && fastlane beta changelog:"Neu: …"           # eigener Testhinweis
