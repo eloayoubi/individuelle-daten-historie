@@ -1,0 +1,101 @@
+# Baut die iOS-App Kostenkurve auf einem macOS-Runner mit `fastlane beta` (ios/fastlane/Fastfile):
+# testen, bauen, über den App-Store-Connect-API-Key signieren (Cloud-Signing, kein
+# Zertifikat nötig), zu TestFlight hochladen und der Tester-Gruppe freigeben.
+# Kein Mac nötig – Start z. B. vom Handy: GitHub-App → Actions → TestFlight → Run workflow,
+# oder aus einer Claude-Cloud-Sitzung: gh workflow run testflight.yml --ref main -f changelog="…"
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8   API-Key mit Rolle Admin (fürs Signieren)
+#   SUPABASE_URL, SUPABASE_ANON_KEY         Werte aus .env.local
+name: TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: "Testhinweis (leer = Commits seit dem letzten TestFlight-Build)"
+        required: false
+      build_number:
+        description: "Build-Nummer (leer = höchste in App Store Connect + 1)"
+        required: false
+      group:
+        description: "TestFlight-Gruppe"
+        required: false
+        default: "Tester"
+      dry_run:
+        description: "Nur bauen und signieren, nichts hochladen"
+        type: boolean
+        default: false
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+permissions:
+  contents: write # Tag testflight/<nummer> pushen
+
+jobs:
+  testflight:
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_HIDE_CHANGELOG: "1"
+      ASC_KEY_PATH: ${{ github.workspace }}/../private_keys/AuthKey.p8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Commits und Tags für den Testhinweis
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      # Gleiche Version wie lokal (fvm); beim Flutter-Update hier mitziehen.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.8
+          cache: true
+
+      - name: Fastlane installieren
+        run: fastlane --version || brew install fastlane
+
+      - name: Secrets schreiben
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 SUPABASE_URL SUPABASE_ANON_KEY; do
+            [ -n "${!v}" ] || { echo "::error::Secret $v fehlt"; exit 1; }
+          done
+          mkdir -p "$(dirname "$ASC_KEY_PATH")"
+          printf '%s\n' "$ASC_KEY_P8" > "$ASC_KEY_PATH"
+          chmod 600 "$ASC_KEY_PATH"
+          printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env.local
+          printf 'ASC_KEY_ID=%s\nASC_ISSUER_ID=%s\n' "$ASC_KEY_ID" "$ASC_ISSUER_ID" > ios/fastlane/.env
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: fastlane beta
+        working-directory: ios
+        env:
+          CHANGELOG: ${{ inputs.changelog }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          TESTFLIGHT_GROUP: ${{ inputs.group || 'Tester' }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=()
+          [ -n "$CHANGELOG" ] && args+=("changelog:$CHANGELOG")
+          [ -n "$BUILD_NUMBER" ] && args+=("build_number:$BUILD_NUMBER")
+          [ "$DRY_RUN" = "true" ] && args+=("dry_run:true")
+          fastlane beta "${args[@]}"
+
+      - name: Aufräumen
+        if: always()
+        run: rm -rf "$(dirname "$ASC_KEY_PATH")" .env.local ios/fastlane/.env

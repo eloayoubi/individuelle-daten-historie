@@ -1,0 +1,51 @@
+{
+  "@@locale": "en",
+  "appTitle": "Kostenkurve",
+
+  "tabOverview": "Overview",
+  "tabCategories": "Categories",
+  "tabInsights": "Insights",
+  "tabSettings": "Settings",
+
+  "comingSoon": "Coming soon.",
+  "placeholderCategories": "Create categories, pick templates and build your own fields and formulas here.",
+  "placeholderInsights": "Histories, year-over-year comparisons and forecasts for every category.",
+
+  "actionBack": "Back",
+  "actionClose": "Close",
+  "actionRetry": "Try again",
+  "errorLoad": "Your data couldn't be loaded.",
+
+  "homeQuickAdd": "Add entry",
+  "homeForecastTitle": "Forecast {year}",
+  "homeForecastHint": "Projected from your history and current prices.",
+  "homeForecastDelta": "{change} vs. {year}",
+  "homeCurveActual": "Actual {year}",
+  "homeCurveForecast": "Forecast {year}",
+  "homeYearToDate": "Costs {year} to date",
+  "homeYearToDateCompare": "{change} vs. same period last year",
+  "homeCategories": "Categories",
+  "homeSeeAll": "See all",
+  "homeNext": "Up next",
+  "homePerMonth": "avg. {amount} per month",
+  "homeConsumptionToDate": "{value} so far",
+  "homeSharedWith": "Shared with {name}",
+  "homeReadMeter": "Read {tracker}",
+  "homeReadMeterDue": "{days, plural, =1{Last reading one day ago} other{Last reading {days} days ago}}",
+  "homeDeadlineTitle": "{field} · {tracker}",
+  "homeDeadlineDue": "{days, plural, =0{Today} =1{Tomorrow} other{On {date} · in {days} days}}",
+  "homeEmptyTitle": "No categories yet",
+  "homeEmptyBody": "Start with a template like electricity, water or rent – or build your own.",
+
+  "quickAddTitle": "What would you like to log?",
+  "quickAddSoon": "Logging is coming in the next step.",
+  "categoryDetailsSoon": "The detail view is coming in the next step.",
+
+  "settingsAppearance": "Appearance",
+  "appearanceSystem": "Automatic",
+  "appearanceLight": "Light",
+  "appearanceDark": "Dark",
+  "settingsAppearanceHint": "“Automatic” follows your device setting.",
+  "settingsAbout": "About Kostenkurve",
+  "settingsAboutBody": "Your meter readings, contracts and costs in one place – with history, year-over-year comparison and forecast."
+}

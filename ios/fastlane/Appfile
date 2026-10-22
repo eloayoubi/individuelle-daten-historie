@@ -1,0 +1,2 @@
+app_identifier("de.eloayoubi.kostenkurve")
+team_id("GYJLSZ9DRM") # Apple-Developer-Team, muss zu DEVELOPMENT_TEAM im Xcode-Projekt passen

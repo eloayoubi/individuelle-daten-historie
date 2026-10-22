@@ -1,0 +1,76 @@
+# Spielt neue Migrationen aus supabase/migrations/ auf das Supabase-Projekt von Kostenkurve ein
+# (`supabase db push`). Vorher laufen alle Migrationen, Seed und Tests in einem
+# Wegwerf-Postgres auf dem Runner (supabase/scripts/test_local.sh).
+# Kein Mac nötig – Start z. B. aus einer Claude-Cloud-Sitzung:
+#   gh workflow run supabase.yml --ref main                     # nur anzeigen, was neu ist
+#   gh workflow run supabase.yml --ref main -f apply=true       # wirklich einspielen
+#   gh workflow run supabase.yml --ref main -f functions="health"   # Edge Functions deployen
+#
+# Secrets: SUPABASE_ACCESS_TOKEN (supabase.com → Account → Access Tokens),
+#          SUPABASE_URL (daraus die Projekt-Ref), optional SUPABASE_DB_PASSWORD
+name: Supabase migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Migrationen wirklich einspielen (sonst nur anzeigen, was neu ist)"
+        type: boolean
+        default: false
+      functions:
+        description: "Edge Functions deployen, Namen mit Leerzeichen getrennt (leer = keine)"
+        type: string
+        default: ""
+
+concurrency:
+  group: supabase-migrations
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test (Migrationen, Seed und Tests in Wegwerf-Postgres)
+        run: bash supabase/scripts/test_local.sh
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
+      - name: Projekt verknüpfen
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::Secret SUPABASE_ACCESS_TOKEN fehlt"; exit 1; }
+          ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https://([^.]+)\..*#\1#')
+          [[ "$ref" =~ ^[a-z0-9]+$ ]] || { echo "::error::Projekt-Ref aus SUPABASE_URL nicht lesbar (erwartet https://<ref>.supabase.co)"; exit 1; }
+          args=(--project-ref "$ref")
+          [ -n "$SUPABASE_DB_PASSWORD" ] && args+=(--password "$SUPABASE_DB_PASSWORD")
+          supabase link "${args[@]}"
+
+      - name: Neue Migrationen anzeigen
+        run: supabase db push --dry-run
+
+      - name: Migrationen einspielen
+        if: inputs.apply
+        run: supabase db push --yes
+
+      # Nutzt die Verknüpfung von oben; verify_jwt & Co. kommen aus supabase/config.toml.
+      - name: Edge Functions deployen
+        if: inputs.functions != ''
+        env:
+          FUNCTIONS: ${{ inputs.functions }}
+        run: |
+          for f in $FUNCTIONS; do
+            [[ "$f" =~ ^[a-z0-9-]+$ && -d "supabase/functions/$f" ]] || { echo "::error::Unbekannte Edge Function: $f"; exit 1; }
+            supabase functions deploy "$f"
+          done

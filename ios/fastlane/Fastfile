@@ -1,0 +1,231 @@
+# Kostenkurve · iOS → TestFlight
+#
+#   cd ios && fastlane beta                              # testen, bauen, hochladen, an die Gruppe Tester verteilen
+#   cd ios && fastlane beta changelog:"Neu: …"           # mit eigenem Testhinweis
+#   cd ios && fastlane beta dry_run:true                 # nur bauen und signieren, nichts hochladen
+#   cd ios && fastlane beta skip_tests:true build_number:7
+#   cd ios && fastlane distribute build_number:6         # vorhandenen Build an die Gruppe Tester geben
+#   cd ios && fastlane check                             # API-Key prüfen, letzte Build-Nummer zeigen
+#
+# Remote (ohne Mac): GitHub → Actions → TestFlight → Run workflow (.github/workflows/testflight.yml).
+#
+# Version = pubspec.yaml (Teil vor dem +), Build-Nummer = höchste in App Store Connect + 1.
+# Testhinweis = Commit-Betreffs seit dem letzten Tag testflight/<nummer> (ohne chore/ci/test/docs).
+#
+# Signieren (Cloud-Signing, kein Zertifikat im Repo):
+#   lokal          über die in Xcode angemeldete Apple-ID des Teams
+#   CI / ASC_SIGN_WITH_KEY=1   über den API-Key – der braucht dafür die Rolle Admin
+#
+# Voraussetzungen (siehe README, Abschnitt TestFlight):
+#   ios/fastlane/.env                                     ASC_KEY_ID, ASC_ISSUER_ID (nicht im Git)
+#   ~/.appstoreconnect/private_keys/AuthKey_<ID>.p8       App-Store-Connect-API-Key (oder ASC_KEY_PATH)
+#   .env.local                                            SUPABASE_URL, SUPABASE_ANON_KEY (nicht im Git)
+
+require "shellwords"
+require "tmpdir"
+
+# UTF-8 erzwingen: Ohne UTF-8-Locale liest Ruby Dateien als US-ASCII und bricht an Umlauten in
+# pubspec.yaml oder Commit-Betreffs ab. LANG/LC_ALL setzt schon .env.default, wenn die Shell keine
+# Locale hat; das hier deckt zusätzlich LANG=C & Co. und Ruby selbst ab.
+unless [ENV["LC_ALL"], ENV["LC_CTYPE"], ENV["LANG"]].find { |v| !v.to_s.empty? }.to_s =~ /UTF-?8/i
+  ENV["LANG"] = ENV["LC_ALL"] = "en_US.UTF-8"
+end
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
+
+default_platform(:ios)
+
+ROOT = File.expand_path("../..", __dir__)
+APP_NAME = "Kostenkurve"
+
+platform :ios do
+  desc "Testet, baut und signiert die App, lädt sie zu TestFlight hoch und gibt sie der Tester-Gruppe frei"
+  desc "Optionen: changelog, build_number, skip_tests, dry_run"
+  lane :beta do |options|
+    sign_with_key = ENV["CI"] == "true" || ENV["ASC_SIGN_WITH_KEY"] == "1"
+    api_key = asc_api_key(sign_with_key: sign_with_key)
+    env_local = File.join(ROOT, ".env.local")
+    missing = %w[SUPABASE_URL SUPABASE_ANON_KEY].reject { |k| File.exist?(env_local) && File.read(env_local) =~ /^\s*#{k}\s*=\s*\S/ }
+    UI.user_error!(".env.local (Repo-Wurzel) fehlt oder ohne #{missing.join(', ')}") unless missing.empty?
+    team_id = CredentialsManager::AppfileConfig.try_fetch_value(:team_id)
+    check_xcode_team(team_id)
+    warn_if_dirty
+
+    version = pubspec_version
+    build_number = (options[:build_number] || latest_testflight_build_number(api_key: api_key, initial_build_number: 0) + 1).to_i
+    UI.user_error!("build_number muss eine positive Zahl sein") unless build_number.positive?
+    UI.header("#{APP_NAME} #{version} (#{build_number})")
+
+    Dir.chdir(ROOT) do
+      sh("flutter", "pub", "get")
+      sh("flutter", "test") unless options[:skip_tests]
+      sh("flutter", "build", "ios", "--release", "--config-only", "--no-codesign",
+         "--build-name=#{version}", "--build-number=#{build_number}", "--dart-define-from-file=.env.local")
+    end
+
+    gym = {
+      workspace: File.join(ROOT, "ios/Runner.xcworkspace"),
+      scheme: "Runner",
+      configuration: "Release",
+      archive_path: File.join(ROOT, "build/ios/fastlane/#{APP_NAME}.xcarchive"),
+      export_method: "app-store",
+      export_team_id: team_id,
+      export_options: { signingStyle: "automatic", uploadSymbols: true, manageAppVersionAndBuildNumber: false },
+      output_directory: File.join(ROOT, "build/ios/fastlane"),
+      output_name: "#{APP_NAME}.ipa",
+    }
+    ipa = if sign_with_key
+      # Mit Key: Archiv unsigniert, signiert wird erst beim Export über den Key. Dazwischen die
+      # Entitlements einbetten – der Export übernimmt nur, was im Binary steht (sonst fehlt z. B.
+      # Sign in with Apple). Getrennte Aufrufe, weil gym xcargs auch an den Export anhängt.
+      build_app(**gym, xcargs: "CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO", skip_package_ipa: true)
+      embed_entitlements(archive: gym[:archive_path])
+      build_app(**gym, skip_build_archive: true, export_xcargs: key_signing_args)
+    else
+      # Ohne Key signiert die Xcode-Anmeldung Archiv und Export.
+      build_app(**gym, xcargs: "-allowProvisioningUpdates")
+    end
+    verify_entitlements(ipa: ipa)
+    next UI.success("Probelauf: #{ipa} gebaut und signiert, nichts hochgeladen") if options[:dry_run]
+
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: ipa,
+      changelog: options[:changelog] || changelog_since_last_release,
+      distribute_external: true,
+      groups: [ENV.fetch("TESTFLIGHT_GROUP")],
+      notify_external_testers: true,
+      uses_non_exempt_encryption: false,
+    )
+
+    tag_release(build_number: build_number)
+    UI.success("Build #{version} (#{build_number}) ist bei #{ENV['TESTFLIGHT_GROUP']}")
+  end
+
+  desc "Gibt einen schon hochgeladenen Build der Tester-Gruppe frei. Optionen: build_number (Pflicht), changelog"
+  lane :distribute do |options|
+    UI.user_error!("build_number fehlt, z. B. fastlane distribute build_number:6") unless options[:build_number]
+    upload_to_testflight(
+      api_key: asc_api_key,
+      distribute_only: true,
+      app_platform: "ios",
+      build_number: options[:build_number].to_s,
+      app_version: pubspec_version,
+      changelog: options[:changelog] || changelog_since_last_release,
+      distribute_external: true,
+      groups: [ENV.fetch("TESTFLIGHT_GROUP")],
+      notify_external_testers: true,
+    )
+  end
+
+  desc "Prüft den API-Key und zeigt die letzte Build-Nummer in TestFlight"
+  lane :check do
+    latest = latest_testflight_build_number(api_key: asc_api_key, initial_build_number: 0)
+    UI.success("API-Key ok · letzter TestFlight-Build: #{latest} · nächster: #{latest + 1}")
+  end
+
+  # Für die API reicht ein Hash; app_store_connect_api_key nur im Key-Modus (legt den Key
+  # zusätzlich in den Lane-Kontext für upload_to_testflight & Co.).
+  private_lane :asc_api_key do |options|
+    UI.user_error!("ASC_KEY_ID/ASC_ISSUER_ID fehlen in ios/fastlane/.env") unless ENV["ASC_KEY_ID"] && ENV["ASC_ISSUER_ID"]
+    UI.user_error!("API-Key fehlt: #{key_path}") unless File.exist?(key_path)
+    if options && options[:sign_with_key]
+      app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_filepath: key_path)
+    else
+      { key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key: File.read(key_path), duration: 1200, in_house: false }
+    end
+  end
+
+  # Ad-hoc-Signatur nur, um die Entitlements ins unsignierte Archiv zu bringen; die echte Signatur
+  # setzt der Export. Kostenkurve hat nur das Runner-Target – kommt eine Extension dazu (Widget o. ä.),
+  # muss sie hier vor Runner.app mit ihrer eigenen .entitlements-Datei signiert werden.
+  private_lane :embed_entitlements do |options|
+    next UI.message("Keine ios/Runner/Runner.entitlements – nichts einzubetten") unless File.exist?(entitlements_path)
+    app = File.join(options[:archive], "Products/Applications/Runner.app")
+    sh("codesign", "--force", "--sign", "-", "--entitlements", entitlements_path, "--generate-entitlement-der", app)
+  end
+
+  # Bricht ab, wenn der signierte Build ein Entitlement aus Runner.entitlements nicht hat
+  # (sonst geht z. B. ein Build ohne Sign in with Apple raus).
+  private_lane :verify_entitlements do |options|
+    next unless File.exist?(entitlements_path)
+    Dir.mktmpdir do |dir|
+      sh("unzip", "-q", options[:ipa], "Payload/*", "-d", dir, log: false)
+      app = Dir[File.join(dir, "Payload/*.app")].first
+      wanted = File.read(entitlements_path).scan(%r{<key>([^<]+)</key>}).flatten
+      signed = sh("codesign", "-d", "--entitlements", "-", "--xml", app, log: false)
+      missing = wanted.reject { |key| signed.include?("<key>#{key}</key>") }
+      UI.user_error!("#{File.basename(app)} signiert ohne Entitlements: #{missing.join(', ')}") unless missing.empty?
+      UI.success("Entitlements in #{File.basename(app)}: #{wanted.join(', ')}")
+    end
+  end
+
+  private_lane :warn_if_dirty do
+    dirty = Dir.chdir(ROOT) { sh("git", "status", "--porcelain", log: false).strip }
+    UI.important("Nicht committete Änderungen werden mitgebaut:\n#{dirty}") unless dirty.empty?
+  end
+
+  # Tag testflight/<nummer> auf den gebauten Commit setzen und pushen, damit der nächste
+  # Testhinweis – lokal wie auf GitHub – nur die Commits seit diesem Build enthält.
+  # Git nur über sh: Fastlane führt Actions wie add_git_tag/git_tag_exists in ".." des aktuellen
+  # Ordners aus – innerhalb von Dir.chdir(ROOT) also außerhalb des Repos.
+  # Der Build ist hier schon hochgeladen; ein Fehler warnt nur (auf GitHub als Annotation) und
+  # lässt den Lauf nicht scheitern.
+  private_lane :tag_release do |options|
+    tag = "testflight/#{options[:build_number]}"
+    begin
+      Dir.chdir(ROOT) do
+        exists = sh("git", "tag", "--list", tag, log: false).strip == tag
+        sh("git", "tag", "-a", tag, "-m", "TestFlight-Build #{options[:build_number]}") unless exists
+        sh("git", "push", "origin", "refs/tags/#{tag}")
+      end
+    rescue StandardError => e
+      UI.important("Tag #{tag} nicht gesetzt oder nicht gepusht: #{e.message}")
+      $stdout.puts("::warning title=TestFlight-Tag fehlt::#{tag} nicht gepusht – bitte nachtragen") if ENV["GITHUB_ACTIONS"] == "true"
+    end
+  end
+
+  # Commit-Betreffs seit dem letzten TestFlight-Tag, ohne Merges und Routine-Commits.
+  # Letzter Tag = höchste Nummer, die im gebauten Commit steckt. Vor dem ersten Build gibt es
+  # keinen: dann die letzten 15 Commits. (Nicht über `git describe`: dessen Fehlermeldung landet
+  # bei sh mit in der Ausgabe und würde als Tag gelesen.)
+  private_lane :changelog_since_last_release do
+    Dir.chdir(ROOT) do
+      last = sh("git", "tag", "--list", "testflight/*", "--merged", "HEAD", "--sort=-v:refname", log: false).lines.first.to_s.strip
+      range = last.empty? ? ["-n", "15"] : ["#{last}..HEAD"]
+      lines = sh("git", "log", *range, "--no-merges", "--pretty=%s", log: false).lines.map(&:strip)
+      lines = lines.reject { |l| l.empty? || l =~ /\A(chore|ci|test|docs)(\(.*\))?:/i }
+      lines.empty? ? "Fehlerbehebungen und Verbesserungen." : "Neu in diesem Build:\n" + lines.map { |l| "• #{l}" }.join("\n")
+    end
+  end
+end
+
+# Cloud-Signing per API-Key (nur Admin-Keys dürfen das).
+def key_signing_args
+  "-allowProvisioningUpdates -authenticationKeyPath #{Shellwords.escape(key_path)} " \
+    "-authenticationKeyID #{ENV.fetch('ASC_KEY_ID')} -authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}"
+end
+
+def pubspec_version
+  version = File.read(File.join(ROOT, "pubspec.yaml"))[/^version:\s*([^+\s]+)/, 1]
+  UI.user_error!("pubspec.yaml ohne version:") unless version
+  version
+end
+
+# Archiv und Export müssen dasselbe Team nutzen – sonst scheitert der Export erst nach dem
+# Archivieren. flutter create trägt das erste Team aus dem Schlüsselbund ein, nicht unbedingt das
+# aus dem Appfile.
+def check_xcode_team(team_id)
+  teams = File.read(File.join(ROOT, "ios/Runner.xcodeproj/project.pbxproj")).scan(/DEVELOPMENT_TEAM = "?(\w+)"?;/).flatten.uniq
+  return if teams.empty? || teams == [team_id]
+  UI.user_error!("DEVELOPMENT_TEAM im Xcode-Projekt ist #{teams.join(', ')}, im Appfile #{team_id} – " \
+                 "in ios/Runner.xcodeproj/project.pbxproj auf #{team_id} setzen")
+end
+
+def entitlements_path
+  File.join(ROOT, "ios/Runner/Runner.entitlements")
+end
+
+def key_path
+  File.expand_path(ENV["ASC_KEY_PATH"] || "~/.appstoreconnect/private_keys/AuthKey_#{ENV['ASC_KEY_ID']}.p8")
+end

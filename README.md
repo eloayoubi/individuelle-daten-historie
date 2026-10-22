@@ -1,0 +1,98 @@
+# Kostenkurve
+
+Zählerstände, Verträge und Kosten an einem Ort – mit Verlauf, Jahresvergleich und Prognose. Nutzer legen eigene Kategorien an (oder starten mit Vorlagen wie Strom, Miete, Auto), definieren ihre Felder selbst (Text, Zahl, Betrag, Prozent, Datum, Formel …) und tragen Werte mit Datum ein. Daraus rechnet die App Verbrauch, Kosten und eine Prognose fürs nächste Jahr; Kategorien lassen sich mit dem Partner teilen.
+
+Produkt, Analyse und Fahrplan: [docs/IMPLEMENTIERUNGSPLAN.md](docs/IMPLEMENTIERUNGSPLAN.md) · Backend: [supabase/README.md](supabase/README.md)
+
+| | |
+|---|---|
+| Plattformen | iOS und Android |
+| Bundle-ID | `de.eloayoubi.kostenkurve` |
+| Sprachen | Deutsch (Vorlage) und Englisch |
+| Design | Apples Designsprache (HIG, iOS 26): Systemfarben, große Titel, gruppierte Karten, CupertinoIcons, Glas-Tab-Leiste – hell und dunkel |
+
+## Stack
+
+| Bereich | Wahl |
+|---|---|
+| Zustand | `flutter_bloc` – Cubits für reinen Zustand, Blocs nur bei echter Event-Logik; `equatable` für States |
+| DI | `get_it`, Zugriff nur über `lookup<T>()` aus `core/di/lookup.dart`, Registrierung in `configureDependencies()` |
+| L10n | `flutter gen-l10n`, ARB in `lib/l10n/` (`app_de.arb` = Vorlage), Zugriff über `context.l10n` |
+| Theme | `AppColors` + `AppTextStyles` als `ThemeExtension`, Zugriff über `context.colors` / `context.textStyles`; `AppTheme.light` / `AppTheme.night`, Umschalter über `AppearanceCubit` über dem `MaterialApp` |
+| Schriften | Inter Tight (Überschriften, Zahlen) + Inter (Text, mit `opsz`-Achse) als gebündelte Variable Fonts in `assets/fonts/` (OFL) – kein `google_fonts`, rendert offline |
+| Backend | Supabase (Postgres + RLS + RPC + Edge Functions), anonyme Anmeldung zum Start |
+| Tests | `flutter_test`, `bloc_test`, `mocktail` |
+| Lints | `flutter_lints` + `prefer_single_quotes`, `prefer_const_constructors`, `prefer_const_declarations`, `require_trailing_commas`, `always_declare_return_types`, `avoid_print` |
+| Release | Fastlane (`ios/fastlane`), GitHub Actions (`testflight.yml`, `supabase.yml`) |
+
+## Struktur
+
+```
+lib/
+  main.dart              DI, dann runApp
+  app/app.dart           MaterialApp, Themes, Locales, AppearanceCubit darüber
+  core/
+    core.dart            Sammel-Import für Features
+    di/                  lookup.dart, injection.dart (configureDependencies)
+    theme/               color_config, text_styles, dimensions, app_theme
+    extensions/          context (colors, textStyles, l10n), format (€, %, Datum), category (Icons)
+    models/tracking.dart Kategorie → Tracker → Felder → Einträge (gemeinsam für alle Features)
+    utils/cost_engine.dart  Verbrauch, Kosten und Prognose je Tracker, Tag für Tag
+    widgets/             AppText, AppCard, AppButton, AppIconButton, AppChip, AppHeader, SectionHeader,
+                         AppSheet, AppToast, PlaceholderPage, AppListGroup/AppListRow, AppIconTile,
+                         AppSegmented, AppPressable, GlassSurface
+    network/             SupabaseApi (rpc, invoke, table, stream)
+    config/              Werte aus --dart-define (SUPABASE_URL, SUPABASE_ANON_KEY)
+  features/<feature>/
+    cubit/               Cubit + State (part-Datei); einmalige Ereignisse als `event` im State,
+                         die View reagiert per BlocListener
+    data/                x_repository.dart (Interface), mock_x_repository.dart, supabase_x_repository.dart
+    view/                Page + feature-eigene Widgets
+  l10n/                  app_de.arb (Vorlage), app_en.arb, generated/ (eingecheckt, vom Analyzer ausgeschlossen)
+```
+
+Features heute: `shell` (Tab-Leiste, `ShellCubit`), `home` (Übersicht), `categories` (Daten), `settings` (Darstellung), `auth` (anonyme Anmeldung). Kategorien und Auswertung sind noch `PlaceholderPage`.
+
+**Mock oder Supabase:** Ohne dart-defines läuft die App komplett mit den Mock-Repositories (Beispieldaten aus dem Design, `MockCategoriesRepository`). Mit `SUPABASE_URL` und `SUPABASE_ANON_KEY` registriert `configureDependencies()` die Supabase-Varianten.
+
+## Code-Regeln
+
+- **Keine Hex-Farben, keine `TextStyle(...)`, keine festen Strings in Widgets** – immer `context.colors` / `context.textStyles` / `context.l10n`.
+- **Neue Farbe/Textstil:** erst in `core/theme/color_config.dart` bzw. `core/theme/text_styles.dart`, dann benutzen.
+- **Neues Feature:** Ordner unter `features/`, Repository (+ Mock + Supabase) und Cubit in `configureDependencies()` registrieren, Page in die Shell.
+- **Wiederverwenden vor neu bauen:** erst `core/widgets/` durchsehen, dann vorhandene Widgets um Parameter ergänzen, erst dann ein neues Widget.
+- Beträge, Mengen und Daten nur über `core/extensions/format_x.dart` formatieren (`context.euros`, `context.amount`, `context.change`, …).
+- Rechenlogik (Verbrauch, Kosten, Prognose) gehört in `core/utils/cost_engine.dart` bzw. `features/*/data/`, nicht in Widgets – und bekommt Unit-Tests.
+
+## Entwicklung
+
+```sh
+flutter pub get
+flutter run                                         # Mock-Daten, kein Backend nötig
+flutter run --dart-define-from-file=.env.local      # gegen Supabase (Werte siehe .env.local.example)
+flutter analyze && flutter test                     # nach jeder Änderung
+flutter gen-l10n                                    # nach ARB-Änderungen (läuft sonst beim Build)
+supabase/scripts/test_local.sh                      # Migrationen + Seed + Tests in Wegwerf-Postgres
+```
+
+Tests: Cubit-Tests je Feature (`test/features/`), Theme-Extensions und Kosten-Engine (`test/core/`), Smoke-Test aller Seiten mit Mock-Daten in Hell und Dunkel (`test/pages_smoke_test.dart`).
+
+Commit-Betreffs: Nutzer-Sichtbares auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:` / `ci:` / `test:` / `docs:`. Branches `feature/…`, `fix/…`, `chore/…`; Ablauf bis `main` steht in [CLAUDE.md](CLAUDE.md).
+
+## TestFlight
+
+```sh
+cd ios && fastlane beta                              # testen, bauen, hochladen, an „Tester“ verteilen
+cd ios && fastlane beta changelog:"Neu: …"           # eigener Testhinweis
+cd ios && fastlane beta dry_run:true                 # nur bauen und signieren
+cd ios && fastlane beta skip_tests:true build_number:7
+cd ios && fastlane distribute build_number:6         # vorhandenen Build an „Tester“ geben
+cd ios && fastlane check                             # API-Key prüfen, letzte/nächste Build-Nummer
+```
+
+- **Version** = `version:` in `pubspec.yaml` (Teil vor dem `+`); die **Build-Nummer** vergibt die Lane: höchste in App Store Connect + 1.
+- **Testhinweis** = Commit-Betreffs seit dem höchsten Tag `testflight/<nr>` im gebauten Stand, ohne Merges und ohne `chore`/`ci`/`test`/`docs` (vor dem ersten Tag die letzten 15 Commits). Nach dem Upload setzt und pusht die Lane den Tag `testflight/<nr>`.
+- **Signieren:** Cloud-Signing – lokal über die in Xcode angemeldete Apple-ID, auf CI (oder mit `ASC_SIGN_WITH_KEY=1`) über den API-Key (Rolle Admin).
+- **Lokal nötig:** `ios/fastlane/.env` mit `ASC_KEY_ID`, `ASC_ISSUER_ID` (nicht im Git), Schlüssel unter `~/.appstoreconnect/private_keys/AuthKey_<ID>.p8`, `.env.local` mit den Supabase-Werten. Fastlane braucht eine UTF-8-Locale (`.env.default` setzt sie).
+- **Ohne Mac:** GitHub → Actions → TestFlight → Run workflow (`.github/workflows/testflight.yml`, macOS-Runner, dieselbe Lane, nur manueller Start). Secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
+- **Migrationen:** `.github/workflows/supabase.yml` testet erst mit `test_local.sh` und spielt nur mit `apply=true` ein (Secrets zusätzlich `SUPABASE_ACCESS_TOKEN`, optional `SUPABASE_DB_PASSWORD`). Neue Migrationen immer vor dem Build einspielen.
