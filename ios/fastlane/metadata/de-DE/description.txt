@@ -1,0 +1,38 @@
+Wie viel Strom hast du dieses Jahr verbraucht? Reichen die Abschläge? Kostenkurve sammelt Zählerstände, Verträge und Fixkosten an einem Ort – und zeigt dir, wohin die Kurve geht.
+
+VERBRAUCH & KOSTEN IM BLICK
+• Zählerstände, Preise und Beträge eintragen – Kostenkurve rechnet Verbrauch und Kosten taggenau, auch bei Preiswechseln
+• Verlauf je Zähler über zwölf Monate, im Vergleich zum Vorjahr
+• Auswertung: Kosten je Monat und Kategorie, Jahresvergleich
+
+VORLAGEN, EIGENE FELDER & FORMELN
+• Acht Vorlagen zum Start: Strom, Heizung, Wasser, Miete & Nebenkosten, Auto, Internet & Mobilfunk, Versicherungen, Abos
+• Alles anpassbar: eigene Kategorien und Felder (Zahl, Betrag, Prozent, Datum, Auswahl …), Einheiten und Umrechnung – etwa Gas von m³ in kWh
+• Formel-Felder rechnen mit, z. B. Liter je 100 km
+
+PROGNOSE MIT SPANNE
+• Prognose fürs nächste Jahr aus Verbrauch, aktuellen Preisen und angekündigten Erhöhungen
+• Mit Spanne statt Scheingenauigkeit – und erklärt, woraus sie besteht
+
+ABSCHLAGS-CHECK
+• Reichen deine Abschläge? Du siehst Guthaben oder Nachzahlung – und welcher Abschlag passen würde
+
+GEMEINSAM MIT DEM PARTNER
+• Einzelne Kategorien teilen, etwa Haushalt oder Auto – per Code, Link oder QR-Code, zum Mitschreiben oder nur zum Ansehen
+
+ERINNERUNGEN
+• Ans Ablesen und an Stichtage wie das Vertragsende
+
+AUCH OFFLINE
+• Zähler im Keller ohne Netz? Einträge werden gespeichert und übertragen, sobald du wieder online bist
+
+DATENSCHUTZ
+• Loslegen ohne Registrierung, keine Werbung, keine Tracker
+• Deine Daten liegen auf Servern in der EU
+• Konto jederzeit in der App löschen
+
+KOSTENKURVE PLUS
+Kostenkurve ist ohne Abo voll nutzbar. Mit dem optionalen Kostenkurve Plus hängst du Belege an Einträge – Fotos und PDFs wie Abrechnungen, Zählerfotos oder Verträge, mit 5 GB Speicher. Das Abo verlängert sich automatisch und ist jederzeit in deinem Apple Account kündbar.
+
+Datenschutz: https://example.com/kostenkurve/datenschutz
+Nutzungsbedingungen: https://example.com/kostenkurve/nutzungsbedingungen

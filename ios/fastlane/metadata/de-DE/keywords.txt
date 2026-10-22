@@ -1,0 +1,1 @@
+nebenkosten,stromverbrauch,haushaltsbuch,fixkosten,verträge,gas,heizung,wasserzähler,prognose,abo
