@@ -89,6 +89,17 @@ class _Content extends StatelessWidget {
               AppIconButton(icon: CupertinoIcons.plus, semanticLabel: l10n.trackerAddEntry, filled: true, onPressed: add),
           ],
         ),
+        if (state.includedInName case final String into)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.xl, 0, Spacing.xl, Spacing.m),
+            child: Row(
+              spacing: Spacing.s,
+              children: [
+                Icon(CupertinoIcons.arrow_turn_down_right, size: 16, color: c.textSecondary),
+                Expanded(child: AppText(l10n.trackerIncludedNote(into), style: (t) => t.footnote, color: c.textSecondary)),
+              ],
+            ),
+          ),
         if (history != null) ...[
           if (state.metrics.length > 1)
             Padding(

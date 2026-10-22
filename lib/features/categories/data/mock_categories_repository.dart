@@ -3,8 +3,9 @@ import 'dart:async';
 import 'categories_repository.dart';
 
 /// Beispieldaten aus dem Design: ein Haushalt mit Verläufen von Januar 2024 bis Oktober 2026.
-/// Miete und Auto sind mit „Anna“ geteilt; Wasser zählt nur den Verbrauch (Kosten stecken in den
-/// Nebenkosten), Gas rechnet Kubikmeter mit dem Brennwert in kWh um.
+/// Miete und Auto sind mit „Anna“ geteilt; die Wasserkosten stecken in den Nebenkosten (gezeigt,
+/// nicht doppelt gezählt), Gas rechnet Kubikmeter mit dem Brennwert in kWh um, Strom und Gas haben
+/// Abschläge für den Abschlags-Check, das Auto eine Formel für den Verbrauch je 100 km.
 ///
 /// Änderungen bleiben im Speicher, bis die App neu startet – genug, um alle Abläufe ohne Backend
 /// zu bedienen.
@@ -75,6 +76,9 @@ class MockCategoriesRepository implements CategoriesRepository {
 
   @override
   Future<void> renameTracker(String id, String name) async => _updateTracker(id, (t) => t.copyWith(name: name));
+
+  @override
+  Future<void> setTrackerIncludedIn(String id, String? categoryId) async => _updateTracker(id, (t) => t.copyWith(includedIn: () => categoryId));
 
   @override
   Future<void> archiveTracker(String id) async {
@@ -188,12 +192,17 @@ class MockCategoriesRepository implements CategoriesRepository {
       FieldDefinition(id: 'f-strom-stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh'),
       FieldDefinition(id: 'f-strom-ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice, unit: '€/kWh'),
       FieldDefinition(id: 'f-strom-gp', name: 'Grundpreis', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Monat'),
+      FieldDefinition(id: 'f-strom-abschlag', name: 'Abschlag', kind: FieldKind.currency, role: FieldRole.instalment, unit: '€/Monat'),
       FieldDefinition(id: 'f-strom-ende', name: 'Vertragsende', kind: FieldKind.date, role: FieldRole.deadline),
       FieldDefinition(id: 'f-strom-anbieter', name: 'Anbieter', kind: FieldKind.text),
     ],
     entries: [
-      Entry(id: 'e-strom-p1', date: _d(2024, 1, 1), values: const {'f-strom-ap': 0.389, 'f-strom-gp': 14.20, 'f-strom-anbieter': 'Stadtwerke'}),
-      Entry(id: 'e-strom-p2', date: _d(2025, 4, 1), values: {'f-strom-ap': 0.329, 'f-strom-gp': 11.90, 'f-strom-anbieter': 'Ökostrom Plus', 'f-strom-ende': _d(2027, 3, 31)}),
+      Entry(id: 'e-strom-p1', date: _d(2024, 1, 1), values: const {'f-strom-ap': 0.389, 'f-strom-gp': 14.20, 'f-strom-abschlag': 98, 'f-strom-anbieter': 'Stadtwerke'}),
+      Entry(
+        id: 'e-strom-p2',
+        date: _d(2025, 4, 1),
+        values: {'f-strom-ap': 0.329, 'f-strom-gp': 11.90, 'f-strom-abschlag': 85, 'f-strom-anbieter': 'Ökostrom Plus', 'f-strom-ende': _d(2027, 3, 31)},
+      ),
       ..._readings('e-strom', 'f-strom-stand', start: 41230, yearly: const {2024: 2550, 2025: 2410, 2026: 2280}, season: _flat, until: _d(2026, 9, 12), day: 12),
     ],
   );
@@ -206,20 +215,29 @@ class MockCategoriesRepository implements CategoriesRepository {
       FieldDefinition(id: 'f-gas-stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'm³', consumptionUnit: 'kWh', factor: 10.35),
       FieldDefinition(id: 'f-gas-ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice, unit: '€/kWh'),
       FieldDefinition(id: 'f-gas-gp', name: 'Grundpreis', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Monat'),
+      FieldDefinition(id: 'f-gas-abschlag', name: 'Abschlag', kind: FieldKind.currency, role: FieldRole.instalment, unit: '€/Monat'),
     ],
     entries: [
-      Entry(id: 'e-gas-p1', date: _d(2024, 1, 1), values: const {'f-gas-ap': 0.121, 'f-gas-gp': 16.50}),
+      Entry(id: 'e-gas-p1', date: _d(2024, 1, 1), values: const {'f-gas-ap': 0.121, 'f-gas-gp': 16.50, 'f-gas-abschlag': 105}),
       Entry(id: 'e-gas-p2', date: _d(2026, 1, 1), values: const {'f-gas-ap': 0.109}),
       ..._readings('e-gas', 'f-gas-stand', start: 18450, yearly: const {2024: 1120, 2025: 1065, 2026: 1010}, season: _heating, until: _d(2026, 10, 5), everyMonths: 2, day: 5),
     ],
   );
 
-  // Wasser: nur Verbrauch, die Kosten laufen über die Nebenkosten.
+  // Wasser: mit Preis, aber die Kosten stecken schon in den Nebenkosten – gezeigt, nicht doppelt gezählt.
   static final _wasser = Tracker(
     id: 't-wasser',
     name: 'Kaltwasser',
-    fields: const [FieldDefinition(id: 'f-wasser-stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'm³')],
-    entries: _readings('e-wasser', 'f-wasser-stand', start: 512.4, yearly: const {2024: 88, 2025: 84, 2026: 81}, season: _flat, until: _d(2026, 7, 1), everyMonths: 3, day: 1),
+    includedIn: 'c-miete',
+    fields: const [
+      FieldDefinition(id: 'f-wasser-stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'm³'),
+      FieldDefinition(id: 'f-wasser-preis', name: 'Wasser & Abwasser', kind: FieldKind.currency, role: FieldRole.unitPrice, unit: '€/m³'),
+    ],
+    entries: [
+      Entry(id: 'e-wasser-p1', date: _d(2024, 1, 1), values: const {'f-wasser-preis': 4.35}),
+      Entry(id: 'e-wasser-p2', date: _d(2026, 1, 1), values: const {'f-wasser-preis': 4.62}),
+      ..._readings('e-wasser', 'f-wasser-stand', start: 512.4, yearly: const {2024: 88, 2025: 84, 2026: 81}, season: _flat, until: _d(2026, 7, 1), everyMonths: 3, day: 1),
+    ],
   );
 
   static final _wohnung = Tracker(
@@ -246,6 +264,15 @@ class MockCategoriesRepository implements CategoriesRepository {
     fields: const [
       FieldDefinition(id: 'f-golf-km', name: 'Kilometerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'km'),
       FieldDefinition(id: 'f-golf-tanken', name: 'Tanken', kind: FieldKind.currency, role: FieldRole.oneOffCost, unit: '€'),
+      FieldDefinition(id: 'f-golf-liter', name: 'Liter', kind: FieldKind.number, role: FieldRole.snapshot, unit: 'l'),
+      FieldDefinition(
+        id: 'f-golf-verbrauch',
+        name: 'Verbrauch',
+        kind: FieldKind.formula,
+        role: FieldRole.snapshot,
+        unit: 'l/100 km',
+        formula: 'runden(liter / verbrauch * 100; 1)',
+      ),
       FieldDefinition(id: 'f-golf-vers', name: 'Kfz-Versicherung', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Jahr', intervalMonths: 12),
       FieldDefinition(id: 'f-golf-steuer', name: 'Kfz-Steuer', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Jahr', intervalMonths: 12),
       FieldDefinition(id: 'f-golf-tuev', name: 'Hauptuntersuchung', kind: FieldKind.date, role: FieldRole.deadline),
@@ -257,7 +284,7 @@ class MockCategoriesRepository implements CategoriesRepository {
         Entry(
           id: 'e-golf-$i',
           date: _d(2024, 1, 5).add(Duration(days: i * 21)),
-          values: {'f-golf-km': 48200 + i * 690, 'f-golf-tanken': 58.0 + (i % 5) * 3.4},
+          values: {'f-golf-km': 48200 + i * 690, 'f-golf-tanken': 58.0 + (i % 5) * 3.4, 'f-golf-liter': 34.5 + (i % 5) * 1.5},
         ),
     ],
   );

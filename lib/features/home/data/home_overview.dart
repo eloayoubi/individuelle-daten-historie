@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:equatable/equatable.dart';
 
 import '../../../core/utils/cost_engine.dart';
@@ -58,6 +60,7 @@ class HomeOverview extends Equatable {
     required this.costToDate,
     required this.costChange,
     required this.forecast,
+    this.forecastRange = 0,
     required this.forecastChange,
     required this.monthsThisYear,
     required this.monthsNextYear,
@@ -77,6 +80,9 @@ class HomeOverview extends Equatable {
 
   /// Hochrechnung für das kommende Kalenderjahr.
   final double forecast;
+
+  /// Halbe Breite der Spanne um [forecast] (siehe [CostEngine.uncertainty]).
+  final double forecastRange;
 
   /// Prognose gegenüber dem laufenden Jahr (Ist bis heute plus Hochrechnung bis Dezember).
   final double? forecastChange;
@@ -109,6 +115,7 @@ class HomeOverview extends Equatable {
     final nextYear = List.filled(12, 0.0);
     var currentYearTotal = 0.0;
     var lastYearToDate = 0.0;
+    var rangeSquares = 0.0;
 
     for (final category in categories) {
       var costToDate = 0.0, previous = 0.0;
@@ -116,12 +123,16 @@ class HomeOverview extends Equatable {
       var usageUnit = '';
       for (final tracker in category.trackers) {
         final engine = CostEngine(tracker, today: today);
-        costToDate += engine.cost(yearStart, tomorrow);
-        previous += engine.cost(lastYearStart, lastYearTomorrow);
-        currentYearTotal += engine.costInYear(year);
-        for (var m = 1; m <= 12; m++) {
-          thisYear[m - 1] += engine.costInMonth(year, m);
-          nextYear[m - 1] += engine.costInMonth(year + 1, m);
+        // Kosten, die schon in einer anderen Kategorie stecken, zählen nirgends doppelt.
+        if (tracker.includedIn == null) {
+          costToDate += engine.cost(yearStart, tomorrow);
+          previous += engine.cost(lastYearStart, lastYearTomorrow);
+          currentYearTotal += engine.costInYear(year);
+          for (var m = 1; m <= 12; m++) {
+            thisYear[m - 1] += engine.costInMonth(year, m);
+            nextYear[m - 1] += engine.costInMonth(year + 1, m);
+          }
+          rangeSquares += math.pow(engine.uncertainty(engine.parts(DateTime.utc(year + 1), DateTime.utc(year + 2))), 2);
         }
         final meter = tracker.firstWithRole(FieldRole.meterReading);
         if (meter != null && engine.hasMeter) {
@@ -170,6 +181,7 @@ class HomeOverview extends Equatable {
       costToDate: costToDate,
       costChange: _ratio(costToDate, lastYearToDate),
       forecast: forecast,
+      forecastRange: math.sqrt(rangeSquares),
       forecastChange: _ratio(forecast, currentYearTotal),
       monthsThisYear: thisYear,
       monthsNextYear: nextYear,
@@ -196,5 +208,5 @@ class HomeOverview extends Equatable {
   }
 
   @override
-  List<Object?> get props => [today, costToDate, costChange, forecast, forecastChange, monthsThisYear, monthsNextYear, categories, reminders];
+  List<Object?> get props => [today, costToDate, costChange, forecast, forecastRange, forecastChange, monthsThisYear, monthsNextYear, categories, reminders];
 }

@@ -70,31 +70,36 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
   }
 }
 
-/// Was im Tracker-Sheet passiert ist: neuer Name oder archivieren.
+/// Was im Tracker-Sheet passiert ist: gespeichert (Name, wohin die Kosten zählen) oder archivieren.
 sealed class TrackerSheetResult {
   const TrackerSheetResult();
 }
 
 class TrackerRenamed extends TrackerSheetResult {
-  const TrackerRenamed(this.name);
+  const TrackerRenamed(this.name, {this.includedIn});
 
   final String name;
+
+  /// Kategorie, in deren Kosten der Tracker steckt (`null` = eigene Kosten).
+  final String? includedIn;
 }
 
 class TrackerArchiveRequested extends TrackerSheetResult {
   const TrackerArchiveRequested();
 }
 
-/// Tracker anlegen (ohne [tracker]) oder umbenennen und archivieren.
+/// Tracker anlegen (ohne [tracker]) oder umbenennen, Kosten einer anderen Kategorie zuordnen
+/// ([others]) und archivieren.
 class TrackerSheet extends StatefulWidget {
-  const TrackerSheet({super.key, this.tracker});
+  const TrackerSheet({super.key, this.tracker, this.others = const []});
 
   final Tracker? tracker;
+  final List<Category> others;
 
-  static Future<TrackerSheetResult?> show(BuildContext context, {Tracker? tracker}) => AppSheet.show<TrackerSheetResult>(
+  static Future<TrackerSheetResult?> show(BuildContext context, {Tracker? tracker, List<Category> others = const []}) => AppSheet.show<TrackerSheetResult>(
     context,
     title: tracker == null ? context.l10n.trackerNew : context.l10n.detailEditTracker,
-    child: TrackerSheet(tracker: tracker),
+    child: TrackerSheet(tracker: tracker, others: others),
   );
 
   @override
@@ -103,6 +108,7 @@ class TrackerSheet extends StatefulWidget {
 
 class _TrackerSheetState extends State<TrackerSheet> {
   late final _name = TextEditingController(text: widget.tracker?.name ?? '');
+  late String? _includedIn = widget.tracker?.includedIn;
 
   @override
   void dispose() {
@@ -112,7 +118,7 @@ class _TrackerSheetState extends State<TrackerSheet> {
 
   void _save() {
     final name = _name.text.trim();
-    if (name.isNotEmpty) Navigator.of(context).pop(TrackerRenamed(name));
+    if (name.isNotEmpty) Navigator.of(context).pop(TrackerRenamed(name, includedIn: _includedIn));
   }
 
   @override
@@ -134,6 +140,7 @@ class _TrackerSheetState extends State<TrackerSheet> {
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => _save(),
           ),
+          if (widget.tracker != null && widget.others.isNotEmpty) _includedPicker(context),
           AppButton(label: l10n.actionSave, onPressed: _name.text.trim().isEmpty ? null : _save),
           if (widget.tracker != null)
             AppButton(
@@ -141,6 +148,39 @@ class _TrackerSheetState extends State<TrackerSheet> {
               variant: AppButtonVariant.destructive,
               onPressed: () => Navigator.of(context).pop(const TrackerArchiveRequested()),
             ),
+        ],
+      ),
+    );
+  }
+
+  /// „Kosten enthalten in“: eigene Kosten oder eine andere Kategorie.
+  Widget _includedPicker(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    Widget chip(String label, String? value, {Color? swatch}) => AppPressable(
+      onTap: () => setState(() => _includedIn = value),
+      child: AppChip(
+        label: label,
+        background: _includedIn == value ? c.accentSoft : c.fill,
+        foreground: _includedIn == value ? c.accent : c.textSecondary,
+      ),
+    );
+    return AppCard(
+      color: c.surfaceRaised,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: Spacing.s,
+        children: [
+          AppText(l10n.trackerIncludedIn, style: (t) => t.headline),
+          Wrap(
+            spacing: Spacing.s,
+            runSpacing: Spacing.s,
+            children: [
+              chip(l10n.trackerIncludedNone, null),
+              for (final other in widget.others) chip(other.name, other.id),
+            ],
+          ),
+          AppText(l10n.trackerIncludedHint, style: (t) => t.footnote, color: c.textSecondary),
         ],
       ),
     );

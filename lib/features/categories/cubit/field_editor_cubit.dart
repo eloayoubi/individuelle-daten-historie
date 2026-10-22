@@ -1,15 +1,19 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/utils/formulas.dart';
 import '../data/categories_repository.dart';
 
 part 'field_editor_state.dart';
 
 /// Wofür der Editor geöffnet wird: neues Feld in [trackerId] oder vorhandenes [field].
 class FieldEditorArgs {
-  const FieldEditorArgs({required this.trackerId, this.field, this.hasValues = false, this.sort = 0});
+  const FieldEditorArgs({required this.trackerId, this.tracker, this.field, this.hasValues = false, this.sort = 0});
 
   final String trackerId;
+
+  /// Der Tracker selbst – für Formeln (Namen der anderen Felder, Vorschau).
+  final Tracker? tracker;
   final FieldDefinition? field;
 
   /// Vorhandene Werte schränken den Typwechsel ein (siehe [FieldKindRules.canBecome]).
@@ -23,7 +27,7 @@ class FieldEditorArgs {
 /// Intervall oder Auswahlwerte. Passt das Zeitverhalten nach einem Typwechsel nicht mehr, springt
 /// es auf das erste passende.
 class FieldEditorCubit extends Cubit<FieldEditorState> {
-  FieldEditorCubit(this._repository, this.args) : super(FieldEditorState.of(args.field, hasValues: args.hasValues));
+  FieldEditorCubit(this._repository, this.args) : super(FieldEditorState.of(args.field, hasValues: args.hasValues, tracker: args.tracker));
 
   final CategoriesRepository _repository;
   final FieldEditorArgs args;
@@ -47,6 +51,8 @@ class FieldEditorCubit extends Cubit<FieldEditorState> {
   void setFactor(String text) => emit(state.copyWith(factorText: text));
 
   void setInterval(int months) => emit(state.copyWith(intervalMonths: months));
+
+  void setFormula(String formula) => emit(state.copyWith(formula: formula));
 
   void addChoice(String choice) {
     final value = choice.trim();

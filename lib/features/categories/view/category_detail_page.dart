@@ -52,7 +52,7 @@ class _DetailView extends StatelessWidget {
           listenWhen: (previous, current) => current.event != null && current.event != previous.event,
           listener: _onEvent,
           builder: (context, state) => switch ((state.status, state.category)) {
-            (CategoryDetailStatus.ready, final Category category) => _Content(category: category),
+            (CategoryDetailStatus.ready, final Category category) => _Content(category: category, others: state.others),
             (CategoryDetailStatus.loading, _) => const Center(child: CupertinoActivityIndicator()),
             _ => _Missing(message: state.status == CategoryDetailStatus.failure ? context.l10n.errorLoad : context.l10n.detailMissing),
           },
@@ -63,9 +63,10 @@ class _DetailView extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.category});
+  const _Content({required this.category, this.others = const []});
 
   final Category category;
+  final List<Category> others;
 
   Future<void> _edit(BuildContext context) async {
     final cubit = context.read<CategoryDetailCubit>();
@@ -81,11 +82,11 @@ class _Content extends StatelessWidget {
   Future<void> _editTracker(BuildContext context, Tracker tracker) async {
     final cubit = context.read<CategoryDetailCubit>();
     final l10n = context.l10n;
-    final result = await TrackerSheet.show(context, tracker: tracker);
+    final result = await TrackerSheet.show(context, tracker: tracker, others: others);
     if (!context.mounted) return;
     switch (result) {
-      case TrackerRenamed(:final name):
-        await cubit.renameTracker(tracker.id, name);
+      case TrackerRenamed(:final name, :final includedIn):
+        await cubit.updateTracker(tracker, name: name, includedIn: includedIn);
       case TrackerArchiveRequested():
         final confirmed = await AppDialog.confirm(
           context,
@@ -115,7 +116,7 @@ class _Content extends StatelessWidget {
 
   void _openField(BuildContext context, Tracker tracker, [FieldDefinition? field]) => FieldEditorPage.open(
     context,
-    FieldEditorArgs(trackerId: tracker.id, field: field, hasValues: field != null && tracker.hasValues(field.id), sort: tracker.fields.length),
+    FieldEditorArgs(trackerId: tracker.id, tracker: tracker, field: field, hasValues: field != null && tracker.hasValues(field.id), sort: tracker.fields.length),
   );
 
   @override
@@ -162,7 +163,10 @@ class _Content extends StatelessWidget {
               AppListRow(
                 leading: AppIconTile(icon: CupertinoIcons.chart_bar_fill, color: c.swatch(category.swatch)),
                 title: l10n.trackerHistory,
-                subtitle: l10n.categoryEntries(tracker.entries.length),
+                subtitle: context.joinParts([
+                  l10n.categoryEntries(tracker.entries.length),
+                  if (others.where((o) => o.id == tracker.includedIn).firstOrNull case final Category into) l10n.trackerIncludedNote(into.name),
+                ]),
                 onTap: () => TrackerPage.open(context, categoryId: category.id, trackerId: tracker.id),
               ),
               for (final field in tracker.fields)

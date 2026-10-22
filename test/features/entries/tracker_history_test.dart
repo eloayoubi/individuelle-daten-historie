@@ -12,7 +12,7 @@ void main() {
   group('TrackerHistory', () {
     test('Zähler mit Preis: Kosten und Verbrauch, Zähler ohne Preis: nur Verbrauch, Verträge: nur Kosten', () {
       expect(TrackerHistory.metricsFor(tracker('c-strom')), [HistoryMetric.cost, HistoryMetric.consumption]);
-      expect(TrackerHistory.metricsFor(tracker('c-wasser')), [HistoryMetric.consumption]);
+      expect(TrackerHistory.metricsFor(tracker('c-wasser')), [HistoryMetric.cost, HistoryMetric.consumption]);
       expect(TrackerHistory.metricsFor(tracker('c-abos')), [HistoryMetric.cost]);
       expect(TrackerHistory.metricsFor(const Tracker(id: 't', name: 'Leer')), isEmpty);
     });

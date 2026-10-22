@@ -13,6 +13,7 @@ import '../../features/categories/data/supabase_categories_repository.dart';
 import '../../features/entries/cubit/entry_form_cubit.dart';
 import '../../features/entries/cubit/tracker_cubit.dart';
 import '../../features/home/cubit/home_cubit.dart';
+import '../../features/insights/cubit/insights_cubit.dart';
 import '../../features/reminders/cubit/reminders_cubit.dart';
 import '../../features/reminders/data/local_notification_gateway.dart';
 import '../../features/reminders/data/notification_gateway.dart';
@@ -64,6 +65,7 @@ Future<void> configureDependencies() async {
     ..registerFactory<AppearanceCubit>(() => AppearanceCubit(lookup<AppearanceStore>()))
     ..registerFactory<HomeCubit>(() => HomeCubit(lookup<CategoriesRepository>()))
     ..registerFactory<CategoriesCubit>(() => CategoriesCubit(lookup<CategoriesRepository>()))
+    ..registerFactory<InsightsCubit>(() => InsightsCubit(lookup<CategoriesRepository>()))
     // Mit Parameter: lookup<…>(param1: …)
     ..registerFactoryParam<CategorySetupCubit, CategoryTemplate?, void>((template, _) => CategorySetupCubit(lookup<CategoriesRepository>(), template))
     ..registerFactoryParam<CategoryDetailCubit, String, void>((id, _) => CategoryDetailCubit(lookup<CategoriesRepository>(), id))

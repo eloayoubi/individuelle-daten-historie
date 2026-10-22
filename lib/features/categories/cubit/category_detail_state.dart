@@ -12,16 +12,19 @@ class CategoryDetailEvent {
 }
 
 class CategoryDetailState extends Equatable {
-  const CategoryDetailState({this.status = CategoryDetailStatus.loading, this.category, this.event});
+  const CategoryDetailState({this.status = CategoryDetailStatus.loading, this.category, this.others = const [], this.event});
 
   final CategoryDetailStatus status;
   final Category? category;
+
+  /// Die übrigen aktiven Kategorien – Ziel für „Kosten enthalten in“.
+  final List<Category> others;
   final CategoryDetailEvent? event;
 
   /// [event] gilt nur für genau einen Zustand und fällt beim nächsten weg.
-  CategoryDetailState copyWith({CategoryDetailStatus? status, Category? category, CategoryDetailEvent? event}) =>
-      CategoryDetailState(status: status ?? this.status, category: category ?? this.category, event: event);
+  CategoryDetailState copyWith({CategoryDetailStatus? status, Category? category, List<Category>? others, CategoryDetailEvent? event}) =>
+      CategoryDetailState(status: status ?? this.status, category: category ?? this.category, others: others ?? this.others, event: event);
 
   @override
-  List<Object?> get props => [status, category, event];
+  List<Object?> get props => [status, category, others, event];
 }

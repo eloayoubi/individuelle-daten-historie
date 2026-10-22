@@ -6,7 +6,6 @@
   "tabInsights": "Auswertung",
   "tabSettings": "Einstellungen",
   "comingSoon": "Kommt bald.",
-  "placeholderInsights": "Verläufe, Jahresvergleiche und Prognosen für jede Kategorie.",
   "actionBack": "Zurück",
   "actionClose": "Schließen",
   "actionRetry": "Erneut versuchen",
@@ -247,7 +246,6 @@
   "fieldKind": "Feldtyp",
   "fieldRole": "Zeitverhalten",
   "fieldRoleFooter": "Bestimmt, wie Verlauf, Kosten und Prognose mit dem Wert rechnen.",
-  "fieldFormulaSoon": "Kommt mit der Auswertung",
   "fieldKindLocked": "Passt nicht zu den gespeicherten Werten",
   "fieldUnit": "Einheit",
   "fieldUnitHint": "z. B. kWh",
@@ -545,6 +543,219 @@
     "placeholders": {
       "count": {
         "type": "int"
+      }
+    }
+  },
+  "roleInstalment": "Abschlag",
+  "roleInstalmentHint": "Vorauszahlung je Monat – keine Kosten, wird im Abschlags-Check mit den Kosten verglichen",
+  "forecastRange": "Spanne {low} – {high}",
+  "@forecastRange": {
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsCosts": "Kosten {year}",
+  "@insightsCosts": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsProjected": "Bis Dezember hochgerechnet",
+  "insightsProjectedValue": "{value} (hochgerechnet)",
+  "@insightsProjectedValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsMonthly": "Kosten je Monat",
+  "insightsPartMeter": "Verbrauch × Preis (Zähler)",
+  "insightsPartFixed": "Feste Beträge (Miete, Verträge, Abos)",
+  "insightsPartOneOff": "Einmaliges (Ø der letzten 12 Monate)",
+  "insightsTrend": "{tracker}: {change} Verbrauch ggü. Vorjahr eingerechnet",
+  "@insightsTrend": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsForecastExplain": "Zähler rechnen mit dem Verbrauch des Vorjahres in derselben Jahreszeit, angepasst um den Trend. Preise und Beträge gelten so, wie sie dann gelten – auch schon eingetragene Erhöhungen. Die Spanne wächst mit unregelmäßigen Ausgaben.",
+  "insightsComparison": "{year} gegen {previous}",
+  "@insightsComparison": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsPrevious": "{year}: {value}",
+  "@insightsPrevious": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsConsumptionHint": "Bis heute, verglichen mit demselben Zeitraum im Vorjahr.",
+  "insightsInstalments": "Abschlags-Check",
+  "insightsInstalmentDetail": "Ø {paid} pro Monat · Kosten {year} ≈ {cost}",
+  "@insightsInstalmentDetail": {
+    "placeholders": {
+      "paid": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsCredit": "Guthaben ≈ {value}",
+  "@insightsCredit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsBackPayment": "Nachzahlung ≈ {value}",
+  "@insightsBackPayment": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsSuggest": "Passend wären {value} pro Monat.",
+  "@insightsSuggest": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsInstalmentFooter": "Abschläge gegen die gerechneten Kosten des ganzen Jahres – im laufenden Jahr mit Hochrechnung bis Dezember.",
+  "insightsIncluded": "{tracker}: {cost} stecken in {category} und zählen dort.",
+  "@insightsIncluded": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "trackerIncludedIn": "Kosten enthalten in",
+  "trackerIncludedNone": "Eigene Kosten",
+  "trackerIncludedHint": "Z. B. Wasser, das schon in den Nebenkosten steckt: Die Kosten werden gezeigt, aber in keiner Summe doppelt gezählt.",
+  "trackerIncludedNote": "Kosten stecken in {category} und zählen dort.",
+  "@trackerIncludedNote": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "fieldFormula": "Formel",
+  "fieldFormulaHint": "z. B. verbrauch * arbeitspreis",
+  "fieldFormulaValues": "Werte",
+  "fieldFormulaFunctions": "Funktionen",
+  "fieldFormulaPreview": "Mit dem letzten Eintrag: {value}",
+  "@fieldFormulaPreview": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fieldFormulaNoPreview": "Noch kein Eintrag, mit dem sich rechnen lässt.",
+  "fieldFormulaFooter": "Rechnet je Eintrag mit den Feldern dieses Trackers, dazu verbrauch, tage und monate seit dem vorigen Eintrag. Mehrere Werte in Funktionen mit ; trennen.",
+  "formulaErrorEmpty": "Bitte einen Ausdruck eingeben.",
+  "formulaErrorCharacter": "Unerwartetes Zeichen „{detail}“ an Stelle {position}.",
+  "@formulaErrorCharacter": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "formulaErrorEnd": "Der Ausdruck endet zu früh.",
+  "formulaErrorToken": "Unerwartetes „{detail}“ an Stelle {position}.",
+  "@formulaErrorToken": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "formulaErrorParenthesis": "Hier fehlt eine schließende Klammer (Stelle {position}).",
+  "@formulaErrorParenthesis": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "formulaErrorFunction": "Unbekannte Funktion „{detail}“.",
+  "@formulaErrorFunction": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorArguments": "Falsche Anzahl Werte für „{detail}“.",
+  "@formulaErrorArguments": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorVariable": "Unbekannter Name „{detail}“.",
+  "@formulaErrorVariable": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorDeep": "Zu tief verschachtelt.",
+  "insightsRangeOnly": "± {range}",
+  "@insightsRangeOnly": {
+    "placeholders": {
+      "range": {
+        "type": "String"
       }
     }
   }

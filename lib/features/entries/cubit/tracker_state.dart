@@ -11,6 +11,7 @@ class TrackerState extends Equatable {
     this.metric,
     this.history,
     this.currentValues = const [],
+    this.includedInName,
   });
 
   final TrackerStatus status;
@@ -23,6 +24,9 @@ class TrackerState extends Equatable {
   final TrackerHistory? history;
   final List<CurrentValue> currentValues;
 
+  /// Kategorie, in deren Kosten dieser Tracker steckt.
+  final String? includedInName;
+
   /// Neueste zuerst.
   List<Entry> get entries => [...?tracker?.entries]..sort((a, b) => b.date.compareTo(a.date));
 
@@ -34,8 +38,9 @@ class TrackerState extends Equatable {
     metric: metric ?? this.metric,
     history: history ?? this.history,
     currentValues: currentValues,
+    includedInName: includedInName,
   );
 
   @override
-  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues];
+  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues, includedInName];
 }

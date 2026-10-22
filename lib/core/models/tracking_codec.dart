@@ -40,6 +40,7 @@ abstract final class TrackingCodec {
     'name': t.name,
     'fields': [for (final f in t.fields) field(f)],
     'entries': [for (final e in t.entries) entry(e)],
+    'includedIn': t.includedIn,
   };
 
   static Tracker trackerFrom(Map<String, Object?> j) => Tracker(
@@ -47,6 +48,7 @@ abstract final class TrackingCodec {
     name: j['name']! as String,
     fields: [for (final f in (j['fields']! as List).cast<Map<String, Object?>>()) fieldFrom(f)],
     entries: [for (final e in (j['entries']! as List).cast<Map<String, Object?>>()) entryFrom(e)],
+    includedIn: j['includedIn'] as String?,
   );
 
   static Map<String, Object?> field(FieldDefinition f) => {

@@ -27,10 +27,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get comingSoon => 'Kommt bald.';
 
   @override
-  String get placeholderInsights =>
-      'Verläufe, Jahresvergleiche und Prognosen für jede Kategorie.';
-
-  @override
   String get actionBack => 'Zurück';
 
   @override
@@ -364,9 +360,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fieldRoleFooter =>
       'Bestimmt, wie Verlauf, Kosten und Prognose mit dem Wert rechnen.';
-
-  @override
-  String get fieldFormulaSoon => 'Kommt mit der Auswertung';
 
   @override
   String get fieldKindLocked => 'Passt nicht zu den gespeicherten Werten';
@@ -907,5 +900,181 @@ class AppLocalizationsDe extends AppLocalizations {
       zero: 'Noch keine Einträge',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get roleInstalment => 'Abschlag';
+
+  @override
+  String get roleInstalmentHint =>
+      'Vorauszahlung je Monat – keine Kosten, wird im Abschlags-Check mit den Kosten verglichen';
+
+  @override
+  String forecastRange(String low, String high) {
+    return 'Spanne $low – $high';
+  }
+
+  @override
+  String insightsCosts(String year) {
+    return 'Kosten $year';
+  }
+
+  @override
+  String get insightsProjected => 'Bis Dezember hochgerechnet';
+
+  @override
+  String insightsProjectedValue(String value) {
+    return '$value (hochgerechnet)';
+  }
+
+  @override
+  String get insightsMonthly => 'Kosten je Monat';
+
+  @override
+  String get insightsPartMeter => 'Verbrauch × Preis (Zähler)';
+
+  @override
+  String get insightsPartFixed => 'Feste Beträge (Miete, Verträge, Abos)';
+
+  @override
+  String get insightsPartOneOff => 'Einmaliges (Ø der letzten 12 Monate)';
+
+  @override
+  String insightsTrend(String tracker, String change) {
+    return '$tracker: $change Verbrauch ggü. Vorjahr eingerechnet';
+  }
+
+  @override
+  String get insightsForecastExplain =>
+      'Zähler rechnen mit dem Verbrauch des Vorjahres in derselben Jahreszeit, angepasst um den Trend. Preise und Beträge gelten so, wie sie dann gelten – auch schon eingetragene Erhöhungen. Die Spanne wächst mit unregelmäßigen Ausgaben.';
+
+  @override
+  String insightsComparison(String year, String previous) {
+    return '$year gegen $previous';
+  }
+
+  @override
+  String insightsPrevious(String year, String value) {
+    return '$year: $value';
+  }
+
+  @override
+  String get insightsConsumptionHint =>
+      'Bis heute, verglichen mit demselben Zeitraum im Vorjahr.';
+
+  @override
+  String get insightsInstalments => 'Abschlags-Check';
+
+  @override
+  String insightsInstalmentDetail(String paid, String year, String cost) {
+    return 'Ø $paid pro Monat · Kosten $year ≈ $cost';
+  }
+
+  @override
+  String insightsCredit(String value) {
+    return 'Guthaben ≈ $value';
+  }
+
+  @override
+  String insightsBackPayment(String value) {
+    return 'Nachzahlung ≈ $value';
+  }
+
+  @override
+  String insightsSuggest(String value) {
+    return 'Passend wären $value pro Monat.';
+  }
+
+  @override
+  String get insightsInstalmentFooter =>
+      'Abschläge gegen die gerechneten Kosten des ganzen Jahres – im laufenden Jahr mit Hochrechnung bis Dezember.';
+
+  @override
+  String insightsIncluded(String tracker, String cost, String category) {
+    return '$tracker: $cost stecken in $category und zählen dort.';
+  }
+
+  @override
+  String get trackerIncludedIn => 'Kosten enthalten in';
+
+  @override
+  String get trackerIncludedNone => 'Eigene Kosten';
+
+  @override
+  String get trackerIncludedHint =>
+      'Z. B. Wasser, das schon in den Nebenkosten steckt: Die Kosten werden gezeigt, aber in keiner Summe doppelt gezählt.';
+
+  @override
+  String trackerIncludedNote(String category) {
+    return 'Kosten stecken in $category und zählen dort.';
+  }
+
+  @override
+  String get fieldFormula => 'Formel';
+
+  @override
+  String get fieldFormulaHint => 'z. B. verbrauch * arbeitspreis';
+
+  @override
+  String get fieldFormulaValues => 'Werte';
+
+  @override
+  String get fieldFormulaFunctions => 'Funktionen';
+
+  @override
+  String fieldFormulaPreview(String value) {
+    return 'Mit dem letzten Eintrag: $value';
+  }
+
+  @override
+  String get fieldFormulaNoPreview =>
+      'Noch kein Eintrag, mit dem sich rechnen lässt.';
+
+  @override
+  String get fieldFormulaFooter =>
+      'Rechnet je Eintrag mit den Feldern dieses Trackers, dazu verbrauch, tage und monate seit dem vorigen Eintrag. Mehrere Werte in Funktionen mit ; trennen.';
+
+  @override
+  String get formulaErrorEmpty => 'Bitte einen Ausdruck eingeben.';
+
+  @override
+  String formulaErrorCharacter(String detail, int position) {
+    return 'Unerwartetes Zeichen „$detail“ an Stelle $position.';
+  }
+
+  @override
+  String get formulaErrorEnd => 'Der Ausdruck endet zu früh.';
+
+  @override
+  String formulaErrorToken(String detail, int position) {
+    return 'Unerwartetes „$detail“ an Stelle $position.';
+  }
+
+  @override
+  String formulaErrorParenthesis(int position) {
+    return 'Hier fehlt eine schließende Klammer (Stelle $position).';
+  }
+
+  @override
+  String formulaErrorFunction(String detail) {
+    return 'Unbekannte Funktion „$detail“.';
+  }
+
+  @override
+  String formulaErrorArguments(String detail) {
+    return 'Falsche Anzahl Werte für „$detail“.';
+  }
+
+  @override
+  String formulaErrorVariable(String detail) {
+    return 'Unbekannter Name „$detail“.';
+  }
+
+  @override
+  String get formulaErrorDeep => 'Zu tief verschachtelt.';
+
+  @override
+  String insightsRangeOnly(String range) {
+    return '± $range';
   }
 }

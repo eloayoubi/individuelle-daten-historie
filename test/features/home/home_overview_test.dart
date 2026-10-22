@@ -18,9 +18,10 @@ void main() {
     expect(overview.monthsNextYear, hasLength(12));
     expect(overview.forecast, greaterThan(overview.costToDate));
     expect(overview.forecastChange, isNotNull);
+    expect(overview.forecastRange, inExclusiveRange(0, overview.forecast * 0.1));
   });
 
-  test('zeigt Verbrauch statt Kosten, wenn ein Zähler keinen Preis hat', () {
+  test('Kosten, die in einer anderen Kategorie stecken, zählen nicht doppelt – es bleibt der Verbrauch', () {
     final wasser = overview.categories.firstWhere((s) => s.category.id == 'c-wasser');
     expect(wasser.costToDate, 0);
     expect(wasser.usage, greaterThan(0));

@@ -134,12 +134,6 @@ abstract class AppLocalizations {
   /// **'Kommt bald.'**
   String get comingSoon;
 
-  /// No description provided for @placeholderInsights.
-  ///
-  /// In de, this message translates to:
-  /// **'Verläufe, Jahresvergleiche und Prognosen für jede Kategorie.'**
-  String get placeholderInsights;
-
   /// No description provided for @actionBack.
   ///
   /// In de, this message translates to:
@@ -643,12 +637,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Bestimmt, wie Verlauf, Kosten und Prognose mit dem Wert rechnen.'**
   String get fieldRoleFooter;
-
-  /// No description provided for @fieldFormulaSoon.
-  ///
-  /// In de, this message translates to:
-  /// **'Kommt mit der Auswertung'**
-  String get fieldFormulaSoon;
 
   /// No description provided for @fieldKindLocked.
   ///
@@ -1567,6 +1555,264 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{count, plural, =0{Noch keine Einträge} =1{1 Eintrag} other{{count} Einträge}}'**
   String categoryEntries(int count);
+
+  /// No description provided for @roleInstalment.
+  ///
+  /// In de, this message translates to:
+  /// **'Abschlag'**
+  String get roleInstalment;
+
+  /// No description provided for @roleInstalmentHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorauszahlung je Monat – keine Kosten, wird im Abschlags-Check mit den Kosten verglichen'**
+  String get roleInstalmentHint;
+
+  /// No description provided for @forecastRange.
+  ///
+  /// In de, this message translates to:
+  /// **'Spanne {low} – {high}'**
+  String forecastRange(String low, String high);
+
+  /// No description provided for @insightsCosts.
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten {year}'**
+  String insightsCosts(String year);
+
+  /// No description provided for @insightsProjected.
+  ///
+  /// In de, this message translates to:
+  /// **'Bis Dezember hochgerechnet'**
+  String get insightsProjected;
+
+  /// No description provided for @insightsProjectedValue.
+  ///
+  /// In de, this message translates to:
+  /// **'{value} (hochgerechnet)'**
+  String insightsProjectedValue(String value);
+
+  /// No description provided for @insightsMonthly.
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten je Monat'**
+  String get insightsMonthly;
+
+  /// No description provided for @insightsPartMeter.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbrauch × Preis (Zähler)'**
+  String get insightsPartMeter;
+
+  /// No description provided for @insightsPartFixed.
+  ///
+  /// In de, this message translates to:
+  /// **'Feste Beträge (Miete, Verträge, Abos)'**
+  String get insightsPartFixed;
+
+  /// No description provided for @insightsPartOneOff.
+  ///
+  /// In de, this message translates to:
+  /// **'Einmaliges (Ø der letzten 12 Monate)'**
+  String get insightsPartOneOff;
+
+  /// No description provided for @insightsTrend.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker}: {change} Verbrauch ggü. Vorjahr eingerechnet'**
+  String insightsTrend(String tracker, String change);
+
+  /// No description provided for @insightsForecastExplain.
+  ///
+  /// In de, this message translates to:
+  /// **'Zähler rechnen mit dem Verbrauch des Vorjahres in derselben Jahreszeit, angepasst um den Trend. Preise und Beträge gelten so, wie sie dann gelten – auch schon eingetragene Erhöhungen. Die Spanne wächst mit unregelmäßigen Ausgaben.'**
+  String get insightsForecastExplain;
+
+  /// No description provided for @insightsComparison.
+  ///
+  /// In de, this message translates to:
+  /// **'{year} gegen {previous}'**
+  String insightsComparison(String year, String previous);
+
+  /// No description provided for @insightsPrevious.
+  ///
+  /// In de, this message translates to:
+  /// **'{year}: {value}'**
+  String insightsPrevious(String year, String value);
+
+  /// No description provided for @insightsConsumptionHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Bis heute, verglichen mit demselben Zeitraum im Vorjahr.'**
+  String get insightsConsumptionHint;
+
+  /// No description provided for @insightsInstalments.
+  ///
+  /// In de, this message translates to:
+  /// **'Abschlags-Check'**
+  String get insightsInstalments;
+
+  /// No description provided for @insightsInstalmentDetail.
+  ///
+  /// In de, this message translates to:
+  /// **'Ø {paid} pro Monat · Kosten {year} ≈ {cost}'**
+  String insightsInstalmentDetail(String paid, String year, String cost);
+
+  /// No description provided for @insightsCredit.
+  ///
+  /// In de, this message translates to:
+  /// **'Guthaben ≈ {value}'**
+  String insightsCredit(String value);
+
+  /// No description provided for @insightsBackPayment.
+  ///
+  /// In de, this message translates to:
+  /// **'Nachzahlung ≈ {value}'**
+  String insightsBackPayment(String value);
+
+  /// No description provided for @insightsSuggest.
+  ///
+  /// In de, this message translates to:
+  /// **'Passend wären {value} pro Monat.'**
+  String insightsSuggest(String value);
+
+  /// No description provided for @insightsInstalmentFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Abschläge gegen die gerechneten Kosten des ganzen Jahres – im laufenden Jahr mit Hochrechnung bis Dezember.'**
+  String get insightsInstalmentFooter;
+
+  /// No description provided for @insightsIncluded.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker}: {cost} stecken in {category} und zählen dort.'**
+  String insightsIncluded(String tracker, String cost, String category);
+
+  /// No description provided for @trackerIncludedIn.
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten enthalten in'**
+  String get trackerIncludedIn;
+
+  /// No description provided for @trackerIncludedNone.
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Kosten'**
+  String get trackerIncludedNone;
+
+  /// No description provided for @trackerIncludedHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Z. B. Wasser, das schon in den Nebenkosten steckt: Die Kosten werden gezeigt, aber in keiner Summe doppelt gezählt.'**
+  String get trackerIncludedHint;
+
+  /// No description provided for @trackerIncludedNote.
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten stecken in {category} und zählen dort.'**
+  String trackerIncludedNote(String category);
+
+  /// No description provided for @fieldFormula.
+  ///
+  /// In de, this message translates to:
+  /// **'Formel'**
+  String get fieldFormula;
+
+  /// No description provided for @fieldFormulaHint.
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. verbrauch * arbeitspreis'**
+  String get fieldFormulaHint;
+
+  /// No description provided for @fieldFormulaValues.
+  ///
+  /// In de, this message translates to:
+  /// **'Werte'**
+  String get fieldFormulaValues;
+
+  /// No description provided for @fieldFormulaFunctions.
+  ///
+  /// In de, this message translates to:
+  /// **'Funktionen'**
+  String get fieldFormulaFunctions;
+
+  /// No description provided for @fieldFormulaPreview.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit dem letzten Eintrag: {value}'**
+  String fieldFormulaPreview(String value);
+
+  /// No description provided for @fieldFormulaNoPreview.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Eintrag, mit dem sich rechnen lässt.'**
+  String get fieldFormulaNoPreview;
+
+  /// No description provided for @fieldFormulaFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Rechnet je Eintrag mit den Feldern dieses Trackers, dazu verbrauch, tage und monate seit dem vorigen Eintrag. Mehrere Werte in Funktionen mit ; trennen.'**
+  String get fieldFormulaFooter;
+
+  /// No description provided for @formulaErrorEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte einen Ausdruck eingeben.'**
+  String get formulaErrorEmpty;
+
+  /// No description provided for @formulaErrorCharacter.
+  ///
+  /// In de, this message translates to:
+  /// **'Unerwartetes Zeichen „{detail}“ an Stelle {position}.'**
+  String formulaErrorCharacter(String detail, int position);
+
+  /// No description provided for @formulaErrorEnd.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Ausdruck endet zu früh.'**
+  String get formulaErrorEnd;
+
+  /// No description provided for @formulaErrorToken.
+  ///
+  /// In de, this message translates to:
+  /// **'Unerwartetes „{detail}“ an Stelle {position}.'**
+  String formulaErrorToken(String detail, int position);
+
+  /// No description provided for @formulaErrorParenthesis.
+  ///
+  /// In de, this message translates to:
+  /// **'Hier fehlt eine schließende Klammer (Stelle {position}).'**
+  String formulaErrorParenthesis(int position);
+
+  /// No description provided for @formulaErrorFunction.
+  ///
+  /// In de, this message translates to:
+  /// **'Unbekannte Funktion „{detail}“.'**
+  String formulaErrorFunction(String detail);
+
+  /// No description provided for @formulaErrorArguments.
+  ///
+  /// In de, this message translates to:
+  /// **'Falsche Anzahl Werte für „{detail}“.'**
+  String formulaErrorArguments(String detail);
+
+  /// No description provided for @formulaErrorVariable.
+  ///
+  /// In de, this message translates to:
+  /// **'Unbekannter Name „{detail}“.'**
+  String formulaErrorVariable(String detail);
+
+  /// No description provided for @formulaErrorDeep.
+  ///
+  /// In de, this message translates to:
+  /// **'Zu tief verschachtelt.'**
+  String get formulaErrorDeep;
+
+  /// No description provided for @insightsRangeOnly.
+  ///
+  /// In de, this message translates to:
+  /// **'± {range}'**
+  String insightsRangeOnly(String range);
 }
 
 class _AppLocalizationsDelegate

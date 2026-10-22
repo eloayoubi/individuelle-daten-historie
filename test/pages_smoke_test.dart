@@ -16,6 +16,7 @@ import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
 import 'package:kostenkurve/features/entries/view/entry_form_page.dart';
 import 'package:kostenkurve/features/entries/view/tracker_page.dart';
 import 'package:kostenkurve/features/home/view/home_page.dart';
+import 'package:kostenkurve/features/insights/view/insights_page.dart';
 import 'package:kostenkurve/features/home/view/widgets/quick_add_sheet.dart';
 import 'package:kostenkurve/features/settings/view/settings_page.dart';
 import 'package:kostenkurve/features/shell/view/shell_page.dart';
@@ -55,6 +56,10 @@ void main() {
     ('tracker water', const TrackerPage(args: TrackerArgs(categoryId: 'c-wasser', trackerId: 't-wasser'))),
     ('tracker contract', const TrackerPage(args: TrackerArgs(categoryId: 'c-internet', trackerId: 't-glasfaser'))),
     ('tracker missing', const TrackerPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 'weg'))),
+    ('tracker car with formula', const TrackerPage(args: TrackerArgs(categoryId: 'c-auto', trackerId: 't-golf'))),
+    ('tracker water included', const TrackerPage(args: TrackerArgs(categoryId: 'c-wasser', trackerId: 't-wasser'))),
+    ('insights', const InsightsPage()),
+    ('field editor formula', FieldEditorPage(args: FieldEditorArgs(trackerId: auto.trackers.single.id, tracker: auto.trackers.single, field: auto.trackers.single.fields.firstWhere((f) => f.formula != null)))),
   ];
 
   for (final (mode, theme) in [('hell', AppTheme.light), ('dunkel', AppTheme.night)]) {
@@ -78,7 +83,7 @@ void main() {
         expect(find.textContaining('Zuletzt'), findsOneWidget);
         await t.enterText(find.byType(TextField).first, '760');
         await t.pumpAndSettle();
-        expect(find.textContaining('m³ seit'), findsOneWidget);
+        expect(find.textContaining(RegExp(r'^\+.* m³ seit')), findsOneWidget);
         await t.tap(find.text('Eintrag speichern'));
         await t.pumpAndSettle();
         expect(find.byType(EntryFormPage), findsNothing);
@@ -93,6 +98,31 @@ void main() {
         await t.tap(find.text('Verbrauch'));
         await t.pumpAndSettle();
         expect(find.textContaining('kWh'), findsWidgets);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Auswertung: Jahr wechseln, Prognose verschwindet', (t) async {
+        await pumpPage(t, const InsightsPage(), theme: theme, size: const Size(390, 2600));
+        await t.pumpAndSettle();
+        expect(find.text('Prognose 2027'), findsWidgets);
+        expect(find.text('Abschlags-Check'), findsOneWidget);
+        await t.tap(find.text('2025'));
+        await t.pumpAndSettle();
+        expect(find.text('Prognose 2027'), findsNothing);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Formel-Editor zeigt Vorschau und Fehler live', (t) async {
+        final golf = auto.trackers.single;
+        await pumpPage(t, FieldEditorPage(args: FieldEditorArgs(trackerId: golf.id, tracker: golf, field: golf.fields.firstWhere((f) => f.formula != null))), theme: theme, size: const Size(390, 2600));
+        await t.pumpAndSettle();
+        expect(find.textContaining('Mit dem letzten Eintrag'), findsOneWidget);
+        final formulaField = find.widgetWithText(TextField, 'runden(liter / verbrauch * 100; 1)');
+        await t.enterText(formulaField, 'liter / strecke');
+        await t.pumpAndSettle();
+        expect(find.text('Unbekannter Name „strecke“.'), findsOneWidget);
+        await t.tap(find.text('verbrauch'));
+        await t.pumpAndSettle();
         expect(t.takeException(), isNull);
       });
 
