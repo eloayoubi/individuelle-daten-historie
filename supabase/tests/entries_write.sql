@@ -66,6 +66,21 @@ begin
   exception when check_violation then null;
   end;
 
+  -- Abrechnungszeitraum.
+  perform public.save_entry(
+    v_id, '20000000-0000-4000-8000-000000000001', '2026-05-20', 'Abrechnung 2025', false,
+    '[{"field_id": "30000000-0000-4000-8000-000000000003", "num": 148}]'::jsonb, '2025-01-01', '2025-12-31'
+  );
+  assert (select (period_start, period_end) from public.entries where id = v_id) = ('2025-01-01'::date, '2025-12-31'::date), 'Zeitraum gespeichert';
+  begin
+    perform public.save_entry(
+      v_id, '20000000-0000-4000-8000-000000000001', '2026-05-20', null, false,
+      '[{"field_id": "30000000-0000-4000-8000-000000000003", "num": 148}]'::jsonb, '2025-12-31', '2025-01-01'
+    );
+    raise exception 'Zeitraum rückwärts angenommen';
+  exception when check_violation then null;
+  end;
+
   -- Löschen ist wiederholbar.
   delete from public.entries where id = v_id;
   assert found, 'Eintrag gelöscht';

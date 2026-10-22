@@ -179,8 +179,9 @@ enable_signup = true
 # Allow/disallow anonymous sign-ins to your project. Für Kostenkurve an (auch im Dashboard
 # einschalten: Authentication → Sign In / Providers → Allow anonymous sign-ins).
 enable_anonymous_sign_ins = true
-# Allow/disallow testing manual linking of accounts
-enable_manual_linking = false
+# Allow/disallow testing manual linking of accounts. Für Kostenkurve an: „Mit Apple sichern“
+# verknüpft die Apple-ID mit dem anonymen Konto (linkIdentityWithIdToken), so bleiben die Daten.
+enable_manual_linking = true
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
 minimum_password_length = 6
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
@@ -250,6 +251,17 @@ otp_expiry = 3600
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
+
+# Kostenkurve fragt 6-stellige Codes ab, Links gibt es nicht: beide Vorlagen enthalten {{ .Token }}.
+# Anmelden mit bestehendem Konto (signInWithOtp):
+[auth.email.template.magic_link]
+subject = "Dein Anmeldecode für Kostenkurve"
+content_path = "./supabase/templates/magic_link.html"
+
+# Konto mit E-Mail sichern (updateUser(email) aus dem anonymen Konto):
+[auth.email.template.email_change]
+subject = "Bestätige deine E-Mail für Kostenkurve"
+content_path = "./supabase/templates/email_change.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -323,10 +335,12 @@ max_frequency = "5s"
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
 [auth.external.apple]
-enabled = false
-client_id = ""
+# Kostenkurve meldet nativ mit dem ID-Token an (Sign in with Apple auf dem Gerät): Client-ID ist
+# die Bundle-ID, ein Secret braucht nur der Web-OAuth-Weg.
+enabled = true
+client_id = "de.eloayoubi.kostenkurve"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
-secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+secret = ""
 # Overrides the default auth callback URL derived from auth.external_url.
 redirect_uri = ""
 # Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
@@ -391,6 +405,22 @@ deno_version = 2
 # Health-Check ohne Anmeldung (liefert nur {"ok": true}), z. B. curl https://<ref>.supabase.co/functions/v1/health
 [functions.health]
 verify_jwt = false
+
+# Kaufprüfung aus der App (StoreKit-2-Transaktion von Kostenkurve Plus) – nur angemeldet.
+[functions.verify-purchase]
+verify_jwt = true
+
+# App Store Server Notifications V2: Apple ruft ohne Supabase-Token auf, die Funktion prüft Apples Signatur.
+[functions.app-store-notifications]
+verify_jwt = false
+
+# Konto löschen (Belege, Apple-Widerruf, Daten, Auth-Nutzer) – nur angemeldet.
+[functions.delete-account]
+verify_jwt = true
+
+# Sign in with Apple: Autorisierungscode gegen Refresh-Token tauschen (für den Widerruf beim Löschen) – nur angemeldet.
+[functions.apple-token]
+verify_jwt = true
 
 [analytics]
 enabled = true

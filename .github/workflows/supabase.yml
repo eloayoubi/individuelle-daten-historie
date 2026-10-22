@@ -5,9 +5,13 @@
 #   gh workflow run supabase.yml --ref main                     # nur anzeigen, was neu ist
 #   gh workflow run supabase.yml --ref main -f apply=true       # wirklich einspielen
 #   gh workflow run supabase.yml --ref main -f functions="health"   # Edge Functions deployen
+#   gh workflow run supabase.yml --ref main -f functions="all"      # alle: health verify-purchase
+#                                     app-store-notifications delete-account apple-token
 #
 # Secrets: SUPABASE_ACCESS_TOKEN (supabase.com → Account → Access Tokens),
 #          SUPABASE_URL (daraus die Projekt-Ref), optional SUPABASE_DB_PASSWORD
+# Die Secrets der Edge Functions (APPLE_BUNDLE_ID, APPLE_ALLOW_SANDBOX, APPLE_TEAM_ID, APPLE_SIGNIN_KEY_ID,
+# APPLE_SIGNIN_KEY) setzt dieser Workflow nicht – einmalig per `supabase secrets set` (supabase/README.md).
 name: Supabase migrations
 
 on:
@@ -18,7 +22,7 @@ on:
         type: boolean
         default: false
       functions:
-        description: "Edge Functions deployen, Namen mit Leerzeichen getrennt (leer = keine)"
+        description: "Edge Functions deployen: Namen mit Leerzeichen getrennt (health verify-purchase app-store-notifications delete-account apple-token) oder all (leer = keine)"
         type: string
         default: ""
 
@@ -70,6 +74,10 @@ jobs:
         env:
           FUNCTIONS: ${{ inputs.functions }}
         run: |
+          # all = jeder Ordner unter supabase/functions außer _shared (gemeinsamer Code, keine Funktion).
+          if [ "$FUNCTIONS" = "all" ]; then
+            FUNCTIONS=$(find supabase/functions -mindepth 1 -maxdepth 1 -type d ! -name '_*' -exec basename {} \; | sort)
+          fi
           for f in $FUNCTIONS; do
             [[ "$f" =~ ^[a-z0-9-]+$ && -d "supabase/functions/$f" ]] || { echo "::error::Unbekannte Edge Function: $f"; exit 1; }
             supabase functions deploy "$f"
