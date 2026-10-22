@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 
+/// Werte eines Felds in einem Zeitfenster bis zum Eintrag: Summe oder Durchschnitt, `null` ohne Werte.
+typedef FormulaWindow = double? Function(String name, double days, bool average);
+
 /// Warum sich eine Formel nicht lesen lässt; die Texte stehen in den ARB-Dateien.
 enum FormulaErrorKind { empty, unexpectedCharacter, unexpectedEnd, unexpectedToken, missingParenthesis, unknownFunction, argumentCount, unknownVariable, tooDeep }
 
@@ -23,7 +26,8 @@ class FormulaException implements Exception {
 /// - Zahlen mit Punkt oder Komma (`0,329`); Argumente trennt `;` oder `, ` (Komma mit Leerzeichen).
 /// - `+ - * / ^`, Klammern, Vergleiche `< > <= >= = !=` (ergeben 1 oder 0).
 /// - Funktionen: `min`, `max`, `abs`, `runden(x; stellen)`, `wurzel`, `wenn(bedingung; dann; sonst)`
-///   (englisch auch `round`, `sqrt`, `if`).
+///   (englisch auch `round`, `sqrt`, `if`); über Zeit `summe(feld; tage)` und `schnitt(feld; tage)`
+///   (`sum`, `avg`) – Werte des Felds in den letzten Tagen bis zum Eintrag.
 /// - Namen sind Feld-Kurznamen (siehe `Formulas.keyOf`) oder `verbrauch`, `tage`, `monate`.
 ///
 /// Eigener Parser statt `eval`: nur Rechnen, keine Schleifen, Tiefe begrenzt.
@@ -49,8 +53,9 @@ class Formula {
   }
 
   /// `null`, wenn ein Name fehlt, durch 0 geteilt wird oder das Ergebnis keine Zahl ist.
-  double? evaluate(Map<String, double> values) {
-    final result = _root.eval(values);
+  /// [window] liefert die Werte für `summe` und `schnitt`.
+  double? evaluate(Map<String, double> values, {FormulaWindow? window}) {
+    final result = _root.eval(values, window);
     return result != null && result.isFinite ? result : null;
   }
 }
@@ -208,7 +213,13 @@ class _Parser {
     'sqrt': (1, 1),
     'wenn': (3, 3),
     'if': (3, 3),
+    'summe': (2, 2),
+    'sum': (2, 2),
+    'schnitt': (2, 2),
+    'avg': (2, 2),
   };
+
+  static const _windowed = {'summe', 'sum', 'schnitt', 'avg'};
 
   _Node _call(_Token name) {
     final arity = _arity[name.text];
@@ -225,6 +236,8 @@ class _Parser {
     if (_peek.type != _T.close) throw FormulaException(FormulaErrorKind.missingParenthesis, _peek.position);
     _next();
     if (args.length < arity.$1 || args.length > arity.$2) throw FormulaException(FormulaErrorKind.argumentCount, name.position, name.text);
+    // Zeitfenster brauchen einen Feldnamen als ersten Wert.
+    if (_windowed.contains(name.text) && args.first is! _Var) throw FormulaException(FormulaErrorKind.argumentCount, name.position, name.text);
     return _Call(name.text, args);
   }
 }
@@ -234,7 +247,7 @@ class _Parser {
 // ---------------------------------------------------------------------------------------------
 
 sealed class _Node {
-  double? eval(Map<String, double> v);
+  double? eval(Map<String, double> v, FormulaWindow? w);
 
   void collect(Set<String> names);
 }
@@ -245,7 +258,7 @@ class _Num extends _Node {
   final double value;
 
   @override
-  double? eval(Map<String, double> v) => value;
+  double? eval(Map<String, double> v, FormulaWindow? w) => value;
 
   @override
   void collect(Set<String> names) {}
@@ -257,7 +270,7 @@ class _Var extends _Node {
   final String name;
 
   @override
-  double? eval(Map<String, double> v) => v[name];
+  double? eval(Map<String, double> v, FormulaWindow? w) => v[name];
 
   @override
   void collect(Set<String> names) => names.add(name);
@@ -269,7 +282,7 @@ class _Neg extends _Node {
   final _Node inner;
 
   @override
-  double? eval(Map<String, double> v) => switch (inner.eval(v)) {
+  double? eval(Map<String, double> v, FormulaWindow? w) => switch (inner.eval(v, w)) {
     final double x => -x,
     null => null,
   };
@@ -286,8 +299,8 @@ class _Bin extends _Node {
   final _Node right;
 
   @override
-  double? eval(Map<String, double> v) {
-    final a = left.eval(v), b = right.eval(v);
+  double? eval(Map<String, double> v, FormulaWindow? w) {
+    final a = left.eval(v, w), b = right.eval(v, w);
     if (a == null || b == null) return null;
     double flag(bool x) => x ? 1 : 0;
     return switch (op) {
@@ -320,16 +333,21 @@ class _Call extends _Node {
   final List<_Node> args;
 
   @override
-  double? eval(Map<String, double> v) {
+  double? eval(Map<String, double> v, FormulaWindow? w) {
     if (fn == 'wenn' || fn == 'if') {
       // Nur der gewählte Zweig wird gerechnet – fehlende Werte im anderen stören nicht.
-      final condition = args[0].eval(v);
+      final condition = args[0].eval(v, w);
       if (condition == null) return null;
-      return (condition != 0 ? args[1] : args[2]).eval(v);
+      return (condition != 0 ? args[1] : args[2]).eval(v, w);
+    }
+    if (_Parser._windowed.contains(fn)) {
+      final days = args[1].eval(v, w);
+      if (w == null || days == null || days <= 0) return null;
+      return w((args[0] as _Var).name, days, fn == 'schnitt' || fn == 'avg');
     }
     final values = <double>[];
     for (final a in args) {
-      final x = a.eval(v);
+      final x = a.eval(v, w);
       if (x == null) return null;
       values.add(x);
     }

@@ -32,8 +32,9 @@ class CostParts {
 /// - **Arbeitspreis** ([FieldRole.unitPrice]) und **wiederkehrende Beträge**
 ///   ([FieldRole.recurringCost]) gelten ab ihrem Datum bis zur nächsten Änderung. Im Voraus
 ///   eingetragene Erhöhungen fließen so von selbst in die Prognose ein.
-/// - **Einmalige Beträge** ([FieldRole.oneOffCost]) zählen an ihrem Tag; ab heute gilt der
-///   Tagesdurchschnitt der letzten 365 Tage (Tanken, Nachzahlungen …).
+/// - **Einmalige Beträge** ([FieldRole.oneOffCost]) zählen an ihrem Tag – mit Abrechnungszeitraum
+///   verteilt auf dessen Tage; ab heute gilt der Tagesdurchschnitt der letzten 365 Tage (Tanken,
+///   Nachzahlungen …).
 /// - **Abschläge** ([FieldRole.instalment]) sind keine Kosten; [paid] summiert sie wie
 ///   wiederkehrende Beträge für den Abschlags-Check.
 /// - **Formel-Felder** werden vorher je Eintrag ausgerechnet ([Formulas.apply]) und zählen dann
@@ -53,8 +54,20 @@ class CostEngine {
         case FieldRole.recurringCost:
           _recurring.add((timeline, field.intervalMonths < 1 ? 1 : field.intervalMonths));
         case FieldRole.oneOffCost:
-          for (final (date, value) in timeline) {
-            _oneOff[date] = (_oneOff[date] ?? 0) + value;
+          for (final e in tracker.entries) {
+            final value = e.number(field.id)?.toDouble();
+            if (value == null) continue;
+            if (e.hasPeriod) {
+              // Abrechnung für einen Zeitraum: gleichmäßig auf dessen Tage.
+              final from = day(e.periodStart!), to = day(e.periodEnd!);
+              final days = to.difference(from).inDays + 1;
+              for (var d = from; !d.isAfter(to); d = d.add(const Duration(days: 1))) {
+                _oneOff[d] = (_oneOff[d] ?? 0) + value / days;
+              }
+            } else {
+              final d = day(e.date);
+              _oneOff[d] = (_oneOff[d] ?? 0) + value;
+            }
           }
         case FieldRole.instalment:
           _instalments.add((timeline, field.intervalMonths < 1 ? 1 : field.intervalMonths));

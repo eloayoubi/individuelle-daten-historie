@@ -46,17 +46,39 @@ class PendingDelete extends PendingWrite {
 /// - **Abgelehnt** ([WriteRejected]) wird verworfen und in [syncState] gezählt; bei anderen
 ///   Fehlern (kein Netz) bleibt die Änderung liegen.
 /// - Kategorien, Tracker und Felder ändern geht nur online (direkt an [_remote]).
+/// - Cache und Warteschlange gehören dem angemeldeten Konto; nach einem Wechsel werden sie verworfen.
 class OfflineCategoriesRepository implements CategoriesRepository {
-  OfflineCategoriesRepository(this._remote, {required JsonStore cache, required JsonStore queue, this.retryEvery = const Duration(seconds: 30)})
-    : _cacheStore = cache,
-      _queueStore = queue {
+  OfflineCategoriesRepository(
+    this._remote, {
+    required JsonStore cache,
+    required JsonStore queue,
+    String? Function()? userId,
+    Stream<Object?>? accountChanges,
+    this.retryEvery = const Duration(seconds: 30),
+  }) : _cacheStore = cache,
+       _queueStore = queue,
+       _userId = userId ?? _noUser {
     _remote.changes.listen((_) => _changes.add(null));
+    // Anmelden, Abmelden, Löschen: alte Daten sofort weg, alle Ansichten laden das neue Konto.
+    accountChanges?.listen((_) {
+      final before = _owner;
+      _forgetOtherAccount();
+      if (_owner != before) _changes.add(null);
+    });
   }
 
   final CategoriesRepository _remote;
   final JsonStore _cacheStore;
   final JsonStore _queueStore;
+
+  /// Cache und Warteschlange gehören einem Konto; nach einem Kontowechsel gelten sie nicht mehr.
+  final String? Function() _userId;
   final Duration retryEvery;
+
+  static String? _noUser() => null;
+
+  /// Konto, zu dem [_cached] und [_pending] gehören.
+  String? _owner;
 
   final _changes = StreamController<void>.broadcast();
   List<Category>? _cached;
@@ -75,20 +97,34 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   @override
   Future<List<Category>> loadCategories() async {
     await _restore();
+    _forgetOtherAccount();
     await sync();
     try {
       final fresh = await _remote.loadCategories();
       _cached = fresh;
-      _quietly(_cacheStore.write([for (final c in fresh) TrackingCodec.category(c)]));
+      _owner = _userId();
+      _quietly(_cacheStore.write({'userId': _owner, 'categories': [for (final c in fresh) TrackingCodec.category(c)]}));
     } catch (_) {
       if (_cached == null) rethrow;
     }
     return _overlay(_cached!);
   }
 
+  /// Ein anderes Konto ist angemeldet: dessen Daten nicht zeigen, wartende Einträge verwerfen.
+  void _forgetOtherAccount() {
+    final current = _userId();
+    if (current == null || _owner == null || current == _owner) return;
+    _cached = null;
+    _pending = [];
+    _owner = current;
+    _quietly(_persistQueue());
+    _quietly(_cacheStore.write(null));
+  }
+
   @override
   Future<Category?> loadCategory(String id) async {
     await _restore();
+    _forgetOtherAccount();
     try {
       final fresh = await _remote.loadCategory(id);
       if (fresh != null && _cached != null) _cached = [for (final c in _cached!) c.id == id ? fresh : c];
@@ -151,21 +187,40 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   @override
   Future<void> archiveField(String id) => _remote.archiveField(id);
 
+  @override
+  Future<String> createInvite(String categoryId, MemberRole role) => _remote.createInvite(categoryId, role);
+
+  @override
+  Future<String> acceptInvite(String code) => _remote.acceptInvite(code);
+
+  @override
+  Future<void> setMemberRole(String categoryId, String userId, MemberRole role) => _remote.setMemberRole(categoryId, userId, role);
+
+  @override
+  Future<void> removeMember(String categoryId, String userId) => _remote.removeMember(categoryId, userId);
+
+  @override
+  Future<void> leaveCategory(String categoryId) => _remote.leaveCategory(categoryId);
+
   Future<void> _restore() => _restoring ??= () async {
+    final current = _userId();
     try {
-      if (await _cacheStore.read() case final List cached) {
+      if (await _cacheStore.read() case {'userId': final String? owner, 'categories': final List cached} when current == null || owner == current) {
         _cached = [for (final c in cached.cast<Map<String, Object?>>()) TrackingCodec.categoryFrom(c)];
+        _owner = owner;
       }
     } catch (_) {
       // Kaputter Cache: beim nächsten Abruf neu.
     }
     try {
-      if (await _queueStore.read() case final List queued) {
+      if (await _queueStore.read() case {'userId': final String? owner, 'writes': final List queued} when current == null || owner == current) {
         _pending = [for (final q in queued.cast<Map<String, Object?>>()) PendingWrite.fromJson(q)];
+        _owner ??= owner;
       }
     } catch (_) {
       _pending = [];
     }
+    _owner ??= current;
     _scheduleRetry();
   }();
 
@@ -203,7 +258,7 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     if (sent) _changes.add(null);
   }
 
-  Future<void> _persistQueue() => _queueStore.write([for (final p in _pending) p.toJson()]).catchError((Object _) {});
+  Future<void> _persistQueue() => _queueStore.write({'userId': _owner ?? _userId(), 'writes': [for (final p in _pending) p.toJson()]}).catchError((Object _) {});
 
   void _scheduleRetry() {
     if (_pending.isEmpty) {

@@ -6,6 +6,7 @@ import '../../../core/core.dart';
 import '../../../core/utils/cost_engine.dart';
 import '../cubit/insights_cubit.dart';
 import '../data/insights.dart';
+import 'what_if_sheet.dart';
 import 'widgets/stacked_months_chart.dart';
 
 /// Auswertung: Kosten des Jahres je Monat und Kategorie, Jahresvergleich, Verbrauch der Zähler,
@@ -197,6 +198,17 @@ class _Forecast extends StatelessWidget {
                   subtitle: f.range > 0.5 ? l10n.insightsRangeOnly(context.euros(f.range)) : null,
                   trailing: AppText(context.euros(f.total), style: (t) => t.numberM),
                 ),
+            ],
+          ),
+          const SizedBox(height: Spacing.m),
+          AppListGroup(
+            children: [
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.wand_stars, color: c.accent),
+                title: l10n.whatIfTitle,
+                subtitle: l10n.whatIfRowHint,
+                onTap: () => WhatIfSheet.show(context, categories: [for (final f in i.categoryForecasts) f.category], today: i.today),
+              ),
             ],
           ),
         ],

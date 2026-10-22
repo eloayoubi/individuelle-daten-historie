@@ -6,6 +6,8 @@
 #   cd ios && fastlane beta skip_tests:true build_number:7
 #   cd ios && fastlane distribute build_number:6         # vorhandenen Build an die Gruppe Tester geben
 #   cd ios && fastlane check                             # API-Key prüfen, letzte Build-Nummer zeigen
+#   cd ios && fastlane metadata                          # Store-Texte und Screenshots hochladen (kein Binary, keine Einreichung)
+#   cd ios && fastlane metadata skip_screenshots:true    # nur Texte (oder skip_metadata:true: nur Screenshots)
 #
 # Remote (ohne Mac): GitHub → Actions → TestFlight → Run workflow (.github/workflows/testflight.yml).
 #
@@ -122,6 +124,39 @@ platform :ios do
   lane :check do
     latest = latest_testflight_build_number(api_key: asc_api_key, initial_build_number: 0)
     UI.success("API-Key ok · letzter TestFlight-Build: #{latest} · nächster: #{latest + 1}")
+  end
+
+  # Texte aus ios/fastlane/metadata, Screenshots aus ios/fastlane/screenshots (erzeugt von
+  # tool/screenshots/store_screenshots_test.dart). Legt die App-Store-Version an bzw. benennt die
+  # bearbeitbare um (Standard: Version aus pubspec.yaml), lädt kein Binary hoch und reicht nichts ein.
+  desc "Lädt Store-Texte und Screenshots zu App Store Connect hoch – ohne Binary, ohne Einreichung zur Prüfung"
+  desc "Optionen: app_version (Standard: pubspec.yaml), skip_metadata, skip_screenshots"
+  lane :metadata do |options|
+    metadata_path = File.join(ROOT, "ios/fastlane/metadata")
+    screenshots_path = File.join(ROOT, "ios/fastlane/screenshots")
+    skip_metadata = options[:skip_metadata] == true
+    placeholders = Dir[File.join(metadata_path, "**", "*.txt")].select { |f| File.read(f).include?("example.com") }
+    unless skip_metadata || placeholders.empty?
+      UI.user_error!("Platzhalter-URLs (example.com) zuerst ersetzen, siehe ios/fastlane/metadata/README.md:\n" +
+                     placeholders.sort.map { |f| "  #{f.delete_prefix("#{ROOT}/")}" }.join("\n"))
+    end
+    version = (options[:app_version] || pubspec_version).to_s
+
+    upload_to_app_store(
+      api_key: asc_api_key,
+      app_version: version,
+      metadata_path: metadata_path,
+      screenshots_path: screenshots_path,
+      skip_binary_upload: true,
+      skip_metadata: skip_metadata,
+      skip_screenshots: options[:skip_screenshots] == true,
+      overwrite_screenshots: true,
+      force: true,
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+    )
+    UI.success("Texte und Screenshots für #{APP_NAME} #{version} sind in App Store Connect")
   end
 
   # Für die API reicht ein Hash; app_store_connect_api_key nur im Key-Modus (legt den Key

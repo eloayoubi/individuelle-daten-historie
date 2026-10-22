@@ -1,0 +1,40 @@
+How much electricity did you use this year? Will your instalments cover the bill? Kostenkurve keeps meter readings, contracts and fixed costs in one place – and shows you where the curve is heading.
+
+USAGE & COSTS AT A GLANCE
+• Log meter readings, prices and amounts – Kostenkurve works out usage and costs day by day, even when prices change
+• A 12-month history for every meter, compared with last year
+• Insights: costs per month and category, year-over-year comparison
+
+TEMPLATES, YOUR OWN FIELDS & FORMULAS
+• Eight templates to get started: electricity, heating, water, rent & utilities, car, internet & mobile, insurance, subscriptions
+• Fully customisable: your own categories, fields (number, amount, percent, date, choice …), units and conversions – e.g. gas from m³ to kWh
+• Formula fields do the maths, e.g. litres per 100 km
+
+FORECAST WITH A RANGE
+• Next year's forecast from your usage, current prices and announced price increases
+• A range instead of false precision – and what it is made of
+
+INSTALMENT CHECK
+• Will your instalments do? See the expected credit or back payment – and which instalment would fit
+
+SHARE WITH YOUR PARTNER
+• Share individual categories such as household or car – via code, link or QR code, to record together or view only
+
+REMINDERS
+• For meter readings and key dates such as the end of a contract
+
+WORKS OFFLINE
+• Meter in the basement without signal? Entries are saved and sent once you are back online
+
+PRIVACY
+• Get started without signing up, no ads, no trackers
+• Your data is stored on servers in the EU
+• Delete your account in the app at any time
+
+KOSTENKURVE PLUS
+Kostenkurve is fully usable without a subscription. The optional Kostenkurve Plus subscription lets you attach receipts to entries – photos and PDFs such as bills, meter photos or contracts, with 5 GB of storage. It renews automatically; cancel anytime in your Apple Account settings.
+
+Amounts are shown in euros.
+
+Privacy policy: https://example.com/kostenkurve/privacy
+Terms of use: https://example.com/kostenkurve/terms

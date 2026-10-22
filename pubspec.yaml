@@ -1,14 +1,17 @@
 name: kostenkurve
 description: "Kostenkurve – Zählerstände, Verträge und Kosten im Verlauf."
 publish_to: 'none'
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ^3.12.2
 
 dependencies:
+  app_links: ^7.2.2
+  crypto: ^3.0.7
   cupertino_icons: ^1.0.8
   equatable: ^3.0.0
+  file_picker: ^13.1.0
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
@@ -16,14 +19,23 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   get_it: ^9.3.0
+  image_picker: ^1.2.4
+  in_app_purchase: ^3.3.1
+  in_app_review: ^2.0.12
   intl: ^0.20.2
   path_provider: ^2.1.6
+  qr_flutter: ^4.1.0
+  share_plus: ^13.3.1
+  sign_in_with_apple: ^8.2.0
   supabase_flutter: ^2.18.3
   timezone: ^0.11.2
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   bloc_test: ^10.0.0
+  flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.8
   flutter_test:
     sdk: flutter
   mocktail: ^1.0.5
@@ -31,6 +43,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    # Datenschutz und Nutzungsbedingungen in der App (Markdown, je Sprache).
+    - assets/legal/
   fonts:
     # Überschriften: Inter Tight (wie SF Pro Display), Text: Inter mit opsz-Achse (wie SF Pro Text).
     - family: InterTight

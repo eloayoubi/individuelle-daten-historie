@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../attachments/view/entry_attachments.dart';
+import '../../settings/data/review_prompter.dart';
 import '../cubit/entry_form_cubit.dart';
 
 /// Eintrag erfassen oder ändern – das Formular entsteht aus den Feldern des Trackers.
@@ -58,9 +60,11 @@ class _FormViewState extends State<_FormView> {
       case EntryFormEventKind.saved:
         AppToast.show(context, l10n.entrySaved);
         Navigator.of(context).pop();
+        lookup<ReviewPrompter>().entrySaved();
       case EntryFormEventKind.savedOffline:
         AppToast.show(context, l10n.entrySavedOffline, icon: CupertinoIcons.cloud_upload_fill);
         Navigator.of(context).pop();
+        lookup<ReviewPrompter>().entrySaved();
       case EntryFormEventKind.deleted:
         AppToast.show(context, l10n.entryDeleted, icon: CupertinoIcons.trash_fill);
         Navigator.of(context).pop();
@@ -135,10 +139,43 @@ class _FormViewState extends State<_FormView> {
                   ],
                 ),
               ],
+              if (s.hasOneOff) ...[
+                const SizedBox(height: Spacing.l),
+                AppListGroup(
+                  dividerIndent: Spacing.l,
+                  footer: s.periodInvalid ? l10n.entryPeriodInvalid : l10n.entryPeriodHint,
+                  children: [
+                    AppListRow(
+                      title: l10n.entryPeriod,
+                      trailing: AppSwitch(value: s.hasPeriod, semanticLabel: l10n.entryPeriod, onChanged: cubit.setPeriodEnabled),
+                    ),
+                    if (s.periodStart case final DateTime from)
+                      AppListRow(
+                        title: l10n.entryPeriodFrom,
+                        trailing: AppText(context.shortDate(from), style: (t) => t.body, color: c.accent),
+                        chevron: false,
+                        onTap: () => _pickDate(context, from, cubit.setPeriodStart),
+                      ),
+                    if (s.periodEnd case final DateTime to)
+                      AppListRow(
+                        title: l10n.entryPeriodTo,
+                        trailing: AppText(context.shortDate(to), style: (t) => t.body, color: s.periodInvalid ? c.danger : c.accent),
+                        chevron: false,
+                        onTap: () => _pickDate(context, to, cubit.setPeriodEnd),
+                      ),
+                  ],
+                ),
+              ],
               const SizedBox(height: Spacing.l),
               Padding(
                 padding: Spacing.screen,
                 child: AppTextField(controller: _note, hint: l10n.entryNoteHint, maxLength: EntryFormState.maxNote, onChanged: cubit.setNote),
+              ),
+              EntryAttachments(
+                categoryId: widget.args.category.id,
+                entryId: s.entryId,
+                isNew: s.isNew,
+                canEdit: widget.args.category.canEdit,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, 0),

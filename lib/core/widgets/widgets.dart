@@ -13,6 +13,7 @@ export 'app_icon_tile.dart';
 export 'app_list.dart';
 export 'app_pressable.dart';
 export 'app_segmented.dart';
+export 'app_share.dart';
 export 'app_sheet.dart';
 export 'app_switch.dart';
 export 'app_text.dart';

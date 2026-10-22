@@ -2,11 +2,11 @@
 
 Zählerstände, Verträge und Kosten an einem Ort – mit Verlauf, Jahresvergleich und Prognose. Nutzer legen eigene Kategorien an (oder starten mit Vorlagen wie Strom, Miete, Auto), definieren ihre Felder selbst (Text, Zahl, Betrag, Prozent, Datum, Formel …) und tragen Werte mit Datum ein. Daraus rechnet die App Verbrauch, Kosten und eine Prognose fürs nächste Jahr; Kategorien lassen sich mit dem Partner teilen.
 
-Produkt, Analyse und Fahrplan: [docs/IMPLEMENTIERUNGSPLAN.md](docs/IMPLEMENTIERUNGSPLAN.md) · Backend: [supabase/README.md](supabase/README.md)
+Produkt, Analyse und Fahrplan: [docs/IMPLEMENTIERUNGSPLAN.md](docs/IMPLEMENTIERUNGSPLAN.md) · Backend: [supabase/README.md](supabase/README.md) · **Supabase verbinden und TestFlight: [docs/SETUP.md](docs/SETUP.md)**
 
 | | |
 |---|---|
-| Plattformen | iOS und Android |
+| Plattformen | iOS (nur iPhone, Hochformat) und Android |
 | Bundle-ID | `de.eloayoubi.kostenkurve` |
 | Sprachen | Deutsch (Vorlage) und Englisch |
 | Design | Apples Designsprache (HIG, iOS 26): Systemfarben, große Titel, gruppierte Karten, CupertinoIcons, Glas-Tab-Leiste – hell und dunkel |
@@ -30,7 +30,8 @@ Produkt, Analyse und Fahrplan: [docs/IMPLEMENTIERUNGSPLAN.md](docs/IMPLEMENTIERU
 ```
 lib/
   main.dart              DI, dann runApp
-  app/app.dart           MaterialApp, Themes, Locales, AppearanceCubit darüber
+  app/app.dart           MaterialApp, Themes, Locales; darüber Darstellung, Erinnerungen, Konto, Plus;
+                         Einladungslinks öffnen das Beitreten-Sheet; Onboarding vor der Shell
   core/
     core.dart            Sammel-Import für Features
     di/                  lookup.dart, injection.dart (configureDependencies)
@@ -40,8 +41,9 @@ lib/
     utils/cost_engine.dart  Verbrauch, Kosten und Prognose je Tracker, Tag für Tag
     widgets/             AppText, AppCard, AppButton, AppIconButton, AppChip, AppHeader, SectionHeader,
                          AppSheet, AppToast, PlaceholderPage, AppListGroup/AppListRow, AppIconTile,
-                         AppSegmented, AppPressable, GlassSurface, AppTextField, AppSwitch, AppDialog
-    network/             SupabaseApi (rpc, invoke, table, stream)
+                         AppSegmented, AppPressable, GlassSurface, AppTextField, AppSwitch, AppDialog,
+                         AppShare (Teilen-Sheet mit iPad-Ursprung)
+    network/             SupabaseApi (rpc, invoke, table, stream, onChanges, upload/download/remove)
     config/              Werte aus --dart-define (SUPABASE_URL, SUPABASE_ANON_KEY)
   features/<feature>/
     cubit/               Cubit + State (part-Datei); einmalige Ereignisse als `event` im State,
@@ -54,13 +56,19 @@ lib/
 Features heute:
 
 - `shell`: Tab-Leiste, `ShellCubit`.
+- `onboarding`: erster Start ohne Kategorien – Willkommen, Vorlagen wählen, Erinnerungen.
 - `home`: Übersicht.
-- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite, Feld-Editor; dazu das Repository mit allen Schreibwegen und der Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge).
-- `entries`: Eingabe-Formular aus den Feldern eines Trackers, Verlauf je Tracker mit Graph, aktuelle Werte und Einträge.
+- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite, Feld-Editor; dazu das Repository mit allen Schreibwegen und der Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto).
+- `entries`: Eingabe-Formular aus den Feldern eines Trackers (mit Abrechnungszeitraum für Nachzahlungen), Verlauf je Tracker mit Graph, aktuelle Werte und Einträge („von Anna“ in geteilten Kategorien).
+- `attachments`: Belege (Fotos, PDFs) an Einträgen – Hochladen mit Plus, Ansehen für alle Mitglieder.
 - `reminders`: lokale Benachrichtigungen ans Ablesen und an Stichtage (`flutter_local_notifications`), an- und ausschaltbar in den Einstellungen.
-- `insights`: Auswertung des Jahres: Kosten je Monat und Kategorie, Jahresvergleich, Verbrauch, Prognose mit Spanne und Erklärung, Abschlags-Check.
-- `settings`: Darstellung.
-- `auth`: anonyme Anmeldung.
+- `insights`: Auswertung des Jahres: Kosten je Monat und Kategorie, Jahresvergleich, Verbrauch, Prognose mit Spanne und Erklärung, Abschlags-Check, „Was wäre wenn“ mit neuen Preisen.
+- `sharing`: Kategorie teilen (Code, Link, QR), Mitglieder und Rollen, Einladung annehmen, Einladungslinks.
+- `plus`: Kostenkurve Plus – Abo-Seite, StoreKit 2 (`in_app_purchase`), Stand aus `entitlements`.
+- `account`: Konto sichern (Apple, E-Mail-Code), anmelden, Name, abmelden, löschen.
+- `legal`: Datenschutz, Nutzungsbedingungen, Impressum aus `assets/legal/` (Markdown, DE/EN).
+- `settings`: Konto und Plus, Darstellung, Erinnerungen, Datenexport (CSV + JSON), Rechtliches; Bewertungsbitte nach dem 3. Eintrag.
+- `auth`: Anmeldung (anonym zum Start, Apple, E-Mail-Code) über `AuthRepository`.
 
 **Rechnen:** Rechenlogik liegt in `core/utils/`:
 
@@ -99,6 +107,23 @@ supabase/scripts/test_local.sh                      # Migrationen + Seed + Tests
 Tests: Cubit-Tests je Feature (`test/features/`), Theme-Extensions und Kosten-Engine (`test/core/`), Smoke-Test aller Seiten mit Mock-Daten in Hell und Dunkel (`test/pages_smoke_test.dart`).
 
 Commit-Betreffs: Nutzer-Sichtbares auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:` / `ci:` / `test:` / `docs:`. Branches `feature/…`, `fix/…`, `chore/…`; Ablauf bis `main` steht in [CLAUDE.md](CLAUDE.md).
+
+## Store
+
+- **Texte und Screenshots:** `ios/fastlane/metadata/` (DE/EN, Hinweise in `metadata/README.md`), Screenshots `ios/fastlane/screenshots/` (6,9″, je 5). Hochladen: `cd ios && fastlane metadata` (ohne Binary, reicht nichts zur Prüfung ein; bricht ab, solange `example.com`-Platzhalter drin sind).
+- **Neu erzeugen:** Icons `flutter test tool/branding/render_icon_test.dart --update-goldens && dart run flutter_launcher_icons` (danach das `sed` aus `flutter_launcher_icons.yaml`), Splash `dart run flutter_native_splash:create`, Screenshots `flutter test tool/screenshots/store_screenshots_test.dart --update-goldens`.
+- **Rechtstexte:** `assets/legal/*.md` – Platzhalter in eckigen Klammern (Name, Anschrift, E-Mail) vor dem Start ersetzen; dieselben Texte öffentlich hosten (Datenschutz-URL für App Store Connect).
+
+## Android-Release
+
+`android/key.properties` (nicht im Git) mit `storeFile`, `storePassword`, `keyAlias`, `keyPassword`; ohne die Datei signiert Release mit dem Debug-Schlüssel. Schlüssel anlegen:
+
+```sh
+keytool -genkey -v -keystore ~/keys/kostenkurve-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+flutter build appbundle --release --dart-define-from-file=.env.local
+```
+
+Plus lässt sich auf Android noch nicht kaufen; ein im App Store gekauftes Abo gilt dort trotzdem.
 
 ## TestFlight
 

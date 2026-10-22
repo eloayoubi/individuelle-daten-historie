@@ -82,6 +82,9 @@ abstract final class TrackingCodec {
     'date': _day(e.date),
     'note': e.note,
     'meterChange': e.meterChange,
+    'periodStart': e.periodStart == null ? null : _day(e.periodStart!),
+    'periodEnd': e.periodEnd == null ? null : _day(e.periodEnd!),
+    'createdBy': e.createdBy,
     'values': {for (final MapEntry(:key, :value) in e.values.entries) key: _value(value)},
   };
 
@@ -90,6 +93,15 @@ abstract final class TrackingCodec {
     date: DateTime.parse(j['date']! as String).toUtc(),
     note: j['note'] as String?,
     meterChange: j['meterChange'] as bool? ?? false,
+    periodStart: switch (j['periodStart']) {
+      final String d => DateTime.parse(d).toUtc(),
+      _ => null,
+    },
+    periodEnd: switch (j['periodEnd']) {
+      final String d => DateTime.parse(d).toUtc(),
+      _ => null,
+    },
+    createdBy: j['createdBy'] as String?,
     values: {
       for (final MapEntry(:key, :value) in (j['values']! as Map).cast<String, Object?>().entries)
         if (_valueFrom(value) case final Object v) key: v,

@@ -758,5 +758,310 @@
         "type": "String"
       }
     }
-  }
+  },
+  "accountTitle": "Konto",
+  "accountSecuredToast": "Konto gesichert",
+  "accountSignedInToast": "Angemeldet",
+  "accountNameSaved": "Name gespeichert",
+  "accountSignedOutToast": "Abgemeldet",
+  "accountAlreadyUsedTitle": "Konto gibt es schon",
+  "accountAlreadyUsedBody": "Diese Apple-ID gehört schon zu einem Konto. Möchtest du dich dort anmelden? Was du bisher ohne Konto erfasst hast, kommt nicht mit.",
+  "accountSignIn": "Anmelden",
+  "accountInvalidCode": "Der Code stimmt nicht oder ist abgelaufen.",
+  "accountSignInTitle": "Mit bestehendem Konto anmelden?",
+  "accountSignInBody": "Du wechselst zu deinem Konto. Was du auf diesem Gerät ohne Konto erfasst hast, kommt nicht mit.",
+  "accountSignOutTitle": "Abmelden?",
+  "accountSignOutBody": "Deine Daten bleiben im Konto. Danach startest du auf diesem Gerät neu ohne Konto.",
+  "accountSignOut": "Abmelden",
+  "accountAnonymousTitle": "Nur auf diesem Gerät",
+  "accountAnonymousBody": "Deine Daten liegen in einem Konto ohne Anmeldung. Sichere es, damit sie ein neues Handy überstehen und du Kategorien teilen kannst.",
+  "accountSecuredTitle": "Konto gesichert",
+  "accountSecuredBody": "Angemeldet mit {login}. Deine Daten sind auf jedem Gerät da.",
+  "@accountSecuredBody": {
+    "placeholders": {
+      "login": {
+        "type": "String"
+      }
+    }
+  },
+  "accountApple": "Apple",
+  "accountSecure": "Konto sichern",
+  "accountSecureApple": "Mit Apple sichern",
+  "accountSecureEmail": "Mit E-Mail sichern",
+  "accountSecureFooter": "Alles, was du schon erfasst hast, bleibt erhalten. Ohne Passwort: Apple oder ein Code per E-Mail.",
+  "accountExisting": "Schon ein Konto?",
+  "accountSignInApple": "Mit Apple anmelden",
+  "accountSignInEmail": "Mit E-Mail anmelden",
+  "accountName": "Dein Name",
+  "accountNameHint": "z. B. Alex",
+  "accountNameFooter": "Sehen alle, mit denen du Kategorien teilst – auch an deinen Einträgen.",
+  "accountEmailHint": "name@beispiel.de",
+  "accountCodeSent": "Code an {email} geschickt. Schau auch im Spam-Ordner.",
+  "@accountCodeSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "accountCodeHint": "Code aus der E-Mail",
+  "accountConfirm": "Bestätigen",
+  "accountResend": "Neuen Code senden",
+  "accountSendCode": "Code senden",
+  "shareRemoved": "Entfernt",
+  "shareLeft": "Kategorie verlassen",
+  "roleOwner": "Besitzer",
+  "roleEditor": "Bearbeiten",
+  "roleViewer": "Nur ansehen",
+  "roleEditorHint": "Darf Einträge erfassen, ändern und löschen.",
+  "roleViewerHint": "Sieht Verlauf und Kosten, ändert aber nichts.",
+  "shareNoName": "Ohne Namen",
+  "shareRemove": "Entfernen",
+  "shareRemoveTitle": "{name} entfernen?",
+  "@shareRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRemoveBody": "Die Person sieht die Kategorie danach nicht mehr. Ihre Einträge bleiben.",
+  "shareLeaveTitle": "„{category}“ verlassen?",
+  "@shareLeaveTitle": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLeaveBody": "Du siehst die Kategorie danach nicht mehr. Deine Einträge bleiben für die anderen.",
+  "shareLeave": "Verlassen",
+  "shareTitle": "Teilen",
+  "shareMembers": "Mitglieder",
+  "shareYou": "Du",
+  "shareYouNamed": "{name} (du)",
+  "@shareYouNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareInvite": "Einladen",
+  "shareSecureFirst": "Zum Teilen brauchst du ein gesichertes Konto – so weiß dein Partner, mit wem er teilt, und nichts geht verloren.",
+  "shareCreateInvite": "Einladung erstellen",
+  "shareSend": "Einladung senden",
+  "shareMessage": "Ich teile „{category}“ in Kostenkurve mit dir. Öffne den Link oder gib in der App unter Kategorien › + › Einladung annehmen den Code {code} ein: {link}",
+  "@shareMessage": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "shareValidity": "Gilt 7 Tage für eine Person.",
+  "joinTitle": "Einladung annehmen",
+  "joinRowHint": "Kategorie eines Partners beitreten",
+  "joinDone": "Beigetreten",
+  "joinInvalid": "Code unbekannt, abgelaufen oder schon benutzt.",
+  "joinBody": "Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.",
+  "joinHint": "Code, z. B. K7Q2M9X4TA",
+  "joinAction": "Beitreten",
+  "entryBy": "von {name}",
+  "@entryBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountDelete": "Konto löschen",
+  "accountDeleteTitle": "Konto und alle Daten löschen?",
+  "accountDeleteBody": "Dein Konto, deine Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Plus-Abo kündigst du separat in den iOS-Einstellungen.",
+  "accountDeleteFooter": "Exportiere vorher deine Daten, wenn du sie behalten willst (Einstellungen › Daten exportieren).",
+  "accountDeletedToast": "Konto gelöscht",
+  "attachmentsTitle": "Belege",
+  "attachmentsAdd": "Hinzufügen",
+  "attachmentsAdded": "Beleg hinzugefügt",
+  "attachmentsDeleted": "Beleg gelöscht",
+  "attachmentsAfterSave": "Nach dem Speichern kannst du Rechnung, Vertrag oder Zählerfoto anhängen.",
+  "attachmentsEmpty": "Noch keine Belege. Häng Rechnung, Vertrag oder ein Foto vom Zähler an.",
+  "attachmentsEmptyPlus": "Mit Plus hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.",
+  "attachmentsOffline": "Belege sind gerade nicht erreichbar.",
+  "attachmentsCamera": "Foto aufnehmen",
+  "attachmentsPhotos": "Aus Fotos wählen",
+  "attachmentsPdf": "PDF wählen",
+  "attachmentsNeedsPlus": "Belege hinzufügen geht mit Plus und Bearbeiten-Rechten.",
+  "attachmentsTooLarge": "Die Datei ist größer als 20 MB.",
+  "attachmentsQuota": "Dein Speicher für Belege ist voll (5 GB).",
+  "attachmentsType": "Nur Fotos (JPEG, PNG, HEIC) und PDFs.",
+  "attachmentsNotSynced": "Der Eintrag ist noch nicht gesendet – gleich noch mal versuchen.",
+  "attachmentsNoAccess": "Kein Zugriff – erlaube Kamera oder Fotos in den Einstellungen.",
+  "attachmentsPhotoTitle": "Foto",
+  "attachmentsPdfTitle": "PDF",
+  "attachmentsShare": "Teilen",
+  "attachmentsOpenPdf": "Öffnen oder sichern",
+  "attachmentsDeleteTitle": "Beleg löschen?",
+  "attachmentsDeleteBody": "Die Datei wird für alle gelöscht, die die Kategorie sehen.",
+  "entryPeriod": "Abrechnungszeitraum",
+  "entryPeriodFrom": "Von",
+  "entryPeriodTo": "Bis",
+  "entryPeriodHint": "Nachzahlung oder Guthaben für einen Zeitraum: Der Betrag verteilt sich auf dessen Tage statt auf den Stichtag.",
+  "entryPeriodInvalid": "Das Ende liegt vor dem Anfang.",
+  "exportCategory": "Kategorie",
+  "exportTracker": "Tracker",
+  "exportField": "Feld",
+  "exportValue": "Wert",
+  "exportUnit": "Einheit",
+  "exportNote": "Notiz",
+  "exportSubject": "Kostenkurve-Export",
+  "exportFailed": "Export ging nicht – bist du online?",
+  "legalPrivacy": "Datenschutz",
+  "legalTerms": "Nutzungsbedingungen",
+  "legalImprint": "Impressum",
+  "onboardingWelcomeTitle": "Alle Kosten.\nEine Kurve.",
+  "onboardingWelcomeBody": "Zählerstände, Verträge und Abschläge an einem Ort – mit Verlauf und Prognose fürs nächste Jahr.",
+  "onboardingPointTrack": "Erfassen in Sekunden",
+  "onboardingPointTrackBody": "Strom, Gas, Wasser, Miete – mit eigenen Feldern und Formeln.",
+  "onboardingPointForecast": "Keine Nachzahlung mehr",
+  "onboardingPointForecastBody": "Prognose mit Spanne und Abschlags-Check.",
+  "onboardingPointShare": "Gemeinsam im Haushalt",
+  "onboardingPointShareBody": "Teile Kategorien mit deinem Partner.",
+  "onboardingStart": "Los geht's",
+  "onboardingTemplatesTitle": "Was möchtest du verfolgen?",
+  "onboardingTemplatesBody": "Wähle Vorlagen – Felder kannst du später jederzeit anpassen.",
+  "onboardingCreate": "{count, plural, =1{1 Kategorie anlegen} other{{count} Kategorien anlegen}}",
+  "@onboardingCreate": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingSkip": "Ohne Vorlage weiter",
+  "onboardingSelected": "Ausgewählt",
+  "onboardingRemindersTitle": "Nichts vergessen",
+  "onboardingRemindersBody": "Wir erinnern dich ans Ablesen und an Kündigungsfristen – auf deinem Gerät, ohne Werbung.",
+  "onboardingRemindersAllow": "Erinnerungen erlauben",
+  "onboardingLater": "Später",
+  "plusTitle": "Kostenkurve Plus",
+  "plusSubtitle": "Alle Belege da, wo die Kosten sind.",
+  "plusBenefitReceipts": "Belege am Eintrag",
+  "plusBenefitReceiptsBody": "Rechnungen, Verträge und Zählerfotos als Foto oder PDF.",
+  "plusBenefitStorage": "5 GB Speicher",
+  "plusBenefitStorageBody": "Sicher gespeichert und auf jedem Gerät da.",
+  "plusBenefitShared": "Für den ganzen Haushalt",
+  "plusBenefitSharedBody": "In geteilten Kategorien sieht dein Partner die Belege – ohne eigenes Abo.",
+  "plusYearly": "Jährlich",
+  "plusMonthly": "Monatlich",
+  "plusPerYear": "{price}/Jahr",
+  "@plusPerYear": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "plusPerMonth": "{price}/Monat",
+  "@plusPerMonth": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "plusYearlyDetail": "{price} pro Monat, jährlich abgerechnet",
+  "@plusYearlyDetail": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "plusMonthlyDetail": "Monatlich kündbar",
+  "plusSave": "Spare {percent} %",
+  "@plusSave": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "plusSubscribe": "Abo starten",
+  "plusFinePrint": "Verlängert sich automatisch, wenn du nicht mindestens 24 Stunden vor Ablauf kündigst. Abgerechnet über deinen Apple-Account, kündbar in dessen Einstellungen.",
+  "plusRestore": "Käufe wiederherstellen",
+  "plusAppleEula": "Lizenzvertrag (EULA)",
+  "plusWelcome": "Willkommen bei Plus",
+  "plusNothingToRestore": "Kein aktives Abo gefunden.",
+  "plusPending": "Kauf wartet auf Freigabe.",
+  "plusFailed": "Kauf ging nicht – bitte später noch mal.",
+  "plusOtherAccount": "Dieses Abo gehört zu einem anderen Kostenkurve-Konto. Melde dich dort an (Einstellungen › Konto).",
+  "plusUnavailable": "Abos sind gerade nicht erreichbar. Prüfe deine Verbindung und versuch es später noch mal.",
+  "plusOnlyIos": "Plus schließt du derzeit in der iPhone-App ab – es gilt dann auch hier.",
+  "plusActive": "Plus ist aktiv.",
+  "plusActiveUntil": "Plus ist aktiv – verlängert sich am {date}.",
+  "@plusActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "plusManage": "Abo verwalten",
+  "plusBadge": "Plus",
+  "plusBadgeActive": "Aktiv",
+  "settingsAccountAnonymous": "Nur auf diesem Gerät – jetzt sichern",
+  "settingsPlusHint": "Belege für Rechnungen und Verträge",
+  "settingsStorage": "{used} von {total} belegt",
+  "@settingsStorage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsData": "Daten",
+  "settingsExport": "Daten exportieren",
+  "settingsExportFooter": "Alle Kategorien und Einträge als CSV (für Tabellen) und JSON.",
+  "settingsLegal": "Rechtliches",
+  "whatIfTitle": "Was wäre wenn …",
+  "whatIfRowHint": "Neue Preise durchspielen, z. B. vor einem Wechsel",
+  "whatIfBody": "Trag neue Preise ein – sie gelten ab 1. Januar. Die Prognose für {year} rechnet mit deinem Verbrauch.",
+  "@whatIfBody": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "whatIfCurrent": "Heute: {value}",
+  "@whatIfCurrent": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "whatIfDelta": "{change} ggü. {before} mit heutigen Preisen",
+  "@whatIfDelta": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      },
+      "before": {
+        "type": "String"
+      }
+    }
+  },
+  "whatIfSame": "Wie mit heutigen Preisen",
+  "whatIfEmpty": "Für Was-wäre-wenn braucht es einen Tracker mit Arbeitspreis oder festen Kosten."
 }

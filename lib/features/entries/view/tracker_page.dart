@@ -186,6 +186,7 @@ class _Content extends StatelessWidget {
                   AppListRow(
                     title: context.shortWeekdayDate(e.date),
                     subtitle: context.joinParts([
+                      if (category.sharedWith.where((m) => m.userId == e.createdBy).firstOrNull case final CategoryMember by) l10n.entryBy(by.name.isEmpty ? l10n.shareNoName : by.name),
                       if (e.meterChange) l10n.trackerMeterChanged,
                       for (final f in tracker.fields)
                         if (e.values[f.id] case final Object v) l10n.entryFieldValue(f.name, context.fieldValue(f, v)),

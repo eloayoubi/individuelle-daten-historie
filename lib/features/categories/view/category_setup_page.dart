@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/core.dart';
 import '../cubit/category_setup_cubit.dart';
 import '../data/category_templates.dart';
+import '../../sharing/view/join_sheet.dart';
 import 'add_category_sheet.dart';
 import 'category_detail_page.dart';
 import 'widgets/appearance_pickers.dart';
@@ -21,6 +22,7 @@ class CategorySetupPage extends StatelessWidget {
   static Future<void> start(BuildContext context) async {
     final choice = await AddCategorySheet.show(context);
     if (choice == null || !context.mounted) return;
+    if (choice.join) return JoinSheet.show(context);
     await Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => CategorySetupPage(template: choice.template)));
   }
 

@@ -16,12 +16,25 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   final AuthRepository _auth;
   final _changes = StreamController<void>.broadcast();
 
+  /// Realtime: Änderungen anderer Mitglieder (oder anderer Geräte) lösen ein Neuladen aus.
+  void Function()? _unsubscribe;
+  Timer? _debounce;
+
+  static const _liveTables = ['categories', 'category_members', 'trackers', 'fields', 'entries', 'entry_values'];
+
+  void _listenLive() {
+    _unsubscribe ??= _api.onChanges(_liveTables, () {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 500), () => _changes.add(null));
+    });
+  }
+
   static const _select =
       'id, name, icon, swatch, template_key, archived_at, '
       'category_members(user_id, role, sort, profiles(display_name)), '
       'trackers(id, name, sort, included_in, '
       'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, sort), '
-      'entries(id, occurred_on, note, meter_change, entry_values(field_id, num, txt, dat, flag)))';
+      'entries(id, occurred_on, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
 
   @override
   Stream<void> get changes => _changes.stream;
@@ -29,6 +42,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   @override
   Future<List<Category>> loadCategories() async {
     await _auth.ensureSignedIn();
+    _listenLive();
     final rows = await _api.table('categories').select(_select).isFilter('trackers.archived_at', null).isFilter('trackers.fields.archived_at', null);
     // Reihenfolge ist je Mitglied (category_members.sort), danach nach Name.
     final sorted = [for (final row in rows) (_mySort(row), _category(row))]
@@ -118,6 +132,8 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
           'p_occurred_on': _isoDay(entry.date),
           'p_note': entry.note,
           'p_meter_change': entry.meterChange,
+          'p_period_start': entry.hasPeriod ? _isoDay(entry.periodStart!) : null,
+          'p_period_end': entry.hasPeriod ? _isoDay(entry.periodEnd!) : null,
           'p_values': [
             for (final MapEntry(:key, :value) in entry.values.entries)
               {
@@ -137,6 +153,31 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
 
   @override
   Future<void> deleteEntry(String trackerId, String entryId) => _write(() => _rejectable(() => _api.table('entries').delete().eq('id', entryId)));
+
+  @override
+  Future<String> createInvite(String categoryId, MemberRole role) => _write(
+    () async => _api.rpc<String>('create_category_invite', params: {'p_category': categoryId, 'p_role': role.name}),
+  );
+
+  @override
+  Future<String> acceptInvite(String code) => _write(() async {
+    try {
+      return await _api.rpc<String>('accept_category_invite', params: {'p_code': code.trim()});
+    } on PostgrestException catch (e) {
+      throw WriteRejected(e.message);
+    }
+  });
+
+  @override
+  Future<void> setMemberRole(String categoryId, String userId, MemberRole role) =>
+      _write(() => _api.table('category_members').update({'role': role.name}).eq('category_id', categoryId).eq('user_id', userId));
+
+  @override
+  Future<void> removeMember(String categoryId, String userId) =>
+      _write(() => _api.table('category_members').delete().eq('category_id', categoryId).eq('user_id', userId));
+
+  @override
+  Future<void> leaveCategory(String categoryId) => removeMember(categoryId, _auth.userId ?? '');
 
   /// Die Offline-Schicht (`OfflineCategoriesRepository`) führt die Warteschlange; hier wird direkt gesendet.
   @override
@@ -247,6 +288,15 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     date: _date(row['occurred_on'] as String),
     note: row['note'] as String?,
     meterChange: row['meter_change'] as bool? ?? false,
+    periodStart: switch (row['period_start']) {
+      final String d => _date(d),
+      _ => null,
+    },
+    periodEnd: switch (row['period_end']) {
+      final String d => _date(d),
+      _ => null,
+    },
+    createdBy: row['created_by'] as String?,
     values: {
       for (final v in (row['entry_values'] as List).cast<Map<String, dynamic>>())
         if (_value(v) case final Object value) v['field_id'] as String: value,

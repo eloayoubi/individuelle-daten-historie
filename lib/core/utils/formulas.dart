@@ -80,7 +80,7 @@ abstract final class Formulas {
     final variables = variablesByEntry(tracker);
     final sorted = [...tracker.entries]..sort((a, b) => b.date.compareTo(a.date));
     for (final e in sorted) {
-      if (formula.evaluate(variables[e.id]!) case final double v) return v;
+      if (formula.evaluate(variables[e.id]!, window: _window(tracker, e)) case final double v) return v;
     }
     return null;
   }
@@ -113,15 +113,11 @@ abstract final class Formulas {
     return tracker.copyWith(
       entries: [
         for (final e in tracker.entries)
-          Entry(
-            id: e.id,
-            date: e.date,
-            note: e.note,
-            meterChange: e.meterChange,
+          e.copyWith(
             values: {
               ...e.values,
               for (final MapEntry(key: field, value: formula) in parsed.entries)
-                if (formula.evaluate(variables[e.id]!) case final double v) field.id: v,
+                if (formula.evaluate(variables[e.id]!, window: _window(tracker, e)) case final double v) field.id: v,
             },
           ),
       ],
@@ -129,6 +125,9 @@ abstract final class Formulas {
   }
 
   /// Formel-Namen mit ihren Werten für jeden Eintrag (Eintrags-Id → Name → Wert).
+  /// Ergebnis mit dem neuesten Eintrag, mit Zeiträumen (`summe`/`schnitt`).
+  static double? evaluateAt(Formula formula, Tracker tracker, Entry entry) => formula.evaluate(variablesByEntry(tracker)[entry.id] ?? const {}, window: _window(tracker, entry));
+
   static Map<String, Map<String, double>> variablesByEntry(Tracker tracker) {
     final keys = Formulas.keys(tracker);
     final meter = tracker.firstWithRole(FieldRole.meterReading);
@@ -166,6 +165,25 @@ abstract final class Formulas {
       lastDate = e.date;
     }
     return result;
+  }
+
+  /// `summe(feld; tage)` / `schnitt(feld; tage)`: Werte des Felds in den [days] Tagen bis zum Eintrag.
+  static FormulaWindow _window(Tracker tracker, Entry at) {
+    final keys = Formulas.keys(tracker);
+    final byKey = {for (final f in tracker.fields) keys[f.id]!: f};
+    return (name, days, average) {
+      final field = byKey[name];
+      if (field == null) return null;
+      final from = at.date.subtract(Duration(days: days.round()));
+      final values = [
+        for (final e in tracker.entries)
+          if (e.date.isAfter(from) && !e.date.isAfter(at.date))
+            if (e.values[field.id] case final num v) v.toDouble(),
+      ];
+      if (values.isEmpty) return average ? null : 0;
+      final sum = values.fold(0.0, (a, b) => a + b);
+      return average ? sum / values.length : sum;
+    };
   }
 
   static Formula? _tryParse(String source) {

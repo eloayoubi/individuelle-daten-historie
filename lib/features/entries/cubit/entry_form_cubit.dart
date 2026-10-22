@@ -43,6 +43,16 @@ class EntryFormCubit extends Cubit<EntryFormState> {
 
   void setMeterChange(bool value) => emit(state.copyWith(meterChange: value));
 
+  /// Zeitraum an: vorbelegt mit dem Kalenderjahr vor dem Stichtag (typisch für Abrechnungen).
+  void setPeriodEnabled(bool on) {
+    final year = state.date.year - 1;
+    emit(state.copyWith(period: on ? (start: DateTime.utc(year), end: DateTime.utc(year, 12, 31)) : (start: null, end: null)));
+  }
+
+  void setPeriodStart(DateTime day) => emit(state.copyWith(period: (start: CostEngine.day(day), end: state.periodEnd)));
+
+  void setPeriodEnd(DateTime day) => emit(state.copyWith(period: (start: state.periodStart, end: CostEngine.day(day))));
+
   void _set(String fieldId, Object? value) => emit(state.copyWith(inputs: {...state.inputs, fieldId: value}));
 
   Future<void> save() async {

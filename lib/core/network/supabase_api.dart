@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
@@ -32,4 +34,22 @@ class SupabaseApi {
       _client.from(table).stream(primaryKey: primaryKey).eq(column, value);
 
   String? get userId => _client.auth.currentUser?.id;
+
+  /// Änderungen in [tables] (Realtime, RLS filtert); liefert eine Funktion zum Abmelden.
+  void Function() onChanges(List<String> tables, void Function() onChange) {
+    var channel = _client.channel('kostenkurve-${tables.join('-')}');
+    for (final table in tables) {
+      channel = channel.onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: table, callback: (_) => onChange());
+    }
+    channel.subscribe();
+    return () => _client.removeChannel(channel);
+  }
+
+  /// Datei in einen privaten Bucket laden.
+  Future<void> upload(String bucket, String path, Uint8List bytes, {required String contentType}) =>
+      _client.storage.from(bucket).uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType));
+
+  Future<Uint8List> download(String bucket, String path) => _client.storage.from(bucket).download(path);
+
+  Future<void> remove(String bucket, List<String> paths) => _client.storage.from(bucket).remove(paths);
 }

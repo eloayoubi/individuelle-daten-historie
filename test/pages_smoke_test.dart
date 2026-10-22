@@ -1,8 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/di/lookup.dart';
+import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/core/theme/app_theme.dart';
 import 'package:kostenkurve/core/widgets/widgets.dart';
+import 'package:kostenkurve/features/account/view/account_page.dart';
+import 'package:kostenkurve/features/auth/data/auth_repository.dart';
 import 'package:kostenkurve/features/categories/cubit/field_editor_cubit.dart';
 import 'package:kostenkurve/features/categories/data/category_templates.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
@@ -18,7 +23,14 @@ import 'package:kostenkurve/features/entries/view/tracker_page.dart';
 import 'package:kostenkurve/features/home/view/home_page.dart';
 import 'package:kostenkurve/features/insights/view/insights_page.dart';
 import 'package:kostenkurve/features/home/view/widgets/quick_add_sheet.dart';
+import 'package:kostenkurve/features/legal/data/legal_document.dart';
+import 'package:kostenkurve/features/legal/view/legal_page.dart';
+import 'package:kostenkurve/features/onboarding/cubit/onboarding_cubit.dart';
+import 'package:kostenkurve/features/onboarding/view/onboarding_page.dart';
+import 'package:kostenkurve/features/plus/view/paywall_page.dart';
 import 'package:kostenkurve/features/settings/view/settings_page.dart';
+import 'package:kostenkurve/features/sharing/view/join_sheet.dart';
+import 'package:kostenkurve/features/sharing/view/share_page.dart';
 import 'package:kostenkurve/features/shell/view/shell_page.dart';
 import 'package:kostenkurve/l10n/generated/app_localizations.dart';
 
@@ -30,11 +42,19 @@ void main() {
     await ensureMockDependencies();
     await loadAppFonts();
   });
+  // Konto-Tests sichern das Beispielkonto – danach wieder anonym.
+  tearDown(() => lookup<AuthRepository>().signOut());
+
+  Widget onboarding() => BlocProvider(
+    create: (_) => OnboardingCubit(MockCategoriesRepository(seed: const []), MemoryJsonStore())..load(),
+    child: const OnboardingPage(),
+  );
 
   final templates = CategoryTemplates.all(lookupAppLocalizations(const Locale('de')));
   final gas = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-heizung').trackers.single;
   final strom = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-strom');
   final auto = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-auto');
+  final miete = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-miete');
 
   final pages = <(String, Widget)>[
     ('shell', const ShellView()),
@@ -60,6 +80,16 @@ void main() {
     ('tracker water included', const TrackerPage(args: TrackerArgs(categoryId: 'c-wasser', trackerId: 't-wasser'))),
     ('insights', const InsightsPage()),
     ('field editor formula', FieldEditorPage(args: FieldEditorArgs(trackerId: auto.trackers.single.id, tracker: auto.trackers.single, field: auto.trackers.single.fields.firstWhere((f) => f.formula != null)))),
+    ('entry form settlement', EntryFormPage(args: EntryFormArgs(category: miete, tracker: miete.trackers.single, entry: miete.trackers.single.entries[1]))),
+    ('account', const AccountPage()),
+    ('share owner', const SharePage(categoryId: 'c-miete')),
+    ('share missing', const SharePage(categoryId: 'weg')),
+    ('join', const JoinSheet(code: 'K7Q2M9X4TA')),
+    ('paywall', const PaywallPage()),
+    ('privacy', const LegalPage(document: LegalDocument.privacy)),
+    ('terms', const LegalPage(document: LegalDocument.terms)),
+    ('imprint', const LegalPage(document: LegalDocument.imprint)),
+    ('onboarding', onboarding()),
   ];
 
   for (final (mode, theme) in [('hell', AppTheme.light), ('dunkel', AppTheme.night)]) {
@@ -123,6 +153,74 @@ void main() {
         expect(find.text('Unbekannter Name „strecke“.'), findsOneWidget);
         await t.tap(find.text('verbrauch'));
         await t.pumpAndSettle();
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Konto per E-Mail-Code sichern, dann Einladung erstellen', (t) async {
+        await pumpPage(t, const AccountPage(), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        expect(find.text('Nur auf diesem Gerät'), findsOneWidget);
+        await t.tap(find.text('Mit E-Mail sichern'));
+        await t.pumpAndSettle();
+        await t.enterText(find.byType(TextField).last, 'elias@example.com');
+        await t.pump();
+        await t.tap(find.text('Code senden'));
+        await t.pumpAndSettle();
+        await t.enterText(find.byType(TextField).last, '123456');
+        await t.pump();
+        await t.tap(find.text('Bestätigen'));
+        await t.pumpAndSettle();
+        expect(find.textContaining('elias@example.com'), findsOneWidget);
+
+        await pumpPage(t, const SharePage(categoryId: 'c-miete'), theme: theme, size: const Size(390, 1600));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Einladung erstellen'));
+        await t.pumpAndSettle();
+        expect(find.text(MockCategoriesRepository.demoInvite), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Onboarding: Vorlagen wählen, anlegen, Erinnerungen später', (t) async {
+        await pumpPage(t, onboarding(), theme: theme, size: const Size(390, 1600));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Los geht\'s'));
+        await t.pumpAndSettle();
+        expect(find.text('3 Kategorien anlegen'), findsOneWidget);
+        await t.tap(find.text('Wasser'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('2 Kategorien anlegen'));
+        await t.pumpAndSettle();
+        expect(find.text('Nichts vergessen'), findsOneWidget);
+        await t.tap(find.text('Später'));
+        await t.pumpAndSettle();
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Was wäre wenn: neuer Arbeitspreis ändert die Prognose', (t) async {
+        await pumpPage(t, const InsightsPage(), theme: theme, size: const Size(390, 3200));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Was wäre wenn …'));
+        await t.pumpAndSettle();
+        expect(find.text('Wie mit heutigen Preisen'), findsOneWidget);
+        await t.enterText(find.byType(TextField).first, '0,60');
+        await t.pumpAndSettle();
+        expect(find.textContaining('mit heutigen Preisen'), findsOneWidget);
+        expect(find.text('Wie mit heutigen Preisen'), findsNothing);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Abo-Seite zeigt beide Abos und Pflicht-Links', (t) async {
+        await pumpPage(t, const PaywallPage(), theme: theme, size: const Size(390, 1600));
+        await t.pumpAndSettle();
+        expect(find.text('19,99 €/Jahr'), findsOneWidget);
+        expect(find.text('2,99 €/Monat'), findsOneWidget);
+        expect(find.text('Spare 44 %'), findsOneWidget);
+        expect(find.text('Käufe wiederherstellen'), findsOneWidget);
+        expect(find.text('Nutzungsbedingungen'), findsOneWidget);
+        expect(find.text('Datenschutz'), findsOneWidget);
+        await t.tap(find.text('Datenschutz'));
+        await t.pumpAndSettle();
+        expect(find.text('Kurz gesagt'), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 

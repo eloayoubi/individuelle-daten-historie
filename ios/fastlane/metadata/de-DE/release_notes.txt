@@ -1,0 +1,1 @@
+Die erste Version von Kostenkurve: Zählerstände, Verträge und Fixkosten erfassen, Verlauf und Auswertung ansehen, Prognose mit Spanne, Abschlags-Check, Erinnerungen und Kategorien mit dem Partner teilen. Wir freuen uns über dein Feedback!

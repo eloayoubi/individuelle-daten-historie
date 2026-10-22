@@ -1071,4 +1071,600 @@ class AppLocalizationsEn extends AppLocalizations {
   String insightsRangeOnly(String range) {
     return '± $range';
   }
+
+  @override
+  String get accountTitle => 'Account';
+
+  @override
+  String get accountSecuredToast => 'Account secured';
+
+  @override
+  String get accountSignedInToast => 'Signed in';
+
+  @override
+  String get accountNameSaved => 'Name saved';
+
+  @override
+  String get accountSignedOutToast => 'Signed out';
+
+  @override
+  String get accountAlreadyUsedTitle => 'Account already exists';
+
+  @override
+  String get accountAlreadyUsedBody =>
+      'This Apple ID already belongs to an account. Do you want to sign in there? What you have recorded without an account so far will not be moved.';
+
+  @override
+  String get accountSignIn => 'Sign in';
+
+  @override
+  String get accountInvalidCode => 'The code is wrong or has expired.';
+
+  @override
+  String get accountSignInTitle => 'Sign in with an existing account?';
+
+  @override
+  String get accountSignInBody =>
+      'You will switch to your account. What you have recorded on this device without an account will not be moved.';
+
+  @override
+  String get accountSignOutTitle => 'Sign out?';
+
+  @override
+  String get accountSignOutBody =>
+      'Your data stays in your account. Afterwards this device starts fresh without an account.';
+
+  @override
+  String get accountSignOut => 'Sign out';
+
+  @override
+  String get accountAnonymousTitle => 'Only on this device';
+
+  @override
+  String get accountAnonymousBody =>
+      'Your data lives in an account without sign-in. Secure it so it survives a new phone and you can share categories.';
+
+  @override
+  String get accountSecuredTitle => 'Account secured';
+
+  @override
+  String accountSecuredBody(String login) {
+    return 'Signed in with $login. Your data is available on every device.';
+  }
+
+  @override
+  String get accountApple => 'Apple';
+
+  @override
+  String get accountSecure => 'Secure account';
+
+  @override
+  String get accountSecureApple => 'Secure with Apple';
+
+  @override
+  String get accountSecureEmail => 'Secure with email';
+
+  @override
+  String get accountSecureFooter =>
+      'Everything you have recorded stays. No password: Apple or a code by email.';
+
+  @override
+  String get accountExisting => 'Already have an account?';
+
+  @override
+  String get accountSignInApple => 'Sign in with Apple';
+
+  @override
+  String get accountSignInEmail => 'Sign in with email';
+
+  @override
+  String get accountName => 'Your name';
+
+  @override
+  String get accountNameHint => 'e.g. Alex';
+
+  @override
+  String get accountNameFooter =>
+      'Visible to everyone you share categories with – also on your entries.';
+
+  @override
+  String get accountEmailHint => 'name@example.com';
+
+  @override
+  String accountCodeSent(String email) {
+    return 'Code sent to $email. Check your spam folder too.';
+  }
+
+  @override
+  String get accountCodeHint => 'Code from the email';
+
+  @override
+  String get accountConfirm => 'Confirm';
+
+  @override
+  String get accountResend => 'Send new code';
+
+  @override
+  String get accountSendCode => 'Send code';
+
+  @override
+  String get shareRemoved => 'Removed';
+
+  @override
+  String get shareLeft => 'Left category';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleEditor => 'Can edit';
+
+  @override
+  String get roleViewer => 'View only';
+
+  @override
+  String get roleEditorHint => 'Can add, change and delete entries.';
+
+  @override
+  String get roleViewerHint => 'Sees history and costs but changes nothing.';
+
+  @override
+  String get shareNoName => 'No name';
+
+  @override
+  String get shareRemove => 'Remove';
+
+  @override
+  String shareRemoveTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get shareRemoveBody =>
+      'They will no longer see the category. Their entries stay.';
+
+  @override
+  String shareLeaveTitle(String category) {
+    return 'Leave “$category”?';
+  }
+
+  @override
+  String get shareLeaveBody =>
+      'You will no longer see the category. Your entries stay for the others.';
+
+  @override
+  String get shareLeave => 'Leave';
+
+  @override
+  String get shareTitle => 'Share';
+
+  @override
+  String get shareMembers => 'Members';
+
+  @override
+  String get shareYou => 'You';
+
+  @override
+  String shareYouNamed(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get shareInvite => 'Invite';
+
+  @override
+  String get shareSecureFirst =>
+      'To share you need a secured account – so your partner knows who they share with and nothing gets lost.';
+
+  @override
+  String get shareCreateInvite => 'Create invite';
+
+  @override
+  String get shareSend => 'Send invite';
+
+  @override
+  String shareMessage(String category, String code, String link) {
+    return 'I\'m sharing “$category” with you in Kostenkurve. Open the link or enter the code $code in the app under Categories › + › Accept invite: $link';
+  }
+
+  @override
+  String get shareValidity => 'Valid for 7 days, for one person.';
+
+  @override
+  String get joinTitle => 'Accept invite';
+
+  @override
+  String get joinRowHint => 'Join a partner\'s category';
+
+  @override
+  String get joinDone => 'Joined';
+
+  @override
+  String get joinInvalid => 'Code unknown, expired or already used.';
+
+  @override
+  String get joinBody =>
+      'Enter the code from the invite. Afterwards you see the category and, depending on your role, record along.';
+
+  @override
+  String get joinHint => 'Code, e.g. K7Q2M9X4TA';
+
+  @override
+  String get joinAction => 'Join';
+
+  @override
+  String entryBy(String name) {
+    return 'by $name';
+  }
+
+  @override
+  String get accountDelete => 'Delete account';
+
+  @override
+  String get accountDeleteTitle => 'Delete account and all data?';
+
+  @override
+  String get accountDeleteBody =>
+      'Your account and your categories with all entries and receipts are deleted immediately – also for everyone you share them with. This cannot be undone. Cancel a Plus subscription separately in iOS Settings.';
+
+  @override
+  String get accountDeleteFooter =>
+      'Export your data first if you want to keep it (Settings › Export data).';
+
+  @override
+  String get accountDeletedToast => 'Account deleted';
+
+  @override
+  String get attachmentsTitle => 'Receipts';
+
+  @override
+  String get attachmentsAdd => 'Add';
+
+  @override
+  String get attachmentsAdded => 'Receipt added';
+
+  @override
+  String get attachmentsDeleted => 'Receipt deleted';
+
+  @override
+  String get attachmentsAfterSave =>
+      'After saving you can attach a bill, contract or meter photo.';
+
+  @override
+  String get attachmentsEmpty =>
+      'No receipts yet. Attach a bill, contract or a photo of the meter.';
+
+  @override
+  String get attachmentsEmptyPlus =>
+      'With Plus you attach bills, contracts and meter photos right to the entry.';
+
+  @override
+  String get attachmentsOffline => 'Receipts are not available right now.';
+
+  @override
+  String get attachmentsCamera => 'Take photo';
+
+  @override
+  String get attachmentsPhotos => 'Choose from Photos';
+
+  @override
+  String get attachmentsPdf => 'Choose PDF';
+
+  @override
+  String get attachmentsNeedsPlus =>
+      'Adding receipts needs Plus and edit rights.';
+
+  @override
+  String get attachmentsTooLarge => 'The file is larger than 20 MB.';
+
+  @override
+  String get attachmentsQuota => 'Your receipt storage is full (5 GB).';
+
+  @override
+  String get attachmentsType => 'Only photos (JPEG, PNG, HEIC) and PDFs.';
+
+  @override
+  String get attachmentsNotSynced =>
+      'The entry has not been sent yet – try again in a moment.';
+
+  @override
+  String get attachmentsNoAccess =>
+      'No access – allow camera or photos in Settings.';
+
+  @override
+  String get attachmentsPhotoTitle => 'Photo';
+
+  @override
+  String get attachmentsPdfTitle => 'PDF';
+
+  @override
+  String get attachmentsShare => 'Share';
+
+  @override
+  String get attachmentsOpenPdf => 'Open or save';
+
+  @override
+  String get attachmentsDeleteTitle => 'Delete receipt?';
+
+  @override
+  String get attachmentsDeleteBody =>
+      'The file is deleted for everyone who sees the category.';
+
+  @override
+  String get entryPeriod => 'Billing period';
+
+  @override
+  String get entryPeriodFrom => 'From';
+
+  @override
+  String get entryPeriodTo => 'To';
+
+  @override
+  String get entryPeriodHint =>
+      'Back payment or credit for a period: the amount is spread over its days instead of the entry date.';
+
+  @override
+  String get entryPeriodInvalid => 'The end is before the start.';
+
+  @override
+  String get exportCategory => 'Category';
+
+  @override
+  String get exportTracker => 'Tracker';
+
+  @override
+  String get exportField => 'Field';
+
+  @override
+  String get exportValue => 'Value';
+
+  @override
+  String get exportUnit => 'Unit';
+
+  @override
+  String get exportNote => 'Note';
+
+  @override
+  String get exportSubject => 'Kostenkurve export';
+
+  @override
+  String get exportFailed => 'Export failed – are you online?';
+
+  @override
+  String get legalPrivacy => 'Privacy';
+
+  @override
+  String get legalTerms => 'Terms of Use';
+
+  @override
+  String get legalImprint => 'Legal notice';
+
+  @override
+  String get onboardingWelcomeTitle => 'All your costs.\nOne curve.';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Meter readings, contracts and instalments in one place – with history and a forecast for next year.';
+
+  @override
+  String get onboardingPointTrack => 'Record in seconds';
+
+  @override
+  String get onboardingPointTrackBody =>
+      'Electricity, gas, water, rent – with your own fields and formulas.';
+
+  @override
+  String get onboardingPointForecast => 'No more surprise bills';
+
+  @override
+  String get onboardingPointForecastBody =>
+      'Forecast with range and instalment check.';
+
+  @override
+  String get onboardingPointShare => 'Together at home';
+
+  @override
+  String get onboardingPointShareBody => 'Share categories with your partner.';
+
+  @override
+  String get onboardingStart => 'Get started';
+
+  @override
+  String get onboardingTemplatesTitle => 'What do you want to track?';
+
+  @override
+  String get onboardingTemplatesBody =>
+      'Pick templates – you can adjust the fields any time later.';
+
+  @override
+  String onboardingCreate(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Create $count categories',
+      one: 'Create 1 category',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onboardingSkip => 'Continue without template';
+
+  @override
+  String get onboardingSelected => 'Selected';
+
+  @override
+  String get onboardingRemindersTitle => 'Never forget';
+
+  @override
+  String get onboardingRemindersBody =>
+      'We remind you to read your meters and about notice periods – on your device, without ads.';
+
+  @override
+  String get onboardingRemindersAllow => 'Allow reminders';
+
+  @override
+  String get onboardingLater => 'Later';
+
+  @override
+  String get plusTitle => 'Kostenkurve Plus';
+
+  @override
+  String get plusSubtitle => 'Every receipt right where the costs are.';
+
+  @override
+  String get plusBenefitReceipts => 'Receipts on entries';
+
+  @override
+  String get plusBenefitReceiptsBody =>
+      'Bills, contracts and meter photos as photo or PDF.';
+
+  @override
+  String get plusBenefitStorage => '5 GB storage';
+
+  @override
+  String get plusBenefitStorageBody =>
+      'Stored securely and available on every device.';
+
+  @override
+  String get plusBenefitShared => 'For the whole household';
+
+  @override
+  String get plusBenefitSharedBody =>
+      'In shared categories your partner sees the receipts – without their own subscription.';
+
+  @override
+  String get plusYearly => 'Yearly';
+
+  @override
+  String get plusMonthly => 'Monthly';
+
+  @override
+  String plusPerYear(String price) {
+    return '$price/year';
+  }
+
+  @override
+  String plusPerMonth(String price) {
+    return '$price/month';
+  }
+
+  @override
+  String plusYearlyDetail(String price) {
+    return '$price per month, billed yearly';
+  }
+
+  @override
+  String get plusMonthlyDetail => 'Cancel monthly';
+
+  @override
+  String plusSave(int percent) {
+    return 'Save $percent%';
+  }
+
+  @override
+  String get plusSubscribe => 'Subscribe';
+
+  @override
+  String get plusFinePrint =>
+      'Renews automatically unless cancelled at least 24 hours before the end of the period. Charged to your Apple account, cancel in its settings.';
+
+  @override
+  String get plusRestore => 'Restore purchases';
+
+  @override
+  String get plusAppleEula => 'License agreement (EULA)';
+
+  @override
+  String get plusWelcome => 'Welcome to Plus';
+
+  @override
+  String get plusNothingToRestore => 'No active subscription found.';
+
+  @override
+  String get plusPending => 'Purchase is waiting for approval.';
+
+  @override
+  String get plusFailed => 'Purchase failed – please try again later.';
+
+  @override
+  String get plusOtherAccount =>
+      'This subscription belongs to another Kostenkurve account. Sign in there (Settings › Account).';
+
+  @override
+  String get plusUnavailable =>
+      'Subscriptions are not available right now. Check your connection and try again later.';
+
+  @override
+  String get plusOnlyIos =>
+      'You currently subscribe to Plus in the iPhone app – it then applies here too.';
+
+  @override
+  String get plusActive => 'Plus is active.';
+
+  @override
+  String plusActiveUntil(String date) {
+    return 'Plus is active – renews on $date.';
+  }
+
+  @override
+  String get plusManage => 'Manage subscription';
+
+  @override
+  String get plusBadge => 'Plus';
+
+  @override
+  String get plusBadgeActive => 'Active';
+
+  @override
+  String get settingsAccountAnonymous => 'Only on this device – secure now';
+
+  @override
+  String get settingsPlusHint => 'Receipts for bills and contracts';
+
+  @override
+  String settingsStorage(String used, String total) {
+    return '$used of $total used';
+  }
+
+  @override
+  String get settingsData => 'Data';
+
+  @override
+  String get settingsExport => 'Export data';
+
+  @override
+  String get settingsExportFooter =>
+      'All categories and entries as CSV (for spreadsheets) and JSON.';
+
+  @override
+  String get settingsLegal => 'Legal';
+
+  @override
+  String get whatIfTitle => 'What if …';
+
+  @override
+  String get whatIfRowHint => 'Try new prices, e.g. before switching';
+
+  @override
+  String whatIfBody(String year) {
+    return 'Enter new prices – they apply from 1 January. The forecast for $year uses your consumption.';
+  }
+
+  @override
+  String whatIfCurrent(String value) {
+    return 'Today: $value';
+  }
+
+  @override
+  String whatIfDelta(String change, String before) {
+    return '$change vs. $before at today\'s prices';
+  }
+
+  @override
+  String get whatIfSame => 'Same as at today\'s prices';
+
+  @override
+  String get whatIfEmpty =>
+      'What if needs a tracker with a unit price or fixed costs.';
 }
