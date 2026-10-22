@@ -11,6 +11,10 @@ import 'package:kostenkurve/features/categories/view/categories_page.dart';
 import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
 import 'package:kostenkurve/features/categories/view/category_setup_page.dart';
 import 'package:kostenkurve/features/categories/view/field_editor_page.dart';
+import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
+import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
+import 'package:kostenkurve/features/entries/view/entry_form_page.dart';
+import 'package:kostenkurve/features/entries/view/tracker_page.dart';
 import 'package:kostenkurve/features/home/view/home_page.dart';
 import 'package:kostenkurve/features/home/view/widgets/quick_add_sheet.dart';
 import 'package:kostenkurve/features/settings/view/settings_page.dart';
@@ -28,6 +32,8 @@ void main() {
 
   final templates = CategoryTemplates.all(lookupAppLocalizations(const Locale('de')));
   final gas = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-heizung').trackers.single;
+  final strom = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-strom');
+  final auto = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-auto');
 
   final pages = <(String, Widget)>[
     ('shell', const ShellView()),
@@ -42,6 +48,13 @@ void main() {
     ('setup custom', const CategorySetupPage()),
     ('field editor new', const FieldEditorPage(args: FieldEditorArgs(trackerId: 't-gas'))),
     ('field editor meter', FieldEditorPage(args: FieldEditorArgs(trackerId: gas.id, field: gas.fields.first, hasValues: true))),
+    ('entry form new', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single))),
+    ('entry form edit', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single, entry: strom.trackers.single.entries[1]))),
+    ('entry form car', EntryFormPage(args: EntryFormArgs(category: auto, tracker: auto.trackers.single))),
+    ('tracker meter', const TrackerPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom'))),
+    ('tracker water', const TrackerPage(args: TrackerArgs(categoryId: 'c-wasser', trackerId: 't-wasser'))),
+    ('tracker contract', const TrackerPage(args: TrackerArgs(categoryId: 'c-internet', trackerId: 't-glasfaser'))),
+    ('tracker missing', const TrackerPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 'weg'))),
   ];
 
   for (final (mode, theme) in [('hell', AppTheme.light), ('dunkel', AppTheme.night)]) {
@@ -54,15 +67,32 @@ void main() {
         });
       }
 
-      testWidgets('Schnellerfassung öffnet das Sheet und meldet sich per Toast', (t) async {
-        await pumpPage(t, const HomePage(), theme: theme);
+      testWidgets('Schnellerfassung: Tracker wählen, Stand eintragen, speichern', (t) async {
+        await pumpPage(t, const HomePage(), theme: theme, size: const Size(390, 1200));
         await t.tap(find.bySemanticsLabel('Eintrag erfassen'));
         await t.pumpAndSettle();
         expect(find.byType(QuickAddSheet), findsOneWidget);
-        await t.tap(find.text('Hauptzähler').last);
+        await t.tap(find.text('Kaltwasser').last);
         await t.pumpAndSettle();
-        expect(find.byType(QuickAddSheet), findsNothing);
-        expect(find.text('Das Erfassen kommt im nächsten Schritt.'), findsOneWidget);
+        expect(find.byType(EntryFormPage), findsOneWidget);
+        expect(find.textContaining('Zuletzt'), findsOneWidget);
+        await t.enterText(find.byType(TextField).first, '760');
+        await t.pumpAndSettle();
+        expect(find.textContaining('m³ seit'), findsOneWidget);
+        await t.tap(find.text('Eintrag speichern'));
+        await t.pumpAndSettle();
+        expect(find.byType(EntryFormPage), findsNothing);
+        expect(find.text('Gespeichert.'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Verlauf: Kennzahl wechseln und Monat antippen', (t) async {
+        await pumpPage(t, const TrackerPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom')), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        expect(find.text('Kosten'), findsOneWidget);
+        await t.tap(find.text('Verbrauch'));
+        await t.pumpAndSettle();
+        expect(find.textContaining('kWh'), findsWidgets);
         expect(t.takeException(), isNull);
       });
 

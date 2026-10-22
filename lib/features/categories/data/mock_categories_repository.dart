@@ -102,6 +102,25 @@ class MockCategoriesRepository implements CategoriesRepository {
     }
   }
 
+  @override
+  Future<void> saveEntry(String trackerId, Entry entry) async => _updateTracker(
+    trackerId,
+    (t) => t.copyWith(entries: [...t.entries.where((e) => e.id != entry.id), entry]..sort((a, b) => a.date.compareTo(b.date))),
+  );
+
+  @override
+  Future<void> deleteEntry(String trackerId, String entryId) async =>
+      _updateTracker(trackerId, (t) => t.copyWith(entries: [...t.entries.where((e) => e.id != entryId)]));
+
+  @override
+  SyncState get syncState => const SyncState();
+
+  @override
+  Future<void> sync() async {}
+
+  @override
+  void acknowledgeRejected() {}
+
   String _id(String kind) => 'mock-$kind-${_seq++}';
 
   void _changed() => _changes.add(null);

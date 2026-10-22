@@ -8,8 +8,11 @@ class QuickAddSheet extends StatelessWidget {
 
   final List<Category> categories;
 
-  static Future<String?> show(BuildContext context, List<Category> categories) =>
-      AppSheet.show<String>(context, title: context.l10n.quickAddTitle, child: QuickAddSheet(categories: categories));
+  static Future<String?> show(BuildContext context, List<Category> categories) => AppSheet.show<String>(
+    context,
+    title: context.l10n.quickAddTitle,
+    child: QuickAddSheet(categories: categories),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +26,13 @@ class QuickAddSheet extends StatelessWidget {
           children: [
             for (final category in categories)
               for (final tracker in category.trackers)
-                AppListRow(
-                  leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
-                  title: tracker.name,
-                  subtitle: category.name,
-                  onTap: () => Navigator.of(context).pop(tracker.id),
-                ),
+                if (tracker.fields.isNotEmpty)
+                  AppListRow(
+                    leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
+                    title: tracker.name,
+                    subtitle: category.name,
+                    onTap: () => Navigator.of(context).pop(tracker.id),
+                  ),
           ],
         ),
       ],

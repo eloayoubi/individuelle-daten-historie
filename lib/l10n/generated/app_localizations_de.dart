@@ -147,9 +147,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get quickAddTitle => 'Wofür möchtest du etwas eintragen?';
 
   @override
-  String get quickAddSoon => 'Das Erfassen kommt im nächsten Schritt.';
-
-  @override
   String get settingsAppearance => 'Darstellung';
 
   @override
@@ -678,4 +675,237 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tplFieldCancelBy => 'Kündbar bis';
+
+  @override
+  String get actionDelete => 'Löschen';
+
+  @override
+  String get toggleYes => 'Ja';
+
+  @override
+  String get toggleNo => 'Nein';
+
+  @override
+  String get datePickerTitle => 'Datum wählen';
+
+  @override
+  String get entryNew => 'Neuer Eintrag';
+
+  @override
+  String get entryEdit => 'Eintrag bearbeiten';
+
+  @override
+  String get entryDate => 'Datum';
+
+  @override
+  String get entryNote => 'Notiz';
+
+  @override
+  String get entryNoteHint => 'Optional, z. B. abgelesen nach dem Urlaub';
+
+  @override
+  String entryLast(String value, String date) {
+    return 'Zuletzt $value · $date';
+  }
+
+  @override
+  String entryCurrent(String value, String date) {
+    return 'Aktuell $value seit $date – leer lassen, wenn sich nichts ändert';
+  }
+
+  @override
+  String entryDelta(String delta, String date) {
+    return '$delta seit $date';
+  }
+
+  @override
+  String entryBelowLast(String value) {
+    return 'Kleiner als der letzte Stand ($value) – neuer Zähler?';
+  }
+
+  @override
+  String get entryMeterChange => 'Neuer Zähler ab diesem Stand';
+
+  @override
+  String get entryMeterChangeHint =>
+      'Der Verbrauch seit dem letzten Stand wird aus dem Zeitraum davor geschätzt.';
+
+  @override
+  String get entryInvalidNumber => 'Bitte eine Zahl eingeben.';
+
+  @override
+  String get entryNeedsValue => 'Trag mindestens einen Wert ein.';
+
+  @override
+  String get entryNoFields =>
+      'Dieser Tracker hat noch keine Felder. Lege sie in der Kategorie an.';
+
+  @override
+  String get entrySave => 'Eintrag speichern';
+
+  @override
+  String get entrySaved => 'Gespeichert.';
+
+  @override
+  String get entrySavedOffline =>
+      'Gespeichert – wird übertragen, sobald du online bist.';
+
+  @override
+  String get entryDelete => 'Eintrag löschen';
+
+  @override
+  String entryDeleteTitle(String date) {
+    return 'Eintrag vom $date löschen?';
+  }
+
+  @override
+  String get entryDeleteBody =>
+      'Der Eintrag verschwindet aus Verlauf, Kosten und Prognose.';
+
+  @override
+  String get entryDeleted => 'Eintrag gelöscht.';
+
+  @override
+  String get trackerHistory => 'Verlauf und Einträge';
+
+  @override
+  String get trackerLast12 => 'Letzte 12 Monate';
+
+  @override
+  String get metricCost => 'Kosten';
+
+  @override
+  String get metricConsumption => 'Verbrauch';
+
+  @override
+  String trackerThisYear(String year) {
+    return '$year bis heute';
+  }
+
+  @override
+  String get trackerLastYear => 'Vorjahr bis heute';
+
+  @override
+  String get trackerChartEmpty => 'Noch zu wenig Daten für einen Verlauf.';
+
+  @override
+  String trackerChartValue(String month, String value) {
+    return '$month: $value';
+  }
+
+  @override
+  String get trackerCurrentValues => 'Aktuelle Werte';
+
+  @override
+  String trackerSince(String date) {
+    return 'seit $date';
+  }
+
+  @override
+  String get trackerEntries => 'Einträge';
+
+  @override
+  String get trackerNoEntriesTitle => 'Noch keine Einträge';
+
+  @override
+  String get trackerNoEntriesBody =>
+      'Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.';
+
+  @override
+  String get trackerAddEntry => 'Wert eintragen';
+
+  @override
+  String get trackerMeterChanged => 'Neuer Zähler';
+
+  @override
+  String homeSyncPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge warten auf Verbindung',
+      one: '1 Eintrag wartet auf Verbindung',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncPendingHint =>
+      'Wird automatisch übertragen, sobald du online bist.';
+
+  @override
+  String homeSyncRejected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge wurden abgelehnt',
+      one: '1 Eintrag wurde abgelehnt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncRejectedHint =>
+      'Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.';
+
+  @override
+  String get remindersEnable => 'Erinnerungen aktivieren';
+
+  @override
+  String get remindersEnableHint =>
+      'Ans Ablesen und an Fristen erinnern lassen';
+
+  @override
+  String get settingsReminders => 'Erinnerungen';
+
+  @override
+  String get settingsNotifications => 'Benachrichtigungen';
+
+  @override
+  String get settingsRemindersFooter =>
+      'Erinnert ans Ablesen, wenn ein Zähler 30 Tage keinen neuen Stand hat, und 30, 7 und 1 Tag vor Stichtagen wie dem Vertragsende.';
+
+  @override
+  String get settingsRemindersDenied =>
+      'Benachrichtigungen sind in den Systemeinstellungen ausgeschaltet. Schalte sie dort für Kostenkurve ein.';
+
+  @override
+  String get notifyChannel => 'Erinnerungen';
+
+  @override
+  String notifyReadBody(int days) {
+    return 'Seit $days Tagen kein neuer Stand – trag ihn kurz ein.';
+  }
+
+  @override
+  String notifyDeadlineBody(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'In $days Tagen',
+      one: 'Morgen',
+    );
+    return '$_temp0 ist es so weit: $date.';
+  }
+
+  @override
+  String entryFieldValue(String field, String value) {
+    return '$field $value';
+  }
+
+  @override
+  String trackerUpcoming(String date, String value) {
+    return 'ab $date: $value';
+  }
+
+  @override
+  String categoryEntries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge',
+      one: '1 Eintrag',
+      zero: 'Noch keine Einträge',
+    );
+    return '$_temp0';
+  }
 }

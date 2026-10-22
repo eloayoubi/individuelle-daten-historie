@@ -1,6 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+import '../models/tracking.dart';
+
 /// Zahlen, Beträge und Daten im Format der App-Sprache (`1.234 €` / `€1,234`).
 extension FormatX on BuildContext {
   String get _locale => Localizations.localeOf(this).toLanguageTag();
@@ -33,6 +36,43 @@ extension FormatX on BuildContext {
 
   /// `31.03.2027`
   String shortDate(DateTime date) => DateFormat.yMd(_locale).format(date);
+
+  /// `Okt. 2026`
+  String monthYear(DateTime date) => DateFormat.yMMM(_locale).format(date);
+
+  /// Anfangsbuchstabe des Monats für Achsen (`J`, `F`, `M` …).
+  String monthInitial(DateTime date) => DateFormat('MMMMM', _locale).format(date);
+
+  /// `Do., 22. Okt.`
+  String shortWeekdayDate(DateTime date) => DateFormat.MMMEd(_locale).format(date);
+
+  /// Dezimaltrenner der App-Sprache für Eingaben (`,` oder `.`).
+  String get decimalSeparator => NumberFormat.decimalPattern(_locale).symbols.DECIMAL_SEP;
+
+  /// Gespeicherter Wert eines Felds mit Einheit, z. B. `47.100 kWh`, `0,329 €/kWh`, `Ja`.
+  String fieldValue(FieldDefinition field, Object value) {
+    final l10n = AppLocalizations.of(this);
+    return switch (value) {
+      final num n when field.kind == FieldKind.percent => '${NumberFormat.decimalPatternDigits(locale: _locale, decimalDigits: _decimals(n, max: 2)).format(n)} %',
+      final num n when field.kind == FieldKind.currency =>
+        field.unit == null || field.unit == '€' ? eurosExact(n.toDouble()) : amount(n.toDouble(), field.unit!, decimals: _decimals(n, max: 4, min: 2)),
+      final num n => amount(n.toDouble(), field.unit ?? '', decimals: _decimals(n, max: 3)),
+      final DateTime d => shortDate(d),
+      final bool b => b ? l10n.toggleYes : l10n.toggleNo,
+      _ => value.toString(),
+    };
+  }
+
+  /// So viele Nachkommastellen, wie der Wert braucht (höchstens [max]).
+  static int _decimals(num n, {required int max, int min = 0}) {
+    for (var d = min; d < max; d++) {
+      final scaled = n * _pow10(d);
+      if ((scaled.round() - scaled).abs() < 1e-6) return d;
+    }
+    return max;
+  }
+
+  static num _pow10(int d) => [1, 10, 100, 1000, 10000][d];
 
   /// Teile einer Zeile mit Mittelpunkt verbinden: `Zählerstand · kWh`. Leere Teile fallen weg.
   String joinParts(Iterable<String?> parts) => parts.whereType<String>().where((p) => p.isNotEmpty).join(' · ');

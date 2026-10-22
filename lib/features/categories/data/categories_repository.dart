@@ -82,6 +82,31 @@ class CategoryDraft extends Equatable {
   List<Object?> get props => [name, icon, swatch, templateKey, trackers];
 }
 
+/// Der Server hat eine Änderung endgültig abgelehnt (fehlende Rechte, ungültiger Wert) –
+/// erneutes Senden hilft nicht. Alle anderen Fehler gelten als vorübergehend (kein Netz).
+class WriteRejected implements Exception {
+  const WriteRejected(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'WriteRejected: $message';
+}
+
+/// Stand der Offline-Warteschlange für Einträge.
+class SyncState extends Equatable {
+  const SyncState({this.pending = 0, this.rejected = 0});
+
+  /// Noch nicht beim Server (offline erfasst oder gerade unterwegs).
+  final int pending;
+
+  /// Vom Server abgelehnt und verworfen, seit der Nutzer zuletzt bestätigt hat.
+  final int rejected;
+
+  @override
+  List<Object?> get props => [pending, rejected];
+}
+
 /// Kategorien mit ihren Trackern, Feldern und Einträgen – eigene und mit mir geteilte.
 ///
 /// Die Modelle liegen in `core/models/tracking.dart`, weil Übersicht, Kategorien und Auswertung
@@ -119,4 +144,19 @@ abstract interface class CategoriesRepository {
 
   /// Blendet das Feld aus; gespeicherte Werte bleiben erhalten.
   Future<void> archiveField(String id);
+
+  /// Speichert einen Eintrag unter seiner Id – neu oder geändert. Die Id vergibt das Gerät
+  /// (`newId()`), damit ein offline erfasster Eintrag beim Nachsenden nicht doppelt landet.
+  Future<void> saveEntry(String trackerId, Entry entry);
+
+  Future<void> deleteEntry(String trackerId, String entryId);
+
+  /// Wartende und abgelehnte Einträge (nur mit Offline-Schicht ungleich 0).
+  SyncState get syncState;
+
+  /// Wartende Einträge jetzt senden (z. B. wenn die App wieder in den Vordergrund kommt).
+  Future<void> sync();
+
+  /// Abgelehnte Einträge zur Kenntnis genommen.
+  void acknowledgeRejected();
 }
