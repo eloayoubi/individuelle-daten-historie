@@ -102,7 +102,7 @@ void main() {
       expect(engine.costInYear(2025), 0);
     });
 
-    test('einmalige Beträge zählen am Tag, die Zukunft mit dem Tagesdurchschnitt', () {
+    test('einmalige Beträge zählen am Tag, ab morgen mit dem Tagesdurchschnitt', () {
       final t = Tracker(
         id: 't',
         name: 'Auto',
@@ -115,7 +115,22 @@ void main() {
       final engine = CostEngine(t, today: d(2026, 7, 1));
       expect(engine.cost(d(2026, 3, 1), d(2026, 4, 1)), closeTo(100, 1e-9));
       // 365 € in den letzten 365 Tagen → 1 € pro Tag.
-      expect(engine.cost(d(2026, 7, 1), d(2026, 7, 11)), closeTo(10, 1e-9));
+      expect(engine.cost(d(2026, 7, 2), d(2026, 7, 12)), closeTo(10, 1e-9));
+    });
+
+    test('heute eingetragene Beträge zählen bis heute und in die Prognose', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Spiele',
+        fields: const [FieldDefinition(id: 'preis', name: 'Preis', kind: FieldKind.currency, role: FieldRole.oneOffCost)],
+        entries: [
+          Entry(id: 'a', date: d(2026, 10, 22), values: const {'preis': 80}),
+          Entry(id: 'b', date: d(2026, 10, 22), values: const {'preis': 20}),
+        ],
+      );
+      final engine = CostEngine(t, today: d(2026, 10, 22));
+      expect(engine.cost(d(2026, 1, 1), d(2026, 10, 23)), closeTo(100, 1e-9));
+      expect(engine.costInYear(2027), closeTo(100, 1e-9));
     });
   });
 }

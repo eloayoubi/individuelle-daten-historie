@@ -33,7 +33,7 @@ class CostParts {
 ///   ([FieldRole.recurringCost]) gelten ab ihrem Datum bis zur nächsten Änderung. Im Voraus
 ///   eingetragene Erhöhungen fließen so von selbst in die Prognose ein.
 /// - **Einmalige Beträge** ([FieldRole.oneOffCost]) zählen an ihrem Tag – mit Abrechnungszeitraum
-///   verteilt auf dessen Tage; ab heute gilt der Tagesdurchschnitt der letzten 365 Tage (Tanken,
+///   verteilt auf dessen Tage; ab morgen gilt der Tagesdurchschnitt der letzten 365 Tage (Tanken,
 ///   Nachzahlungen …).
 /// - **Abschläge** ([FieldRole.instalment]) sind keine Kosten; [paid] summiert sie wie
 ///   wiederkehrende Beträge für den Abschlags-Check.
@@ -77,7 +77,8 @@ class CostEngine {
     }
     _unitPrices.sort((a, b) => a.$1.compareTo(b.$1));
     final yearAgo = _today.subtract(const Duration(days: 365));
-    final lastYear = _oneOff.entries.where((e) => !e.key.isBefore(yearAgo) && e.key.isBefore(_today));
+    // Heute zählt schon mit: ein heute eingetragener Betrag ist bekannt, kein Durchschnitt.
+    final lastYear = _oneOff.entries.where((e) => e.key.isAfter(yearAgo) && !e.key.isAfter(_today));
     _oneOffDaily = lastYear.fold(0.0, (sum, e) => sum + e.value) / 365;
   }
 
@@ -156,7 +157,7 @@ class CostEngine {
   (double, double, double) _partsOn(DateTime d) => (
     _rateOn(d) * _valueAt(_unitPrices, d, beforeFirst: _unitPrices.firstOrNull?.$2 ?? 0),
     _monthly(_recurring, d),
-    d.isBefore(_today) ? _oneOff[d] ?? 0 : _oneOffDaily,
+    d.isAfter(_today) ? _oneOffDaily : _oneOff[d] ?? 0,
   );
 
   /// Tagesanteil wiederkehrender Beträge (Betrag je Intervall, auf die Tage des Monats verteilt).
