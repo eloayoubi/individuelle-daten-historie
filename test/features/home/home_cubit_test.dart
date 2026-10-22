@@ -27,6 +27,7 @@ void main() {
     build: () {
       final repo = _MockCategories();
       when(() => repo.changes).thenAnswer((_) => const Stream.empty());
+      when(() => repo.syncState).thenReturn(const SyncState());
       when(repo.loadCategories).thenThrow(Exception('offline'));
       return HomeCubit(repo, now: now);
     },
@@ -39,6 +40,7 @@ void main() {
     build: () {
       final repo = _MockCategories();
       when(() => repo.changes).thenAnswer((_) => const Stream.empty());
+      when(() => repo.syncState).thenReturn(const SyncState());
       var calls = 0;
       when(repo.loadCategories).thenAnswer((_) async {
         if (calls++ > 0) throw Exception('offline');
@@ -57,14 +59,32 @@ void main() {
   );
 
   blocTest<HomeCubit, HomeState>(
-    'meldet jedes Antippen als eigenes Ereignis',
-    build: () => HomeCubit(MockCategoriesRepository(), now: now),
-    act: (cubit) => cubit
-      ..capture('t-strom')
-      ..capture('t-strom'),
-    expect: () => [
-      isA<HomeState>().having((s) => s.event?.kind, 'event', HomeEventKind.captureSoon),
-      isA<HomeState>().having((s) => s.event?.kind, 'event', HomeEventKind.captureSoon),
-    ],
+    'übernimmt den Stand der Offline-Warteschlange',
+    build: () {
+      final repo = _MockCategories();
+      when(() => repo.changes).thenAnswer((_) => const Stream.empty());
+      when(repo.loadCategories).thenAnswer((_) async => MockCategoriesRepository.categories);
+      when(() => repo.syncState).thenReturn(const SyncState(pending: 2, rejected: 1));
+      return HomeCubit(repo, now: now);
+    },
+    act: (cubit) => cubit.load(),
+    expect: () => [isA<HomeState>().having((s) => s.sync, 'sync', const SyncState(pending: 2, rejected: 1))],
+  );
+
+  test('blendet abgelehnte Einträge aus', () {
+    final repo = _MockCategories();
+    when(() => repo.changes).thenAnswer((_) => const Stream.empty());
+    HomeCubit(repo, now: now).acknowledgeRejected();
+    verify(repo.acknowledgeRejected).called(1);
+  });
+
+  blocTest<HomeCubit, HomeState>(
+    'blendet archivierte Kategorien aus',
+    build: () => HomeCubit(
+      MockCategoriesRepository(seed: [MockCategoriesRepository.categories.first.copyWith(archivedAt: () => DateTime.utc(2026)), ...MockCategoriesRepository.categories.skip(1)]),
+      now: now,
+    ),
+    act: (cubit) => cubit.load(),
+    expect: () => [isA<HomeState>().having((s) => s.overview?.categories.map((c) => c.category.id), 'ids', isNot(contains('c-strom')))],
   );
 }

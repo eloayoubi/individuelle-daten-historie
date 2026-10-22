@@ -55,11 +55,15 @@ Features heute:
 
 - `shell`: Tab-Leiste, `ShellCubit`.
 - `home`: Übersicht.
-- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite, Feld-Editor; dazu das Repository mit allen Schreibwegen.
+- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite, Feld-Editor; dazu das Repository mit allen Schreibwegen und der Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge).
+- `entries`: Eingabe-Formular aus den Feldern eines Trackers, Verlauf je Tracker mit Graph, aktuelle Werte und Einträge.
+- `reminders`: lokale Benachrichtigungen ans Ablesen und an Stichtage (`flutter_local_notifications`), an- und ausschaltbar in den Einstellungen.
 - `settings`: Darstellung.
 - `auth`: anonyme Anmeldung.
 
 Nur die Auswertung ist noch eine `PlaceholderPage`.
+
+**Offline:** Mit Supabase liest die App ohne Netz aus dem Cache des letzten Abrufs. Einträge landen zuerst in einer Warteschlange auf dem Gerät und erscheinen sofort. Gesendet wird gleich, beim Zurückkehren in die App und alle 30 Sekunden, solange etwas wartet. Die Id vergibt das Gerät, daher landet ein Eintrag auch bei doppeltem Senden nur einmal (`save_entry` ist ein Upsert). Die Übersicht zeigt, was noch wartet oder abgelehnt wurde. Kategorien, Tracker und Felder ändern geht nur online.
 
 Cubits mit Parameter (z. B. die Kategorie-Id) sind per `registerFactoryParam` registriert und kommen über `lookup<T>(param1: …)`. Nach jeder Änderung meldet `CategoriesRepository.changes` ein Ereignis, darauf laden Übersicht, Kategorien-Tab und Detailseite neu.
 

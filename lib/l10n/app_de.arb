@@ -132,7 +132,6 @@
   "homeEmptyTitle": "Noch keine Kategorien",
   "homeEmptyBody": "Starte mit einer Vorlage wie Strom, Wasser oder Miete – oder baue dir eine eigene.",
   "quickAddTitle": "Wofür möchtest du etwas eintragen?",
-  "quickAddSoon": "Das Erfassen kommt im nächsten Schritt.",
   "settingsAppearance": "Darstellung",
   "appearanceSystem": "Automatisch",
   "appearanceLight": "Hell",
@@ -366,5 +365,187 @@
   "tplFieldPolicyNumber": "Versicherungsnummer",
   "tplFieldDueDate": "Hauptfälligkeit",
   "tplFieldPrice": "Preis",
-  "tplFieldCancelBy": "Kündbar bis"
+  "tplFieldCancelBy": "Kündbar bis",
+  "actionDelete": "Löschen",
+  "toggleYes": "Ja",
+  "toggleNo": "Nein",
+  "datePickerTitle": "Datum wählen",
+  "entryNew": "Neuer Eintrag",
+  "entryEdit": "Eintrag bearbeiten",
+  "entryDate": "Datum",
+  "entryNote": "Notiz",
+  "entryNoteHint": "Optional, z. B. abgelesen nach dem Urlaub",
+  "entryLast": "Zuletzt {value} · {date}",
+  "@entryLast": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "entryCurrent": "Aktuell {value} seit {date} – leer lassen, wenn sich nichts ändert",
+  "@entryCurrent": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "entryDelta": "{delta} seit {date}",
+  "@entryDelta": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "entryBelowLast": "Kleiner als der letzte Stand ({value}) – neuer Zähler?",
+  "@entryBelowLast": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "entryMeterChange": "Neuer Zähler ab diesem Stand",
+  "entryMeterChangeHint": "Der Verbrauch seit dem letzten Stand wird aus dem Zeitraum davor geschätzt.",
+  "entryInvalidNumber": "Bitte eine Zahl eingeben.",
+  "entryNeedsValue": "Trag mindestens einen Wert ein.",
+  "entryNoFields": "Dieser Tracker hat noch keine Felder. Lege sie in der Kategorie an.",
+  "entrySave": "Eintrag speichern",
+  "entrySaved": "Gespeichert.",
+  "entrySavedOffline": "Gespeichert – wird übertragen, sobald du online bist.",
+  "entryDelete": "Eintrag löschen",
+  "entryDeleteTitle": "Eintrag vom {date} löschen?",
+  "@entryDeleteTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "entryDeleteBody": "Der Eintrag verschwindet aus Verlauf, Kosten und Prognose.",
+  "entryDeleted": "Eintrag gelöscht.",
+  "trackerHistory": "Verlauf und Einträge",
+  "trackerLast12": "Letzte 12 Monate",
+  "metricCost": "Kosten",
+  "metricConsumption": "Verbrauch",
+  "trackerThisYear": "{year} bis heute",
+  "@trackerThisYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "trackerLastYear": "Vorjahr bis heute",
+  "trackerChartEmpty": "Noch zu wenig Daten für einen Verlauf.",
+  "trackerChartValue": "{month}: {value}",
+  "@trackerChartValue": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "trackerCurrentValues": "Aktuelle Werte",
+  "trackerSince": "seit {date}",
+  "@trackerSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "trackerEntries": "Einträge",
+  "trackerNoEntriesTitle": "Noch keine Einträge",
+  "trackerNoEntriesBody": "Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.",
+  "trackerAddEntry": "Wert eintragen",
+  "trackerMeterChanged": "Neuer Zähler",
+  "homeSyncPending": "{count, plural, =1{1 Eintrag wartet auf Verbindung} other{{count} Einträge warten auf Verbindung}}",
+  "@homeSyncPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSyncPendingHint": "Wird automatisch übertragen, sobald du online bist.",
+  "homeSyncRejected": "{count, plural, =1{1 Eintrag wurde abgelehnt} other{{count} Einträge wurden abgelehnt}}",
+  "@homeSyncRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSyncRejectedHint": "Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.",
+  "remindersEnable": "Erinnerungen aktivieren",
+  "remindersEnableHint": "Ans Ablesen und an Fristen erinnern lassen",
+  "settingsReminders": "Erinnerungen",
+  "settingsNotifications": "Benachrichtigungen",
+  "settingsRemindersFooter": "Erinnert ans Ablesen, wenn ein Zähler 30 Tage keinen neuen Stand hat, und 30, 7 und 1 Tag vor Stichtagen wie dem Vertragsende.",
+  "settingsRemindersDenied": "Benachrichtigungen sind in den Systemeinstellungen ausgeschaltet. Schalte sie dort für Kostenkurve ein.",
+  "notifyChannel": "Erinnerungen",
+  "notifyReadBody": "Seit {days} Tagen kein neuer Stand – trag ihn kurz ein.",
+  "@notifyReadBody": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "notifyDeadlineBody": "{days, plural, =1{Morgen} other{In {days} Tagen}} ist es so weit: {date}.",
+  "@notifyDeadlineBody": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "entryFieldValue": "{field} {value}",
+  "trackerUpcoming": "ab {date}: {value}",
+  "@entryFieldValue": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@trackerUpcoming": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryEntries": "{count, plural, =0{Noch keine Einträge} =1{1 Eintrag} other{{count} Einträge}}",
+  "@categoryEntries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -9,7 +9,8 @@ import '../data/home_overview.dart';
 part 'home_state.dart';
 
 /// Lädt alle Kategorien und rechnet daraus die Übersicht: Kosten bis heute, Prognose fürs
-/// nächste Jahr, Kategorien nach Kosten und was als Nächstes ansteht.
+/// nächste Jahr, Kategorien nach Kosten und was als Nächstes ansteht – dazu den Stand der
+/// Offline-Warteschlange.
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit(this._categories, {DateTime Function()? now}) : _now = now ?? DateTime.now, super(const HomeState()) {
     // Neue oder geänderte Kategorien (z. B. aus dem Kategorien-Tab) sofort übernehmen.
@@ -26,14 +27,14 @@ class HomeCubit extends Cubit<HomeState> {
     try {
       final categories = [for (final c in await _categories.loadCategories()) if (!c.isArchived) c];
       if (isClosed) return;
-      emit(state.copyWith(status: HomeStatus.ready, overview: HomeOverview.build(categories, _now())));
+      emit(state.copyWith(status: HomeStatus.ready, overview: HomeOverview.build(categories, _now()), sync: _categories.syncState));
     } catch (_) {
-      if (!isClosed) emit(state.copyWith(status: HomeStatus.failure));
+      if (!isClosed) emit(state.copyWith(status: HomeStatus.failure, sync: _categories.syncState));
     }
   }
 
-  /// Schnellerfassung aus dem Sheet – das Formular folgt im nächsten Schritt (Meilenstein 2).
-  void capture(String trackerId) => emit(state.copyWith(event: HomeEvent(HomeEventKind.captureSoon)));
+  /// Hinweis auf abgelehnte Einträge ausblenden.
+  void acknowledgeRejected() => _categories.acknowledgeRejected();
 
   @override
   Future<void> close() async {

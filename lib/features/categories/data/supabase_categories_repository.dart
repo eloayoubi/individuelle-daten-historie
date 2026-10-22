@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
+
 import '../../../core/network/supabase_api.dart';
 import '../../auth/data/auth_repository.dart';
 import 'categories_repository.dart';
@@ -101,6 +103,62 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   @override
   Future<void> archiveField(String id) =>
       _write(() => _api.table('fields').update({'archived_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id));
+
+  @override
+  Future<void> saveEntry(String trackerId, Entry entry) => _write(
+    () => _rejectable(
+      () => _api.rpc<void>(
+        'save_entry',
+        params: {
+          'p_id': entry.id,
+          'p_tracker': trackerId,
+          'p_occurred_on': _isoDay(entry.date),
+          'p_note': entry.note,
+          'p_meter_change': entry.meterChange,
+          'p_values': [
+            for (final MapEntry(:key, :value) in entry.values.entries)
+              {
+                'field_id': key,
+                ...switch (value) {
+                  final num n => {'num': n},
+                  final DateTime d => {'dat': _isoDay(d)},
+                  final bool b => {'flag': b},
+                  _ => {'txt': value.toString()},
+                },
+              },
+          ],
+        },
+      ),
+    ),
+  );
+
+  @override
+  Future<void> deleteEntry(String trackerId, String entryId) => _write(() => _rejectable(() => _api.table('entries').delete().eq('id', entryId)));
+
+  /// Die Offline-Schicht (`OfflineCategoriesRepository`) führt die Warteschlange; hier wird direkt gesendet.
+  @override
+  SyncState get syncState => const SyncState();
+
+  @override
+  Future<void> sync() async {}
+
+  @override
+  void acknowledgeRejected() {}
+
+  /// Fehler, bei denen erneutes Senden nicht hilft: Datenfehler (22), Integrität (23), Rechte (42),
+  /// eigene `raise exception` (P0). Netzwerk- und Serverfehler bleiben vorübergehend.
+  static final _permanent = RegExp(r'^(22|23|42|P0)');
+
+  static Future<void> _rejectable(Future<void> Function() write) async {
+    try {
+      await write();
+    } on PostgrestException catch (e) {
+      if (_permanent.hasMatch(e.code ?? '')) throw WriteRejected(e.message);
+      rethrow;
+    }
+  }
+
+  static String _isoDay(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   /// Angemeldet schreiben, danach alle Ansichten neu laden lassen.
   Future<T> _write<T>(Future<T> Function() write) async {

@@ -290,12 +290,6 @@ abstract class AppLocalizations {
   /// **'Wofür möchtest du etwas eintragen?'**
   String get quickAddTitle;
 
-  /// No description provided for @quickAddSoon.
-  ///
-  /// In de, this message translates to:
-  /// **'Das Erfassen kommt im nächsten Schritt.'**
-  String get quickAddSoon;
-
   /// No description provided for @settingsAppearance.
   ///
   /// In de, this message translates to:
@@ -1237,6 +1231,342 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Kündbar bis'**
   String get tplFieldCancelBy;
+
+  /// No description provided for @actionDelete.
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen'**
+  String get actionDelete;
+
+  /// No description provided for @toggleYes.
+  ///
+  /// In de, this message translates to:
+  /// **'Ja'**
+  String get toggleYes;
+
+  /// No description provided for @toggleNo.
+  ///
+  /// In de, this message translates to:
+  /// **'Nein'**
+  String get toggleNo;
+
+  /// No description provided for @datePickerTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Datum wählen'**
+  String get datePickerTitle;
+
+  /// No description provided for @entryNew.
+  ///
+  /// In de, this message translates to:
+  /// **'Neuer Eintrag'**
+  String get entryNew;
+
+  /// No description provided for @entryEdit.
+  ///
+  /// In de, this message translates to:
+  /// **'Eintrag bearbeiten'**
+  String get entryEdit;
+
+  /// No description provided for @entryDate.
+  ///
+  /// In de, this message translates to:
+  /// **'Datum'**
+  String get entryDate;
+
+  /// No description provided for @entryNote.
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz'**
+  String get entryNote;
+
+  /// No description provided for @entryNoteHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Optional, z. B. abgelesen nach dem Urlaub'**
+  String get entryNoteHint;
+
+  /// No description provided for @entryLast.
+  ///
+  /// In de, this message translates to:
+  /// **'Zuletzt {value} · {date}'**
+  String entryLast(String value, String date);
+
+  /// No description provided for @entryCurrent.
+  ///
+  /// In de, this message translates to:
+  /// **'Aktuell {value} seit {date} – leer lassen, wenn sich nichts ändert'**
+  String entryCurrent(String value, String date);
+
+  /// No description provided for @entryDelta.
+  ///
+  /// In de, this message translates to:
+  /// **'{delta} seit {date}'**
+  String entryDelta(String delta, String date);
+
+  /// No description provided for @entryBelowLast.
+  ///
+  /// In de, this message translates to:
+  /// **'Kleiner als der letzte Stand ({value}) – neuer Zähler?'**
+  String entryBelowLast(String value);
+
+  /// No description provided for @entryMeterChange.
+  ///
+  /// In de, this message translates to:
+  /// **'Neuer Zähler ab diesem Stand'**
+  String get entryMeterChange;
+
+  /// No description provided for @entryMeterChangeHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Verbrauch seit dem letzten Stand wird aus dem Zeitraum davor geschätzt.'**
+  String get entryMeterChangeHint;
+
+  /// No description provided for @entryInvalidNumber.
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine Zahl eingeben.'**
+  String get entryInvalidNumber;
+
+  /// No description provided for @entryNeedsValue.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag mindestens einen Wert ein.'**
+  String get entryNeedsValue;
+
+  /// No description provided for @entryNoFields.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Tracker hat noch keine Felder. Lege sie in der Kategorie an.'**
+  String get entryNoFields;
+
+  /// No description provided for @entrySave.
+  ///
+  /// In de, this message translates to:
+  /// **'Eintrag speichern'**
+  String get entrySave;
+
+  /// No description provided for @entrySaved.
+  ///
+  /// In de, this message translates to:
+  /// **'Gespeichert.'**
+  String get entrySaved;
+
+  /// No description provided for @entrySavedOffline.
+  ///
+  /// In de, this message translates to:
+  /// **'Gespeichert – wird übertragen, sobald du online bist.'**
+  String get entrySavedOffline;
+
+  /// No description provided for @entryDelete.
+  ///
+  /// In de, this message translates to:
+  /// **'Eintrag löschen'**
+  String get entryDelete;
+
+  /// No description provided for @entryDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Eintrag vom {date} löschen?'**
+  String entryDeleteTitle(String date);
+
+  /// No description provided for @entryDeleteBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Eintrag verschwindet aus Verlauf, Kosten und Prognose.'**
+  String get entryDeleteBody;
+
+  /// No description provided for @entryDeleted.
+  ///
+  /// In de, this message translates to:
+  /// **'Eintrag gelöscht.'**
+  String get entryDeleted;
+
+  /// No description provided for @trackerHistory.
+  ///
+  /// In de, this message translates to:
+  /// **'Verlauf und Einträge'**
+  String get trackerHistory;
+
+  /// No description provided for @trackerLast12.
+  ///
+  /// In de, this message translates to:
+  /// **'Letzte 12 Monate'**
+  String get trackerLast12;
+
+  /// No description provided for @metricCost.
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten'**
+  String get metricCost;
+
+  /// No description provided for @metricConsumption.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbrauch'**
+  String get metricConsumption;
+
+  /// No description provided for @trackerThisYear.
+  ///
+  /// In de, this message translates to:
+  /// **'{year} bis heute'**
+  String trackerThisYear(String year);
+
+  /// No description provided for @trackerLastYear.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorjahr bis heute'**
+  String get trackerLastYear;
+
+  /// No description provided for @trackerChartEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch zu wenig Daten für einen Verlauf.'**
+  String get trackerChartEmpty;
+
+  /// No description provided for @trackerChartValue.
+  ///
+  /// In de, this message translates to:
+  /// **'{month}: {value}'**
+  String trackerChartValue(String month, String value);
+
+  /// No description provided for @trackerCurrentValues.
+  ///
+  /// In de, this message translates to:
+  /// **'Aktuelle Werte'**
+  String get trackerCurrentValues;
+
+  /// No description provided for @trackerSince.
+  ///
+  /// In de, this message translates to:
+  /// **'seit {date}'**
+  String trackerSince(String date);
+
+  /// No description provided for @trackerEntries.
+  ///
+  /// In de, this message translates to:
+  /// **'Einträge'**
+  String get trackerEntries;
+
+  /// No description provided for @trackerNoEntriesTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Einträge'**
+  String get trackerNoEntriesTitle;
+
+  /// No description provided for @trackerNoEntriesBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.'**
+  String get trackerNoEntriesBody;
+
+  /// No description provided for @trackerAddEntry.
+  ///
+  /// In de, this message translates to:
+  /// **'Wert eintragen'**
+  String get trackerAddEntry;
+
+  /// No description provided for @trackerMeterChanged.
+  ///
+  /// In de, this message translates to:
+  /// **'Neuer Zähler'**
+  String get trackerMeterChanged;
+
+  /// No description provided for @homeSyncPending.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Eintrag wartet auf Verbindung} other{{count} Einträge warten auf Verbindung}}'**
+  String homeSyncPending(int count);
+
+  /// No description provided for @homeSyncPendingHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Wird automatisch übertragen, sobald du online bist.'**
+  String get homeSyncPendingHint;
+
+  /// No description provided for @homeSyncRejected.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Eintrag wurde abgelehnt} other{{count} Einträge wurden abgelehnt}}'**
+  String homeSyncRejected(int count);
+
+  /// No description provided for @homeSyncRejectedHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.'**
+  String get homeSyncRejectedHint;
+
+  /// No description provided for @remindersEnable.
+  ///
+  /// In de, this message translates to:
+  /// **'Erinnerungen aktivieren'**
+  String get remindersEnable;
+
+  /// No description provided for @remindersEnableHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Ans Ablesen und an Fristen erinnern lassen'**
+  String get remindersEnableHint;
+
+  /// No description provided for @settingsReminders.
+  ///
+  /// In de, this message translates to:
+  /// **'Erinnerungen'**
+  String get settingsReminders;
+
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In de, this message translates to:
+  /// **'Benachrichtigungen'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsRemindersFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Erinnert ans Ablesen, wenn ein Zähler 30 Tage keinen neuen Stand hat, und 30, 7 und 1 Tag vor Stichtagen wie dem Vertragsende.'**
+  String get settingsRemindersFooter;
+
+  /// No description provided for @settingsRemindersDenied.
+  ///
+  /// In de, this message translates to:
+  /// **'Benachrichtigungen sind in den Systemeinstellungen ausgeschaltet. Schalte sie dort für Kostenkurve ein.'**
+  String get settingsRemindersDenied;
+
+  /// No description provided for @notifyChannel.
+  ///
+  /// In de, this message translates to:
+  /// **'Erinnerungen'**
+  String get notifyChannel;
+
+  /// No description provided for @notifyReadBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Seit {days} Tagen kein neuer Stand – trag ihn kurz ein.'**
+  String notifyReadBody(int days);
+
+  /// No description provided for @notifyDeadlineBody.
+  ///
+  /// In de, this message translates to:
+  /// **'{days, plural, =1{Morgen} other{In {days} Tagen}} ist es so weit: {date}.'**
+  String notifyDeadlineBody(int days, String date);
+
+  /// No description provided for @entryFieldValue.
+  ///
+  /// In de, this message translates to:
+  /// **'{field} {value}'**
+  String entryFieldValue(String field, String value);
+
+  /// No description provided for @trackerUpcoming.
+  ///
+  /// In de, this message translates to:
+  /// **'ab {date}: {value}'**
+  String trackerUpcoming(String date, String value);
+
+  /// No description provided for @categoryEntries.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =0{Noch keine Einträge} =1{1 Eintrag} other{{count} Einträge}}'**
+  String categoryEntries(int count);
 }
 
 class _AppLocalizationsDelegate

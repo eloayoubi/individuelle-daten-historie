@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
 import '../cubit/category_detail_cubit.dart';
+import '../../entries/view/tracker_page.dart';
 import '../cubit/field_editor_cubit.dart';
 import 'field_editor_page.dart';
 import 'widgets/category_sheets.dart';
@@ -158,6 +159,12 @@ class _Content extends StatelessWidget {
           SectionHeader(title: tracker.name, action: editable ? l10n.actionEdit : null, onAction: () => _editTracker(context, tracker)),
           AppListGroup(
             children: [
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.chart_bar_fill, color: c.swatch(category.swatch)),
+                title: l10n.trackerHistory,
+                subtitle: l10n.categoryEntries(tracker.entries.length),
+                onTap: () => TrackerPage.open(context, categoryId: category.id, trackerId: tracker.id),
+              ),
               for (final field in tracker.fields)
                 FieldRow.of(field, swatch: category.swatch, onTap: editable ? () => _openField(context, tracker, field) : null),
               if (editable)

@@ -147,9 +147,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddTitle => 'What would you like to log?';
 
   @override
-  String get quickAddSoon => 'Logging is coming in the next step.';
-
-  @override
   String get settingsAppearance => 'Appearance';
 
   @override
@@ -674,4 +671,235 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tplFieldCancelBy => 'Cancel by';
+
+  @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String get toggleYes => 'Yes';
+
+  @override
+  String get toggleNo => 'No';
+
+  @override
+  String get datePickerTitle => 'Choose date';
+
+  @override
+  String get entryNew => 'New entry';
+
+  @override
+  String get entryEdit => 'Edit entry';
+
+  @override
+  String get entryDate => 'Date';
+
+  @override
+  String get entryNote => 'Note';
+
+  @override
+  String get entryNoteHint => 'Optional, e.g. read after the holiday';
+
+  @override
+  String entryLast(String value, String date) {
+    return 'Last $value · $date';
+  }
+
+  @override
+  String entryCurrent(String value, String date) {
+    return 'Currently $value since $date – leave empty if nothing changes';
+  }
+
+  @override
+  String entryDelta(String delta, String date) {
+    return '$delta since $date';
+  }
+
+  @override
+  String entryBelowLast(String value) {
+    return 'Lower than the last reading ($value) – new meter?';
+  }
+
+  @override
+  String get entryMeterChange => 'New meter from this reading';
+
+  @override
+  String get entryMeterChangeHint =>
+      'Consumption since the last reading is estimated from the period before.';
+
+  @override
+  String get entryInvalidNumber => 'Please enter a number.';
+
+  @override
+  String get entryNeedsValue => 'Enter at least one value.';
+
+  @override
+  String get entryNoFields =>
+      'This tracker has no fields yet. Add them in the category.';
+
+  @override
+  String get entrySave => 'Save entry';
+
+  @override
+  String get entrySaved => 'Saved.';
+
+  @override
+  String get entrySavedOffline => 'Saved – it will sync once you\'re online.';
+
+  @override
+  String get entryDelete => 'Delete entry';
+
+  @override
+  String entryDeleteTitle(String date) {
+    return 'Delete entry from $date?';
+  }
+
+  @override
+  String get entryDeleteBody =>
+      'The entry disappears from history, costs and forecast.';
+
+  @override
+  String get entryDeleted => 'Entry deleted.';
+
+  @override
+  String get trackerHistory => 'History and entries';
+
+  @override
+  String get trackerLast12 => 'Last 12 months';
+
+  @override
+  String get metricCost => 'Costs';
+
+  @override
+  String get metricConsumption => 'Consumption';
+
+  @override
+  String trackerThisYear(String year) {
+    return '$year to date';
+  }
+
+  @override
+  String get trackerLastYear => 'Last year to date';
+
+  @override
+  String get trackerChartEmpty => 'Not enough data for a history yet.';
+
+  @override
+  String trackerChartValue(String month, String value) {
+    return '$month: $value';
+  }
+
+  @override
+  String get trackerCurrentValues => 'Current values';
+
+  @override
+  String trackerSince(String date) {
+    return 'since $date';
+  }
+
+  @override
+  String get trackerEntries => 'Entries';
+
+  @override
+  String get trackerNoEntriesTitle => 'No entries yet';
+
+  @override
+  String get trackerNoEntriesBody =>
+      'Enter the first value – the history starts with the second meter reading.';
+
+  @override
+  String get trackerAddEntry => 'Add value';
+
+  @override
+  String get trackerMeterChanged => 'New meter';
+
+  @override
+  String homeSyncPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries are waiting for a connection',
+      one: '1 entry is waiting for a connection',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncPendingHint =>
+      'It syncs automatically once you\'re online.';
+
+  @override
+  String homeSyncRejected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries were rejected',
+      one: '1 entry was rejected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncRejectedHint =>
+      'Missing rights or an invalid value. Tap to dismiss.';
+
+  @override
+  String get remindersEnable => 'Turn on reminders';
+
+  @override
+  String get remindersEnableHint => 'Get reminded about readings and deadlines';
+
+  @override
+  String get settingsReminders => 'Reminders';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsRemindersFooter =>
+      'Reminds you to read a meter after 30 days without a reading, and 30, 7 and 1 day before deadlines such as a contract end.';
+
+  @override
+  String get settingsRemindersDenied =>
+      'Notifications are turned off in system settings. Turn them on there for Kostenkurve.';
+
+  @override
+  String get notifyChannel => 'Reminders';
+
+  @override
+  String notifyReadBody(int days) {
+    return 'No new reading for $days days – add it quickly.';
+  }
+
+  @override
+  String notifyDeadlineBody(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'In $days days',
+      one: 'Tomorrow',
+    );
+    return '$_temp0: $date.';
+  }
+
+  @override
+  String entryFieldValue(String field, String value) {
+    return '$field $value';
+  }
+
+  @override
+  String trackerUpcoming(String date, String value) {
+    return 'from $date: $value';
+  }
+
+  @override
+  String categoryEntries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+      zero: 'No entries yet',
+    );
+    return '$_temp0';
+  }
 }

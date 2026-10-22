@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../reminders/cubit/reminders_cubit.dart';
 import '../cubit/appearance_cubit.dart';
 
-/// Einstellungen: vorerst Darstellung (Automatisch / Hell / Dunkel) und ein Satz zur App.
+/// Einstellungen: Darstellung (Automatisch / Hell / Dunkel), Erinnerungen und ein Satz zur App.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -38,6 +40,23 @@ class SettingsPage extends StatelessWidget {
                 AppText(l10n.settingsAppearanceHint, style: (t) => t.footnote, color: c.textSecondary),
               ],
             ),
+          ),
+        ),
+        SectionHeader(title: l10n.settingsReminders),
+        BlocBuilder<RemindersCubit, RemindersState>(
+          builder: (context, reminders) => AppListGroup(
+            footer: reminders.denied ? l10n.settingsRemindersDenied : l10n.settingsRemindersFooter,
+            children: [
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.bell_fill, color: c.danger),
+                title: l10n.settingsNotifications,
+                trailing: AppSwitch(
+                  value: reminders.enabled,
+                  semanticLabel: l10n.settingsNotifications,
+                  onChanged: reminders.loaded ? context.read<RemindersCubit>().setEnabled : null,
+                ),
+              ),
+            ],
           ),
         ),
         SectionHeader(title: l10n.settingsAbout),
