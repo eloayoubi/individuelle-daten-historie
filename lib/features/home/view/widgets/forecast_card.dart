@@ -47,6 +47,13 @@ class ForecastCard extends StatelessWidget {
                       -1 => c.spotlightSuccess,
                       _ => c.onSpotlightSecondary,
                     },
+                  )
+                // Noch kein volles Jahr zum Vergleichen (unterjährig angefangen): neutral den Monatsschnitt.
+                else if (overview.forecast > 0.5)
+                  AppChip(
+                    label: l10n.homePerMonth(context.euros(overview.forecast / 12)),
+                    background: c.spotlightLine,
+                    foreground: c.onSpotlightSecondary,
                   ),
               ],
             ),
@@ -66,6 +73,7 @@ class ForecastCard extends StatelessWidget {
               child: CostCurve(
                 months: [...overview.monthsThisYear, ...overview.monthsNextYear],
                 currentIndex: overview.today.month - 1,
+                startIndex: overview.firstTrackedMonth,
                 lineColor: c.spotlightAccent,
                 forecastColor: c.onSpotlightSecondary,
                 gridColor: c.spotlightLine,

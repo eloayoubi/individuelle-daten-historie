@@ -22,7 +22,11 @@ class CategorySummary extends Equatable {
   final double costToDate;
 
   /// Veränderung gegenüber dem gleichen Zeitraum im Vorjahr (0.05 = +5 %), `null` ohne Vorjahr.
+  /// Zählt nur Tracker, die schon das ganze Vorjahr erfasst waren.
   final double? costChange;
+
+  /// Kosten je Monat seit Jahresbeginn. Erst dieses Jahr angefangen: die Prognose fürs nächste
+  /// Jahr je Monat – ein paar Tage mit einer Tankfüllung wären sonst ein riesiger Schnitt.
   final double monthlyAverage;
 
   /// Verbrauch seit 1. Januar (erster Zähler der Kategorie), `null` ohne Zähler.
@@ -64,6 +68,7 @@ class HomeOverview extends Equatable {
     required this.forecastChange,
     required this.monthsThisYear,
     required this.monthsNextYear,
+    this.trackedSince,
     required this.categories,
     required this.reminders,
   });
@@ -85,11 +90,16 @@ class HomeOverview extends Equatable {
   final double forecastRange;
 
   /// Prognose gegenüber dem laufenden Jahr (Ist bis heute plus Hochrechnung bis Dezember).
+  /// Zählt nur Tracker, die seit 1. Januar erfasst sind – wer unterjährig anfängt, hätte sonst
+  /// ein halb leeres Jahr als Vergleich. `null`, wenn kein Tracker so weit zurückreicht.
   final double? forecastChange;
 
   /// Kosten je Monat (Januar bis Dezember): laufendes Jahr und Prognose fürs nächste.
   final List<double> monthsThisYear;
   final List<double> monthsNextYear;
+
+  /// Tag des ersten Eintrags überhaupt, `null` ohne Einträge.
+  final DateTime? trackedSince;
 
   /// Nach Kosten seit Januar absteigend.
   final List<CategorySummary> categories;
@@ -98,6 +108,9 @@ class HomeOverview extends Equatable {
   int get year => today.year;
 
   bool get isEmpty => categories.isEmpty;
+
+  /// Erster Monat (0 = Januar) dieses Jahres mit Daten; davor gibt es keinen Ist-Verlauf.
+  int get firstTrackedMonth => trackedSince == null || trackedSince!.year < year ? 0 : trackedSince!.month - 1;
 
   factory HomeOverview.build(List<Category> categories, DateTime now) {
     final today = CostEngine.day(now);
@@ -113,21 +126,36 @@ class HomeOverview extends Equatable {
     final reminders = <Reminder>[];
     final thisYear = List.filled(12, 0.0);
     final nextYear = List.filled(12, 0.0);
-    var currentYearTotal = 0.0;
-    var lastYearToDate = 0.0;
+    // Nur Tracker, die den ganzen Vergleichszeitraum erfasst sind (siehe [forecastChange]).
+    var comparableThisYear = 0.0, comparableNextYear = 0.0;
+    var lastYearToDate = 0.0, comparableToDate = 0.0;
+    DateTime? trackedSince;
     var rangeSquares = 0.0;
 
     for (final category in categories) {
-      var costToDate = 0.0, previous = 0.0;
+      var costToDate = 0.0, previous = 0.0, sameTrackersToDate = 0.0, categoryNextYear = 0.0;
+      DateTime? categorySince;
       double? usage;
       var usageUnit = '';
       for (final tracker in category.trackers) {
         final engine = CostEngine(tracker, today: today);
+        final since = _firstEntry(tracker);
+        if (since != null && (trackedSince == null || since.isBefore(trackedSince))) trackedSince = since;
         // Kosten, die schon in einer anderen Kategorie stecken, zählen nirgends doppelt.
         if (tracker.includedIn == null) {
-          costToDate += engine.cost(yearStart, tomorrow);
-          previous += engine.cost(lastYearStart, lastYearTomorrow);
-          currentYearTotal += engine.costInYear(year);
+          final toDate = engine.cost(yearStart, tomorrow);
+          costToDate += toDate;
+          if (since != null && (categorySince == null || since.isBefore(categorySince))) categorySince = since;
+          if (since != null && !since.isAfter(lastYearStart)) {
+            previous += engine.cost(lastYearStart, lastYearTomorrow);
+            sameTrackersToDate += toDate;
+          }
+          final nextYearCost = engine.costInYear(year + 1);
+          categoryNextYear += nextYearCost;
+          if (since != null && !since.isAfter(yearStart)) {
+            comparableThisYear += engine.costInYear(year);
+            comparableNextYear += nextYearCost;
+          }
           for (var m = 1; m <= 12; m++) {
             thisYear[m - 1] += engine.costInMonth(year, m);
             nextYear[m - 1] += engine.costInMonth(year + 1, m);
@@ -140,9 +168,9 @@ class HomeOverview extends Equatable {
             usage = engine.consumption(yearStart, tomorrow);
             usageUnit = meter.usageUnit;
           }
-          final since = today.difference(engine.lastReading!).inDays;
-          if (since >= readMeterAfterDays) {
-            reminders.add(Reminder(kind: ReminderKind.readMeter, category: category, trackerId: tracker.id, trackerName: tracker.name, days: since));
+          final unread = today.difference(engine.lastReading!).inDays;
+          if (unread >= readMeterAfterDays) {
+            reminders.add(Reminder(kind: ReminderKind.readMeter, category: category, trackerId: tracker.id, trackerName: tracker.name, days: unread));
           }
         }
         for (final field in tracker.withRole(FieldRole.deadline)) {
@@ -155,12 +183,15 @@ class HomeOverview extends Equatable {
         }
       }
       lastYearToDate += previous;
+      comparableToDate += sameTrackersToDate;
       summaries.add(
         CategorySummary(
           category: category,
           costToDate: costToDate,
-          costChange: _ratio(costToDate, previous),
-          monthlyAverage: costToDate / (today.month - 1 + today.day / _daysInMonth(today)),
+          costChange: _ratio(sameTrackersToDate, previous),
+          monthlyAverage: categorySince != null && categorySince.isAfter(yearStart)
+              ? categoryNextYear / 12
+              : costToDate / (today.month - 1 + today.day / _daysInMonth(today)),
           usage: usage,
           usageUnit: usageUnit,
         ),
@@ -179,12 +210,13 @@ class HomeOverview extends Equatable {
     return HomeOverview(
       today: today,
       costToDate: costToDate,
-      costChange: _ratio(costToDate, lastYearToDate),
+      costChange: _ratio(comparableToDate, lastYearToDate),
       forecast: forecast,
       forecastRange: math.sqrt(rangeSquares),
-      forecastChange: _ratio(forecast, currentYearTotal),
+      forecastChange: _ratio(comparableNextYear, comparableThisYear),
       monthsThisYear: thisYear,
       monthsNextYear: nextYear,
+      trackedSince: trackedSince,
       categories: summaries,
       reminders: reminders,
     );
@@ -193,6 +225,15 @@ class HomeOverview extends Equatable {
   static double? _ratio(double now, double before) => before.abs() < 0.01 ? null : (now - before) / before;
 
   static int _daysInMonth(DateTime d) => DateTime.utc(d.year, d.month + 1, 0).day;
+
+  static DateTime? _firstEntry(Tracker tracker) {
+    DateTime? first;
+    for (final e in tracker.entries) {
+      final d = CostEngine.day(e.hasPeriod ? e.periodStart! : e.date);
+      if (first == null || d.isBefore(first)) first = d;
+    }
+    return first;
+  }
 
   static DateTime? _latestDate(Tracker tracker, String fieldId) {
     DateTime? latest;
@@ -208,5 +249,5 @@ class HomeOverview extends Equatable {
   }
 
   @override
-  List<Object?> get props => [today, costToDate, costChange, forecast, forecastRange, forecastChange, monthsThisYear, monthsNextYear, categories, reminders];
+  List<Object?> get props => [today, costToDate, costChange, forecast, forecastRange, forecastChange, monthsThisYear, monthsNextYear, trackedSince, categories, reminders];
 }

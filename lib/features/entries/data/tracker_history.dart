@@ -75,9 +75,15 @@ class TrackerHistory extends Equatable {
     final engine = CostEngine(tracker, today: today);
     double sum(DateTime from, DateTime to) => metric == HistoryMetric.cost ? engine.cost(from, to) : engine.consumption(from, to);
 
+    // Erst ab dem Monat des ersten Eintrags – davor gab es nichts zu erfassen.
+    final first = [for (final e in tracker.entries) CostEngine.day(e.hasPeriod ? e.periodStart! : e.date)].fold<DateTime?>(
+      null,
+      (a, b) => a == null || b.isBefore(a) ? b : a,
+    );
     final months = <HistoryMonth>[];
     for (var i = 11; i >= 0; i--) {
       final start = DateTime.utc(today.year, today.month - i);
+      if (i > 0 && first != null && start.isBefore(DateTime.utc(first.year, first.month))) continue;
       final next = DateTime.utc(start.year, start.month + 1);
       final previous = sum(DateTime.utc(start.year - 1, start.month), DateTime.utc(next.year - 1, next.month));
       months.add(HistoryMonth(month: start, value: sum(start, next.isAfter(tomorrow) ? tomorrow : next), previousYear: previous.abs() > 0.004 ? previous : null));

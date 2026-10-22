@@ -9,6 +9,7 @@ class CostCurve extends StatelessWidget {
     super.key,
     required this.months,
     required this.currentIndex,
+    this.startIndex = 0,
     required this.lineColor,
     required this.forecastColor,
     required this.gridColor,
@@ -19,6 +20,9 @@ class CostCurve extends StatelessWidget {
 
   /// Index des aktuellen Monats in [months].
   final int currentIndex;
+
+  /// Erster Monat mit Daten; davor bleibt die Kurve leer statt bei null zu liegen.
+  final int startIndex;
   final Color lineColor;
   final Color forecastColor;
   final Color gridColor;
@@ -27,16 +31,17 @@ class CostCurve extends StatelessWidget {
   Widget build(BuildContext context) => ExcludeSemantics(
     child: CustomPaint(
       size: Size.infinite,
-      painter: _CurvePainter(months: months, currentIndex: currentIndex, line: lineColor, forecast: forecastColor, grid: gridColor),
+      painter: _CurvePainter(months: months, currentIndex: currentIndex, startIndex: startIndex, line: lineColor, forecast: forecastColor, grid: gridColor),
     ),
   );
 }
 
 class _CurvePainter extends CustomPainter {
-  _CurvePainter({required this.months, required this.currentIndex, required this.line, required this.forecast, required this.grid});
+  _CurvePainter({required this.months, required this.currentIndex, required this.startIndex, required this.line, required this.forecast, required this.grid});
 
   final List<double> months;
   final int currentIndex;
+  final int startIndex;
   final Color line;
   final Color forecast;
   final Color grid;
@@ -46,8 +51,14 @@ class _CurvePainter extends CustomPainter {
     if (months.length < 2) return;
     const dot = 4.0;
     final top = dot * 2, bottom = size.height - dot * 2;
-    final lo = months.reduce(math.min), hi = months.reduce(math.max);
-    final span = (hi - lo).abs() < 1 ? 1.0 : hi - lo;
+    final now = currentIndex.clamp(0, months.length - 1);
+    final start = startIndex.clamp(0, now);
+    final shown = months.sublist(start);
+    final hi = shown.reduce(math.max);
+    // Mindestens 30 % des Höchstwerts als Spanne: Sonst sähen ein paar Euro Unterschied wie ein
+    // Absturz aus, gerade wenn erst wenige Monate erfasst sind.
+    final lo = math.min(shown.reduce(math.min), hi - hi.abs() * 0.3);
+    final span = math.max(hi - lo, 1.0);
     final step = size.width / (months.length - 1);
     final points = [
       for (final (i, v) in months.indexed) Offset(i * step, bottom - (v - lo) / span * (bottom - top)),
@@ -57,15 +68,14 @@ class _CurvePainter extends CustomPainter {
     final yearX = step * (months.length ~/ 2 - 0.5);
     canvas.drawLine(Offset(yearX, 0), Offset(yearX, size.height), Paint()..color = grid..strokeWidth = 1);
 
-    final now = currentIndex.clamp(0, points.length - 1);
-    final past = _smooth(points.sublist(0, now + 1));
+    final past = _smooth(points.sublist(start, now + 1));
     final future = _smooth(points.sublist(now));
 
     // Fläche unter dem Ist-Verlauf.
-    if (now > 0) {
+    if (now > start) {
       final area = Path.from(past)
         ..lineTo(points[now].dx, size.height)
-        ..lineTo(points.first.dx, size.height)
+        ..lineTo(points[start].dx, size.height)
         ..close();
       canvas.drawPath(
         area,
@@ -123,5 +133,5 @@ class _CurvePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CurvePainter old) =>
-      old.months != months || old.currentIndex != currentIndex || old.line != line || old.forecast != forecast || old.grid != grid;
+      old.months != months || old.currentIndex != currentIndex || old.startIndex != startIndex || old.line != line || old.forecast != forecast || old.grid != grid;
 }

@@ -19,6 +19,9 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
 
   late var _selected = _defaultMonth;
 
+  /// Plätze für Balken: wenige Monate stehen links und werden nicht breit gezogen.
+  static int _slots(int count) => count < 6 ? 6 : count;
+
   int get _defaultMonth => widget.insights.isCurrentYear ? widget.insights.today.month - 1 : 11;
 
   @override
@@ -34,6 +37,10 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
     final i = widget.insights;
     // Reihenfolge der Stapel wie die Kategorien im Jahresvergleich (teuerste unten).
     final order = [for (final comparison in i.comparisons) comparison.category];
+    // Erst ab dem ersten Monat mit Daten; davor gab es nichts zu erfassen.
+    final first = i.firstMonth.clamp(0, 11);
+    final shown = [for (var m = first; m < 12; m++) m];
+    final slots = _slots(shown.length);
     final month = DateTime.utc(i.year, _selected + 1);
     final label = l10n.trackerChartValue(context.monthYear(month), context.euros(i.monthTotal(_selected)));
     return Column(
@@ -43,7 +50,7 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
         AppText(i.isProjected(_selected) ? l10n.insightsProjectedValue(label) : label, style: (t) => t.headline),
         LayoutBuilder(
           builder: (context, constraints) {
-            void select(Offset p) => setState(() => _selected = (p.dx / constraints.maxWidth * 12).floor().clamp(0, 11));
+            void select(Offset p) => setState(() => _selected = (first + (p.dx / constraints.maxWidth * slots).floor()).clamp(first, 11));
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTapDown: (d) => select(d.localPosition),
@@ -56,10 +63,11 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
                   child: CustomPaint(
                     painter: _StackPainter(
                       months: [
-                        for (var m = 0; m < 12; m++) [for (final category in order) (c.swatch(category.swatch), i.months[m][category.id] ?? 0)],
+                        for (final m in shown) [for (final category in order) (c.swatch(category.swatch), i.months[m][category.id] ?? 0)],
                       ],
-                      projected: [for (var m = 0; m < 12; m++) i.isProjected(m)],
-                      selected: _selected,
+                      projected: [for (final m in shown) i.isProjected(m)],
+                      slots: slots,
+                      selected: _selected - first,
                       grid: c.separator,
                     ),
                   ),
@@ -70,7 +78,7 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
         ),
         Row(
           children: [
-            for (var m = 0; m < 12; m++)
+            for (final m in shown)
               Expanded(
                 child: AppText(
                   context.monthInitial(DateTime.utc(i.year, m + 1)),
@@ -79,6 +87,7 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
                   align: TextAlign.center,
                 ),
               ),
+            if (slots > shown.length) Spacer(flex: slots - shown.length),
           ],
         ),
       ],
@@ -87,11 +96,12 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
 }
 
 class _StackPainter extends CustomPainter {
-  _StackPainter({required this.months, required this.projected, required this.selected, required this.grid});
+  _StackPainter({required this.months, required this.projected, required this.slots, required this.selected, required this.grid});
 
   /// Je Monat die Stapel (Farbe, Betrag) von unten nach oben.
   final List<List<(Color, double)>> months;
   final List<bool> projected;
+  final int slots;
   final int selected;
   final Color grid;
 
@@ -101,7 +111,7 @@ class _StackPainter extends CustomPainter {
     final totals = [for (final m in months) m.fold(0.0, (sum, s) => sum + (s.$2 > 0 ? s.$2 : 0))];
     final top = totals.fold(0.0, (a, b) => a > b ? a : b);
     if (top <= 0) return;
-    final slot = size.width / months.length;
+    final slot = size.width / slots;
     final barWidth = slot * 0.6;
     for (final (i, stack) in months.indexed) {
       final left = i * slot + (slot - barWidth) / 2;
@@ -126,5 +136,5 @@ class _StackPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_StackPainter old) => old.months != months || old.selected != selected || old.projected != projected || old.grid != grid;
+  bool shouldRepaint(_StackPainter old) => old.months != months || old.slots != slots || old.selected != selected || old.projected != projected || old.grid != grid;
 }

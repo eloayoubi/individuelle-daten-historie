@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/models/tracking.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/home/data/home_overview.dart';
 
@@ -33,6 +34,40 @@ void main() {
     expect([for (final x in r.where((x) => x.kind == ReminderKind.deadline)) x.trackerName], ['Glasfaser 250', 'Golf', 'Hauptzähler']);
     expect(r.first.days, 70);
     expect([for (final x in r.where((x) => x.kind == ReminderKind.readMeter)) (x.trackerName, x.days)], [('Kaltwasser', 113), ('Gaszähler', 47), ('Hauptzähler', 40)]);
+  });
+
+  group('unterjährig angefangen', () {
+    const rent = FieldDefinition(id: 'miete', name: 'Miete', kind: FieldKind.currency, role: FieldRole.recurringCost);
+    Category wohnung(DateTime since) => Category(
+      id: 'c',
+      name: 'Wohnung',
+      icon: CategoryIcon.house,
+      swatch: CategorySwatch.brown,
+      trackers: [
+        Tracker(id: 't', name: 'Miete', fields: const [rent], entries: [Entry(id: 'e', date: since, values: const {'miete': 1400})]),
+      ],
+    );
+
+    test('vergleicht die Prognose nicht mit einem halb leeren Jahr', () {
+      final o = HomeOverview.build([wohnung(DateTime.utc(2026, 10, 1))], today);
+      expect(o.forecast, closeTo(12 * 1400, 1e-6));
+      expect(o.forecastChange, isNull);
+      expect(o.costChange, isNull);
+      expect(o.firstTrackedMonth, 9);
+    });
+
+    test('nimmt als Monatsschnitt die Prognose, solange das Jahr nicht voll erfasst ist', () {
+      final o = HomeOverview.build([wohnung(DateTime.utc(2026, 10, 1))], today);
+      expect(o.categories.single.monthlyAverage, closeTo(1400, 1e-6));
+    });
+
+    test('vergleicht, sobald das ganze Jahr erfasst ist', () {
+      final o = HomeOverview.build([wohnung(DateTime.utc(2025, 10, 1))], today);
+      expect(o.forecastChange, closeTo(0, 1e-9));
+      expect(o.firstTrackedMonth, 0);
+      // Vorjahr erst ab Oktober erfasst: kein Vergleich „bis heute“.
+      expect(o.costChange, isNull);
+    });
   });
 
   test('leere Daten ergeben eine leere Übersicht', () {

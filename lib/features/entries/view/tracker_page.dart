@@ -118,7 +118,11 @@ class _Content extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: Spacing.m,
                 children: [
-                  AppText(l10n.trackerLast12.toUpperCase(), style: (t) => t.footnoteEmphasized, color: c.textSecondary),
+                  AppText(
+                    (history.months.length < 12 ? l10n.trackerSince(context.monthYear(history.months.first.month)) : l10n.trackerLast12).toUpperCase(),
+                    style: (t) => t.footnoteEmphasized,
+                    color: c.textSecondary,
+                  ),
                   if (history.hasData)
                     HistoryChart(history: history, color: c.swatch(category.swatch), format: format)
                   else

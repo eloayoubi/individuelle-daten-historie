@@ -213,6 +213,14 @@
   "entryDeleteBody": "The entry disappears from history, costs and forecast.",
   "entryDeleted": "Entry deleted.",
   "trackerHistory": "History and entries",
+  "trackerSince": "Since {month}",
+  "@trackerSince": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "trackerLast12": "Last 12 months",
   "metricCost": "Costs",
   "metricConsumption": "Consumption",

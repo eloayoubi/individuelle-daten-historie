@@ -434,6 +434,14 @@
   "entryDeleteBody": "Der Eintrag verschwindet aus Verlauf, Kosten und Prognose.",
   "entryDeleted": "Eintrag gelöscht.",
   "trackerHistory": "Verlauf und Einträge",
+  "trackerSince": "Seit {month}",
+  "@trackerSince": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "trackerLast12": "Letzte 12 Monate",
   "metricCost": "Kosten",
   "metricConsumption": "Verbrauch",

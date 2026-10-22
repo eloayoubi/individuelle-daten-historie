@@ -762,6 +762,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get trackerHistory => 'Verlauf und Einträge';
 
   @override
+  String trackerSince(String date) {
+    return 'seit $date';
+  }
+
+  @override
   String get trackerLast12 => 'Letzte 12 Monate';
 
   @override
@@ -788,11 +793,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get trackerCurrentValues => 'Aktuelle Werte';
-
-  @override
-  String trackerSince(String date) {
-    return 'seit $date';
-  }
 
   @override
   String get trackerEntries => 'Einträge';
