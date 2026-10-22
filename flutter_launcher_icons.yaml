@@ -1,0 +1,25 @@
+# App-Icons für iOS und Android. Die Bilder rendert tool/branding/render_icon_test.dart:
+#
+#   flutter test tool/branding/render_icon_test.dart --update-goldens
+#   dart run flutter_launcher_icons && sed -i '' 's/SYMBOL_EXTENSIONS = AppIcon;/SYMBOL_EXTENSIONS = YES;/' ios/Runner.xcodeproj/project.pbxproj
+#
+# Das sed gleicht einen Fehler von flutter_launcher_icons 0.14 aus: Es ersetzt in project.pbxproj jede
+# ASSETCATALOG-Zeile, also auch ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES durch
+# „= AppIcon“. Danach ist project.pbxproj wieder wie vorher.
+flutter_launcher_icons:
+  # iOS und App Store: randlos, ohne Alphakanal – die Ecken rundet iOS selbst.
+  image_path: assets/branding/app_icon.png
+  ios: true
+  remove_alpha_ios: true
+  background_color_ios: "#5856D6"
+
+  # Android: Adaptive Icon (Android 8+) aus Indigo-Hintergrund und Kurve, dieselbe Kurve als
+  # Monochrom-Ebene für Themed Icons (Android 13+). Android 7 bekommt das abgerundete Icon.
+  android: true
+  image_path_android: assets/branding/app_icon_android.png
+  min_sdk_android: 24
+  adaptive_icon_background: "#5856D6"
+  adaptive_icon_foreground: assets/branding/app_icon_foreground.png
+  # Die Kurve liegt im PNG schon in der sicheren Zone (66 %), daher kein zusätzlicher Rand.
+  adaptive_icon_foreground_inset: 0
+  adaptive_icon_monochrome: assets/branding/app_icon_foreground.png
