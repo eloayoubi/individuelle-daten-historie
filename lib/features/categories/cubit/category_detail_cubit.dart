@@ -21,8 +21,9 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   Future<void> load() async {
     try {
       final category = await _repository.loadCategory(categoryId);
+      final others = [for (final c in await _repository.loadCategories()) if (c.id != categoryId && !c.isArchived) c];
       if (isClosed) return;
-      emit(state.copyWith(status: category == null ? CategoryDetailStatus.missing : CategoryDetailStatus.ready, category: category));
+      emit(state.copyWith(status: category == null ? CategoryDetailStatus.missing : CategoryDetailStatus.ready, category: category, others: others));
     } catch (_) {
       if (!isClosed) emit(state.copyWith(status: state.category == null ? CategoryDetailStatus.failure : state.status));
     }
@@ -35,6 +36,12 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
       _run(() => _repository.createTracker(categoryId, name.trim(), sort: state.category?.trackers.length ?? 0), success: CategoryDetailEventKind.trackerAdded);
 
   Future<void> renameTracker(String trackerId, String name) => _run(() => _repository.renameTracker(trackerId, name.trim()));
+
+  /// Name und „Kosten enthalten in“ – nur, was sich geändert hat.
+  Future<void> updateTracker(Tracker tracker, {required String name, String? includedIn}) => _run(() async {
+    if (name.trim() != tracker.name) await _repository.renameTracker(tracker.id, name.trim());
+    if (includedIn != tracker.includedIn) await _repository.setTrackerIncludedIn(tracker.id, includedIn);
+  });
 
   Future<void> archiveTracker(String trackerId) => _run(() => _repository.archiveTracker(trackerId), success: CategoryDetailEventKind.trackerArchived);
 

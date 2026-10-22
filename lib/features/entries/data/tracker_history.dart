@@ -95,12 +95,12 @@ class TrackerHistory extends Equatable {
   }
 
   /// Letzter Wert je Feld bis heute; bei Preisen und Beträgen auch eine schon eingetragene Änderung.
+  /// Formel-Felder zeigen ihren letzten Wert, wenn [tracker] schon durch `Formulas.apply` lief.
   static List<CurrentValue> currentValuesOf(Tracker tracker, DateTime today) {
     final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
     return [
       for (final field in tracker.fields)
-        if (field.kind != FieldKind.formula)
-          if (_current(sorted, field, today) case final CurrentValue value) value,
+        if (_current(sorted, field, today) case final CurrentValue value) value,
     ];
   }
 

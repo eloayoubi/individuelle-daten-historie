@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../models/tracking.dart';
+import '../utils/formula.dart';
 
 /// Beschriftung und Symbol der Feldtypen.
 extension FieldKindX on FieldKind {
@@ -38,6 +39,7 @@ extension FieldRoleX on FieldRole {
     FieldRole.recurringCost => l10n.roleRecurringCost,
     FieldRole.oneOffCost => l10n.roleOneOffCost,
     FieldRole.deadline => l10n.roleDeadline,
+    FieldRole.instalment => l10n.roleInstalment,
   };
 
   String hint(AppLocalizations l10n) => switch (this) {
@@ -48,6 +50,7 @@ extension FieldRoleX on FieldRole {
     FieldRole.recurringCost => l10n.roleRecurringCostHint,
     FieldRole.oneOffCost => l10n.roleOneOffCostHint,
     FieldRole.deadline => l10n.roleDeadlineHint,
+    FieldRole.instalment => l10n.roleInstalmentHint,
   };
 }
 
@@ -60,5 +63,20 @@ abstract final class FieldIntervals {
     3 => l10n.intervalQuarterly,
     12 => l10n.intervalYearly,
     _ => l10n.intervalMonths(months),
+  };
+}
+
+/// Fehlermeldung eines Formel-Ausdrucks (Stellen ab 1 gezählt).
+extension FormulaExceptionX on FormulaException {
+  String message(AppLocalizations l10n) => switch (kind) {
+    FormulaErrorKind.empty => l10n.formulaErrorEmpty,
+    FormulaErrorKind.unexpectedCharacter => l10n.formulaErrorCharacter(detail ?? '', position + 1),
+    FormulaErrorKind.unexpectedEnd => l10n.formulaErrorEnd,
+    FormulaErrorKind.unexpectedToken => l10n.formulaErrorToken(detail ?? '', position + 1),
+    FormulaErrorKind.missingParenthesis => l10n.formulaErrorParenthesis(position + 1),
+    FormulaErrorKind.unknownFunction => l10n.formulaErrorFunction(detail ?? ''),
+    FormulaErrorKind.argumentCount => l10n.formulaErrorArguments(detail ?? ''),
+    FormulaErrorKind.unknownVariable => l10n.formulaErrorVariable(detail ?? ''),
+    FormulaErrorKind.tooDeep => l10n.formulaErrorDeep,
   };
 }

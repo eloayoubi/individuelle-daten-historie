@@ -27,10 +27,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get comingSoon => 'Coming soon.';
 
   @override
-  String get placeholderInsights =>
-      'Histories, year-over-year comparisons and forecasts for every category.';
-
-  @override
   String get actionBack => 'Back';
 
   @override
@@ -362,9 +358,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fieldRoleFooter =>
       'Decides how history, costs and forecast use the value.';
-
-  @override
-  String get fieldFormulaSoon => 'Coming with insights';
 
   @override
   String get fieldKindLocked => 'Doesn\'t fit the saved values';
@@ -901,5 +894,181 @@ class AppLocalizationsEn extends AppLocalizations {
       zero: 'No entries yet',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get roleInstalment => 'Instalment';
+
+  @override
+  String get roleInstalmentHint =>
+      'Monthly prepayment – not a cost, compared with the costs in the instalment check';
+
+  @override
+  String forecastRange(String low, String high) {
+    return 'Range $low – $high';
+  }
+
+  @override
+  String insightsCosts(String year) {
+    return 'Costs $year';
+  }
+
+  @override
+  String get insightsProjected => 'Projected to December';
+
+  @override
+  String insightsProjectedValue(String value) {
+    return '$value (projected)';
+  }
+
+  @override
+  String get insightsMonthly => 'Costs per month';
+
+  @override
+  String get insightsPartMeter => 'Consumption × price (meters)';
+
+  @override
+  String get insightsPartFixed =>
+      'Fixed amounts (rent, contracts, subscriptions)';
+
+  @override
+  String get insightsPartOneOff => 'One-off (avg. of the last 12 months)';
+
+  @override
+  String insightsTrend(String tracker, String change) {
+    return '$tracker: $change consumption vs. last year included';
+  }
+
+  @override
+  String get insightsForecastExplain =>
+      'Meters use last year\'s consumption for the same season, adjusted for the trend. Prices and amounts apply as they will then – including increases you already entered. The range grows with irregular spending.';
+
+  @override
+  String insightsComparison(String year, String previous) {
+    return '$year vs. $previous';
+  }
+
+  @override
+  String insightsPrevious(String year, String value) {
+    return '$year: $value';
+  }
+
+  @override
+  String get insightsConsumptionHint =>
+      'To date, compared with the same period last year.';
+
+  @override
+  String get insightsInstalments => 'Instalment check';
+
+  @override
+  String insightsInstalmentDetail(String paid, String year, String cost) {
+    return 'avg. $paid per month · costs $year ≈ $cost';
+  }
+
+  @override
+  String insightsCredit(String value) {
+    return 'Credit ≈ $value';
+  }
+
+  @override
+  String insightsBackPayment(String value) {
+    return 'Back payment ≈ $value';
+  }
+
+  @override
+  String insightsSuggest(String value) {
+    return 'About $value per month would fit.';
+  }
+
+  @override
+  String get insightsInstalmentFooter =>
+      'Instalments against the calculated costs of the whole year – projected to December for the current year.';
+
+  @override
+  String insightsIncluded(String tracker, String cost, String category) {
+    return '$tracker: $cost are part of $category and count there.';
+  }
+
+  @override
+  String get trackerIncludedIn => 'Costs included in';
+
+  @override
+  String get trackerIncludedNone => 'Own costs';
+
+  @override
+  String get trackerIncludedHint =>
+      'E.g. water that is already part of the utility costs: costs are shown but never counted twice.';
+
+  @override
+  String trackerIncludedNote(String category) {
+    return 'Costs are part of $category and count there.';
+  }
+
+  @override
+  String get fieldFormula => 'Formula';
+
+  @override
+  String get fieldFormulaHint => 'e.g. consumption * unit_price';
+
+  @override
+  String get fieldFormulaValues => 'Values';
+
+  @override
+  String get fieldFormulaFunctions => 'Functions';
+
+  @override
+  String fieldFormulaPreview(String value) {
+    return 'With the latest entry: $value';
+  }
+
+  @override
+  String get fieldFormulaNoPreview => 'No entry to calculate with yet.';
+
+  @override
+  String get fieldFormulaFooter =>
+      'Calculates per entry with this tracker\'s fields, plus consumption, days and months since the previous entry. Separate several values in functions with ;.';
+
+  @override
+  String get formulaErrorEmpty => 'Please enter an expression.';
+
+  @override
+  String formulaErrorCharacter(String detail, int position) {
+    return 'Unexpected character “$detail” at position $position.';
+  }
+
+  @override
+  String get formulaErrorEnd => 'The expression ends too early.';
+
+  @override
+  String formulaErrorToken(String detail, int position) {
+    return 'Unexpected “$detail” at position $position.';
+  }
+
+  @override
+  String formulaErrorParenthesis(int position) {
+    return 'A closing parenthesis is missing (position $position).';
+  }
+
+  @override
+  String formulaErrorFunction(String detail) {
+    return 'Unknown function “$detail”.';
+  }
+
+  @override
+  String formulaErrorArguments(String detail) {
+    return 'Wrong number of values for “$detail”.';
+  }
+
+  @override
+  String formulaErrorVariable(String detail) {
+    return 'Unknown name “$detail”.';
+  }
+
+  @override
+  String get formulaErrorDeep => 'Nested too deeply.';
+
+  @override
+  String insightsRangeOnly(String range) {
+    return '± $range';
   }
 }

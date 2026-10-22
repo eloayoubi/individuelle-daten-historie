@@ -1,10 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
 import '../../categories/view/categories_page.dart';
 import '../../home/view/home_page.dart';
+import '../../insights/view/insights_page.dart';
 import '../../settings/view/settings_page.dart';
 import '../cubit/shell_cubit.dart';
 import 'app_tab_bar.dart';
@@ -26,7 +26,6 @@ class ShellView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     return BlocBuilder<ShellCubit, ShellTab>(
       builder: (context, tab) => Scaffold(
         extendBody: true,
@@ -37,7 +36,7 @@ class ShellView extends StatelessWidget {
             children: [
               const HomePage(),
               const CategoriesPage(),
-              PlaceholderPage(title: l10n.tabInsights, icon: CupertinoIcons.chart_bar_alt_fill, description: l10n.placeholderInsights),
+              const InsightsPage(),
               const SettingsPage(),
             ],
           ),

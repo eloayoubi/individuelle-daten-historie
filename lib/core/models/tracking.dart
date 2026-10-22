@@ -18,10 +18,10 @@ extension FieldKindRules on FieldKind {
   /// Zeitverhalten, die zu diesem Typ passen – wie der Check `fields_role_fits_kind` in der Datenbank.
   List<FieldRole> get roles => switch (this) {
     FieldKind.number => const [FieldRole.meterReading, FieldRole.snapshot, FieldRole.info],
-    FieldKind.currency => const [FieldRole.recurringCost, FieldRole.oneOffCost, FieldRole.unitPrice, FieldRole.snapshot, FieldRole.info],
+    FieldKind.currency => const [FieldRole.recurringCost, FieldRole.oneOffCost, FieldRole.unitPrice, FieldRole.instalment, FieldRole.snapshot, FieldRole.info],
     FieldKind.percent => const [FieldRole.snapshot, FieldRole.info],
     FieldKind.date => const [FieldRole.deadline, FieldRole.info],
-    FieldKind.formula => const [FieldRole.recurringCost, FieldRole.oneOffCost, FieldRole.unitPrice, FieldRole.snapshot, FieldRole.info],
+    FieldKind.formula => const [FieldRole.snapshot, FieldRole.oneOffCost, FieldRole.recurringCost, FieldRole.unitPrice, FieldRole.info],
     FieldKind.text || FieldKind.choice || FieldKind.toggle => const [FieldRole.info],
   };
 
@@ -54,6 +54,10 @@ enum FieldRole {
 
   /// Stichtag mit Erinnerung (Vertragsende, Kündigungsfrist, TÜV).
   deadline,
+
+  /// Abschlag: Vorauszahlung je Monat, gilt ab dem Datum. Zählt nicht als Kosten, sondern wird im
+  /// Abschlags-Check mit den gerechneten Kosten verglichen (Guthaben oder Nachzahlung).
+  instalment,
 }
 
 /// Symbol einer Kategorie; die Zuordnung zu Icons steht in `category_x.dart`.
@@ -142,12 +146,16 @@ class Entry extends Equatable {
 
 /// Etwas, das verfolgt wird – ein Zähler, ein Vertrag, ein Auto – mit eigenen Feldern und Einträgen.
 class Tracker extends Equatable {
-  const Tracker({required this.id, required this.name, this.fields = const [], this.entries = const []});
+  const Tracker({required this.id, required this.name, this.fields = const [], this.entries = const [], this.includedIn});
 
   final String id;
   final String name;
   final List<FieldDefinition> fields;
   final List<Entry> entries;
+
+  /// Kategorie, in deren Kosten dieser Tracker schon steckt (Wasser in den Nebenkosten). Seine
+  /// Kosten werden dann gezeigt, aber in keiner Summe gezählt.
+  final String? includedIn;
 
   Iterable<FieldDefinition> withRole(FieldRole role) => fields.where((f) => f.role == role);
 
@@ -156,11 +164,16 @@ class Tracker extends Equatable {
   /// Hat das Feld schon gespeicherte Werte? Dann darf sich sein Typ nur eingeschränkt ändern.
   bool hasValues(String fieldId) => entries.any((e) => e.values.containsKey(fieldId));
 
-  Tracker copyWith({String? name, List<FieldDefinition>? fields, List<Entry>? entries}) =>
-      Tracker(id: id, name: name ?? this.name, fields: fields ?? this.fields, entries: entries ?? this.entries);
+  Tracker copyWith({String? name, List<FieldDefinition>? fields, List<Entry>? entries, String? Function()? includedIn}) => Tracker(
+    id: id,
+    name: name ?? this.name,
+    fields: fields ?? this.fields,
+    entries: entries ?? this.entries,
+    includedIn: includedIn == null ? this.includedIn : includedIn(),
+  );
 
   @override
-  List<Object?> get props => [id, name, fields, entries];
+  List<Object?> get props => [id, name, fields, entries, includedIn];
 }
 
 /// Eine andere Person, mit der eine Kategorie geteilt ist.

@@ -138,6 +138,9 @@ abstract interface class CategoriesRepository {
 
   Future<void> archiveTracker(String id);
 
+  /// Kosten des Trackers stecken in einer anderen Kategorie (`null` = eigene Kosten).
+  Future<void> setTrackerIncludedIn(String id, String? categoryId);
+
   Future<String> createField(String trackerId, FieldDraft draft, {required int sort});
 
   Future<void> updateField(String id, FieldDraft draft);

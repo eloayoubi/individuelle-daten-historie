@@ -25,6 +25,7 @@ class AppTextField extends StatelessWidget {
     this.suffix,
     this.label,
     this.textCapitalization = TextCapitalization.sentences,
+    this.autocorrect = true,
   });
 
   final TextEditingController? controller;
@@ -45,6 +46,9 @@ class AppTextField extends StatelessWidget {
 
   /// Beschriftung links im Feld; bleibt sichtbar, wenn ein Wert drinsteht.
   final String? label;
+
+  /// Für Formeln und Einheiten aus: keine Autokorrektur, keine Vorschläge.
+  final bool autocorrect;
   final TextCapitalization textCapitalization;
 
   @override
@@ -58,6 +62,8 @@ class AppTextField extends StatelessWidget {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       textCapitalization: textCapitalization,
+      autocorrect: autocorrect,
+      enableSuggestions: autocorrect,
       inputFormatters: [
         if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
         ...?inputFormatters,

@@ -1,4 +1,26 @@
+import 'dart:math' as math;
+
 import '../models/tracking.dart';
+import 'formulas.dart';
+
+/// Kosten aufgeteilt nach Herkunft – Grundlage für die erklärte Prognose und ihre Spanne.
+class CostParts {
+  const CostParts({this.meter = 0, this.fixed = 0, this.oneOff = 0});
+
+  /// Verbrauch × Arbeitspreis.
+  final double meter;
+
+  /// Wiederkehrende Beträge (Miete, Grundpreis, Abos, Versicherungen).
+  final double fixed;
+
+  /// Einmalige Beträge (Tanken, Nachzahlungen); in der Zukunft als Durchschnitt.
+  final double oneOff;
+
+  double get total => meter + fixed + oneOff;
+
+  CostParts operator +(CostParts o) => CostParts(meter: meter + o.meter, fixed: fixed + o.fixed, oneOff: oneOff + o.oneOff);
+}
+
 
 /// Rechnet Verbrauch und Kosten eines [Tracker]s Tag für Tag.
 ///
@@ -12,8 +34,15 @@ import '../models/tracking.dart';
 ///   eingetragene Erhöhungen fließen so von selbst in die Prognose ein.
 /// - **Einmalige Beträge** ([FieldRole.oneOffCost]) zählen an ihrem Tag; ab heute gilt der
 ///   Tagesdurchschnitt der letzten 365 Tage (Tanken, Nachzahlungen …).
+/// - **Abschläge** ([FieldRole.instalment]) sind keine Kosten; [paid] summiert sie wie
+///   wiederkehrende Beträge für den Abschlags-Check.
+/// - **Formel-Felder** werden vorher je Eintrag ausgerechnet ([Formulas.apply]) und zählen dann
+///   nach ihrem Zeitverhalten wie eingegebene Werte.
+/// - **Trend:** Liegen zwei volle Jahre Zählerstände vor, wird der Vorjahres-Verbrauch der Prognose
+///   mit dem Verhältnis der letzten 365 Tage zu den 365 davor angepasst (begrenzt auf −20 … +25 %).
 class CostEngine {
-  CostEngine(Tracker tracker, {required DateTime today}) : _today = day(today) {
+  CostEngine(Tracker source, {required DateTime today}) : _today = day(today) {
+    final tracker = Formulas.apply(source);
     _prepareReadings(tracker);
     for (final field in tracker.fields) {
       final timeline = _timeline(tracker, field);
@@ -27,6 +56,8 @@ class CostEngine {
           for (final (date, value) in timeline) {
             _oneOff[date] = (_oneOff[date] ?? 0) + value;
           }
+        case FieldRole.instalment:
+          _instalments.add((timeline, field.intervalMonths < 1 ? 1 : field.intervalMonths));
         case FieldRole.info || FieldRole.snapshot || FieldRole.meterReading || FieldRole.deadline:
           break;
       }
@@ -44,8 +75,11 @@ class CostEngine {
   final _rates = <double>[];
   double _trailingRate = 0;
 
+  double? _trend;
+
   final _unitPrices = <(DateTime, double)>[];
   final _recurring = <(List<(DateTime, double)>, int)>[];
+  final _instalments = <(List<(DateTime, double)>, int)>[];
   final _oneOff = <DateTime, double>{};
   double _oneOffDaily = 0;
 
@@ -56,11 +90,38 @@ class CostEngine {
 
   bool get hasMeter => _readings.length >= 2;
 
+  bool get hasInstalment => _instalments.isNotEmpty;
+
+  /// Verhältnis Verbrauch letzte 365 Tage zu den 365 davor, `null` ohne zwei volle Jahre.
+  double? get trend => _trend;
+
   /// Verbrauch in `[from, to)`.
   double consumption(DateTime from, DateTime to) => _sum(from, to, _rateOn);
 
   /// Kosten in `[from, to)`.
   double cost(DateTime from, DateTime to) => _sum(from, to, _costOn);
+
+  /// Kosten in `[from, to)` nach Herkunft.
+  CostParts parts(DateTime from, DateTime to) {
+    var meter = 0.0, fixed = 0.0, oneOff = 0.0;
+    for (var d = day(from); d.isBefore(to); d = d.add(const Duration(days: 1))) {
+      final (m, f, o) = _partsOn(d);
+      meter += m;
+      fixed += f;
+      oneOff += o;
+    }
+    return CostParts(meter: meter, fixed: fixed, oneOff: oneOff);
+  }
+
+  /// Gezahlte Abschläge in `[from, to)`.
+  double paid(DateTime from, DateTime to) => _sum(from, to, (d) => _monthly(_instalments, d));
+
+  /// Halbe Breite der Prognose-Spanne für [p]: Verbrauch je nach Trend (mindestens ±5 %, ohne
+  /// Trend ±10 %), feste Beträge ±1 %, einmalige ±25 %; unabhängig, daher als Wurzel der Quadrate.
+  double uncertainty(CostParts p) {
+    final meterShare = _trend == null ? 0.1 : math.max(0.05, (_trend! - 1).abs());
+    return math.sqrt(math.pow(p.meter * meterShare, 2) + math.pow(p.fixed * 0.01, 2) + math.pow(p.oneOff * 0.25, 2));
+  }
 
   double costInYear(int year) => cost(DateTime.utc(year), DateTime.utc(year + 1));
 
@@ -75,11 +136,23 @@ class CostEngine {
   }
 
   double _costOn(DateTime d) {
-    var total = _rateOn(d) * _valueAt(_unitPrices, d, beforeFirst: _unitPrices.firstOrNull?.$2 ?? 0);
-    for (final (timeline, months) in _recurring) {
+    final (meter, fixed, oneOff) = _partsOn(d);
+    return meter + fixed + oneOff;
+  }
+
+  (double, double, double) _partsOn(DateTime d) => (
+    _rateOn(d) * _valueAt(_unitPrices, d, beforeFirst: _unitPrices.firstOrNull?.$2 ?? 0),
+    _monthly(_recurring, d),
+    d.isBefore(_today) ? _oneOff[d] ?? 0 : _oneOffDaily,
+  );
+
+  /// Tagesanteil wiederkehrender Beträge (Betrag je Intervall, auf die Tage des Monats verteilt).
+  static double _monthly(List<(List<(DateTime, double)>, int)> series, DateTime d) {
+    var total = 0.0;
+    for (final (timeline, months) in series) {
       total += _valueAt(timeline, d) / months / _daysInMonth(d);
     }
-    return total + (d.isBefore(_today) ? _oneOff[d] ?? 0 : _oneOffDaily);
+    return total;
   }
 
   double _rateOn(DateTime d) {
@@ -91,7 +164,7 @@ class CostEngine {
       while (!back.isBefore(_readings.last.$1)) {
         back = back.subtract(const Duration(days: 365));
       }
-      return back.isBefore(_readings.first.$1) ? _trailingRate : _segmentRate(back);
+      return back.isBefore(_readings.first.$1) ? _trailingRate : _segmentRate(back) * (_trend ?? 1);
     }
     return _segmentRate(d);
   }
@@ -147,6 +220,26 @@ class CostEngine {
       total += _rates[i] * days;
     }
     _trailingRate = used == 0 ? 0 : total / used;
+    _trend = _computeTrend();
+  }
+
+  /// Letzte 365 Tage vor dem letzten Stand gegen die 365 davor – nur mit echten Ständen.
+  double? _computeTrend() {
+    final end = _readings.last.$1;
+    final middle = end.subtract(const Duration(days: 365));
+    final start = end.subtract(const Duration(days: 730));
+    if (_readings.first.$1.isAfter(start)) return null;
+    double actual(DateTime from, DateTime to) {
+      var sum = 0.0;
+      for (var d = from; d.isBefore(to); d = d.add(const Duration(days: 1))) {
+        sum += _segmentRate(d);
+      }
+      return sum;
+    }
+
+    final older = actual(start, middle);
+    if (older <= 0) return null;
+    return (actual(middle, end) / older).clamp(0.8, 1.25);
   }
 
   static double _neighbour(List<double?> rates, int i) {

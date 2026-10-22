@@ -14,6 +14,7 @@ class FieldEditorState extends Equatable {
     required this.isNew,
     required this.originalKind,
     required this.hasValues,
+    this.tracker,
     required this.name,
     required this.kind,
     required this.role,
@@ -22,14 +23,17 @@ class FieldEditorState extends Equatable {
     this.factorText = '1',
     this.intervalMonths = 1,
     this.choices = const [],
+    this.formula = '',
     this.saving = false,
     this.event,
   });
 
-  factory FieldEditorState.of(FieldDefinition? field, {required bool hasValues}) => FieldEditorState(
+  factory FieldEditorState.of(FieldDefinition? field, {required bool hasValues, Tracker? tracker}) => FieldEditorState(
     isNew: field == null,
     originalKind: field?.kind,
     hasValues: hasValues,
+    tracker: tracker,
+    formula: field?.formula ?? '',
     name: field?.name ?? '',
     kind: field?.kind ?? FieldKind.number,
     role: field?.role ?? FieldRole.snapshot,
@@ -49,6 +53,9 @@ class FieldEditorState extends Equatable {
   final FieldKind? originalKind;
   final bool hasValues;
 
+  /// Für Formeln: welche Namen es gibt und wie die Vorschau rechnet.
+  final Tracker? tracker;
+
   final String name;
   final FieldKind kind;
   final FieldRole role;
@@ -59,11 +66,17 @@ class FieldEditorState extends Equatable {
   final String factorText;
   final int intervalMonths;
   final List<String> choices;
+
+  /// Ausdruck bei [FieldKind.formula].
+  final String formula;
   final bool saving;
   final FieldEditorEvent? event;
 
-  /// Formeln kommen mit der Auswertung (Meilenstein 3); vorhandene Werte begrenzen den Wechsel.
-  bool canPick(FieldKind k) => k != FieldKind.formula && (originalKind?.canBecome(k, hasValues: hasValues) ?? true);
+  /// Vorhandene Werte begrenzen den Wechsel (eine Formel speichert keine Werte).
+  bool canPick(FieldKind k) => originalKind?.canBecome(k, hasValues: hasValues) ?? true;
+
+  /// Prüfung des Ausdrucks gegen die Felder des Trackers.
+  FormulaCheck get formulaCheck => Formulas.check(formula, tracker ?? const Tracker(id: '', name: ''));
 
   double? get factor {
     final value = parseDecimal(factorText);
@@ -73,7 +86,11 @@ class FieldEditorState extends Equatable {
   bool get factorValid => role != FieldRole.meterReading || factor != null;
 
   bool get canSave =>
-      !saving && name.trim().isNotEmpty && kind != FieldKind.formula && factorValid && (kind != FieldKind.choice || choices.isNotEmpty);
+      !saving &&
+      name.trim().isNotEmpty &&
+      factorValid &&
+      (kind != FieldKind.choice || choices.isNotEmpty) &&
+      (kind != FieldKind.formula || formulaCheck.isValid);
 
   FieldDraft get draft {
     final meter = role == FieldRole.meterReading;
@@ -86,6 +103,7 @@ class FieldEditorState extends Equatable {
       factor: meter ? factor ?? 1 : 1,
       intervalMonths: role == FieldRole.recurringCost ? intervalMonths : 1,
       choices: kind == FieldKind.choice ? choices : const [],
+      formula: kind == FieldKind.formula ? formula.trim() : null,
     );
   }
 
@@ -103,12 +121,15 @@ class FieldEditorState extends Equatable {
     String? factorText,
     int? intervalMonths,
     List<String>? choices,
+    String? formula,
     bool? saving,
     FieldEditorEvent? event,
   }) => FieldEditorState(
     isNew: isNew,
     originalKind: originalKind,
     hasValues: hasValues,
+    tracker: tracker,
+    formula: formula ?? this.formula,
     name: name ?? this.name,
     kind: kind ?? this.kind,
     role: role ?? this.role,
@@ -122,5 +143,5 @@ class FieldEditorState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [isNew, originalKind, hasValues, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, saving, event];
+  List<Object?> get props => [isNew, originalKind, hasValues, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, saving, event];
 }

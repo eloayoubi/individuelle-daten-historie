@@ -53,6 +53,12 @@ class ForecastCard extends StatelessWidget {
             const SizedBox(height: Spacing.s),
             AppText(context.euros(overview.forecast), style: (t) => t.numberXL, color: c.onSpotlight, maxLines: 1),
             const SizedBox(height: Spacing.xxs),
+            if (overview.forecastRange > 0.5)
+              AppText(
+                l10n.forecastRange(context.euros(overview.forecast - overview.forecastRange), context.euros(overview.forecast + overview.forecastRange)),
+                style: (t) => t.footnoteEmphasized,
+                color: c.spotlightAccent,
+              ),
             AppText(l10n.homeForecastHint, style: (t) => t.footnote, color: c.onSpotlightSecondary),
             const SizedBox(height: Spacing.l),
             SizedBox(

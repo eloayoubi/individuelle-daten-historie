@@ -37,9 +37,34 @@ void main() {
       expect(cubit.state.kind, FieldKind.number);
     });
 
-    test('Formeln kommen erst mit der Auswertung', () {
-      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't'))..setKind(FieldKind.formula);
-      expect(cubit.state.kind, isNot(FieldKind.formula));
+    test('Formel: speicherbar erst mit gültigem Ausdruck aus bekannten Namen', () {
+      final golf = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-auto').trackers.single;
+      final cubit = FieldEditorCubit(repo, FieldEditorArgs(trackerId: golf.id, tracker: golf))
+        ..setName('Kosten je km')
+        ..setKind(FieldKind.formula);
+      expect(cubit.state.kind, FieldKind.formula);
+      expect(cubit.state.role, FieldRole.snapshot);
+      expect(cubit.state.canSave, isFalse);
+      cubit.setFormula('tanken / strecke');
+      expect(cubit.state.formulaCheck.isValid, isFalse);
+      expect(cubit.state.canSave, isFalse);
+      cubit.setFormula('tanken / verbrauch');
+      expect(cubit.state.canSave, isTrue);
+      expect(cubit.state.draft.formula, 'tanken / verbrauch');
+    });
+
+    test('Feld mit Werten wird keine Formel (Formeln speichern nichts)', () {
+      const field = FieldDefinition(id: 'f', name: 'Stand', kind: FieldKind.number, role: FieldRole.meterReading);
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't', field: field, hasValues: true));
+      expect(cubit.state.canPick(FieldKind.formula), isFalse);
+    });
+
+    test('Abschlag ist ein Zeitverhalten für Beträge', () {
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't'))
+        ..setName('Abschlag')
+        ..setKind(FieldKind.currency)
+        ..setRole(FieldRole.instalment);
+      expect(cubit.state.draft.role, FieldRole.instalment);
     });
 
     test('Auswahl braucht mindestens einen Wert, doppelte zählen nicht', () {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/utils/formulas.dart';
 import '../../categories/data/categories_repository.dart';
 import '../data/tracker_history.dart';
 
@@ -30,13 +31,17 @@ class TrackerCubit extends Cubit<TrackerState> {
 
   Future<void> load() async {
     try {
-      final category = await _repository.loadCategory(args.categoryId);
-      final tracker = category?.trackers.where((t) => t.id == args.trackerId).firstOrNull;
+      final all = await _repository.loadCategories();
+      final category = all.where((c) => c.id == args.categoryId).firstOrNull;
+      final raw = category?.trackers.where((t) => t.id == args.trackerId).firstOrNull;
       if (isClosed) return;
-      if (category == null || tracker == null) {
+      if (category == null || raw == null) {
         emit(const TrackerState(status: TrackerStatus.missing));
         return;
       }
+      // Formel-Werte gleich mitrechnen, damit Einträge und aktuelle Werte sie zeigen.
+      final tracker = Formulas.apply(raw);
+      final into = all.where((c) => c.id == raw.includedIn).firstOrNull;
       final metrics = TrackerHistory.metricsFor(tracker);
       final metric = metrics.contains(state.metric) ? state.metric : metrics.firstOrNull;
       emit(
@@ -46,8 +51,9 @@ class TrackerCubit extends Cubit<TrackerState> {
           tracker: tracker,
           metrics: metrics,
           metric: metric,
-          history: metric == null ? null : TrackerHistory.build(tracker, _now(), metric),
+          history: metric == null ? null : TrackerHistory.build(raw, _now(), metric),
           currentValues: TrackerHistory.currentValuesOf(tracker, _now()),
+          includedInName: into?.name,
         ),
       );
     } catch (_) {

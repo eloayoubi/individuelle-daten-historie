@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../../core/utils/formulas.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../cubit/field_editor_cubit.dart';
 
@@ -36,10 +37,22 @@ class _EditorViewState extends State<_EditorView> {
   late final _consumptionUnit = TextEditingController(text: _initial.consumptionUnit);
   late final _factor = TextEditingController(text: _initial.factorText);
   final _choice = TextEditingController();
+  late final _formula = TextEditingController(text: _initial.formula);
+
+  /// Text an der Cursor-Stelle einsetzen; [cursor] = Abstand der neuen Cursor-Position vom Anfang.
+  void _insert(FieldEditorCubit cubit, String text, {int? cursor}) {
+    final value = _formula.text;
+    final selection = _formula.selection;
+    final start = selection.isValid ? selection.start : value.length;
+    final end = selection.isValid ? selection.end : value.length;
+    final next = value.replaceRange(start, end, text);
+    _formula.value = TextEditingValue(text: next, selection: TextSelection.collapsed(offset: start + (cursor ?? text.length)));
+    cubit.setFormula(next);
+  }
 
   @override
   void dispose() {
-    for (final c in [_name, _unit, _consumptionUnit, _factor, _choice]) {
+    for (final c in [_name, _unit, _consumptionUnit, _factor, _choice, _formula]) {
       c.dispose();
     }
     super.dispose();
@@ -121,11 +134,7 @@ class _EditorViewState extends State<_EditorView> {
                       child: AppListRow(
                         leading: AppIconTile(icon: kind.icon, color: c.accent),
                         title: kind.label(l10n),
-                        subtitle: switch (kind) {
-                          FieldKind.formula => l10n.fieldFormulaSoon,
-                          _ when !s.canPick(kind) => l10n.fieldKindLocked,
-                          _ => null,
-                        },
+                        subtitle: s.canPick(kind) ? null : l10n.fieldKindLocked,
                         trailing: kind == s.kind ? Icon(CupertinoIcons.checkmark_alt, size: 20, color: c.accent) : null,
                         chevron: false,
                         onTap: s.canPick(kind) ? () => cubit.setKind(kind) : null,
@@ -184,6 +193,10 @@ class _EditorViewState extends State<_EditorView> {
                     ],
                   ),
                 ),
+              ],
+              if (s.kind == FieldKind.formula) ...[
+                SectionHeader(title: l10n.fieldFormula),
+                Padding(padding: Spacing.screen, child: _FormulaEditor(state: s, controller: _formula, onInsert: (text, cursor) => _insert(cubit, text, cursor: cursor))),
               ],
               if (s.role == FieldRole.meterReading) ...[
                 SectionHeader(title: l10n.fieldMeter),
@@ -295,6 +308,79 @@ class _EditorViewState extends State<_EditorView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Ausdruck, Prüfung mit Fehlerstelle oder Vorschau, dazu Namen und Funktionen zum Antippen.
+class _FormulaEditor extends StatelessWidget {
+  const _FormulaEditor({required this.state, required this.controller, required this.onInsert});
+
+  final FieldEditorState state;
+  final TextEditingController controller;
+  final void Function(String text, int? cursor) onInsert;
+
+  /// So viele Nachkommastellen, wie das Ergebnis braucht (höchstens zwei).
+  static int _decimals(double v) => v == v.roundToDouble() ? 0 : ((v * 10).roundToDouble() == v * 10 ? 1 : 2);
+
+  static const _functionsDe = [('min(;)', 4), ('max(;)', 4), ('runden(;2)', 7), ('wenn(;;)', 5), ('abs()', 4)];
+  static const _functionsEn = [('min(;)', 4), ('max(;)', 4), ('round(;2)', 6), ('if(;;)', 3), ('abs()', 4)];
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final english = l10n.localeName.startsWith('en');
+    final tracker = state.tracker;
+    final check = state.formulaCheck;
+    final (status, statusColor) = switch ((state.formula.trim().isEmpty, check.error, check.formula, tracker)) {
+      (true, _, _, _) => (null, c.textSecondary),
+      (false, final error?, _, _) => (error.message(l10n), c.danger),
+      (false, null, final formula?, final t?) => switch (Formulas.preview(formula, t)) {
+        final double v => (l10n.fieldFormulaPreview(context.amount(v, state.unit.trim(), decimals: _decimals(v))), c.success),
+        null => (l10n.fieldFormulaNoPreview, c.textSecondary),
+      },
+      _ => (null, c.textSecondary),
+    };
+    Widget chips(Iterable<(String, int?)> items) => Wrap(
+      spacing: Spacing.s,
+      runSpacing: Spacing.s,
+      children: [
+        for (final (text, cursor) in items)
+          AppPressable(
+            onTap: () => onInsert(text, cursor),
+            child: AppChip(label: text, background: c.accentSoft, foreground: c.accent),
+          ),
+      ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: Spacing.s,
+      children: [
+        AppTextField(
+          controller: controller,
+          hint: l10n.fieldFormulaHint,
+          maxLength: 500,
+          autocorrect: false,
+          textCapitalization: TextCapitalization.none,
+          onChanged: context.read<FieldEditorCubit>().setFormula,
+        ),
+        if (status != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.l),
+            child: AppText(status, style: (t) => t.footnoteEmphasized, color: statusColor),
+          ),
+        if (tracker != null) ...[
+          AppText(l10n.fieldFormulaValues.toUpperCase(), style: (t) => t.caption2Emphasized, color: c.textSecondary),
+          chips([for (final name in Formulas.available(tracker, english: english)) (name, null)]),
+        ],
+        AppText(l10n.fieldFormulaFunctions.toUpperCase(), style: (t) => t.caption2Emphasized, color: c.textSecondary),
+        chips(english ? _functionsEn : _functionsDe),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.l),
+          child: AppText(l10n.fieldFormulaFooter, style: (t) => t.footnote, color: c.textSecondary),
+        ),
+      ],
     );
   }
 }
