@@ -1,20 +1,19 @@
 # Native Splash für iOS und Android: Hintergrund wie die App (gruppiertes Grau bzw. Schwarz), in der
-# Mitte die Kurve. Die Logos rendert tool/branding/render_icon_test.dart:
+# Mitte die leere Icon-Kachel – das erste Bild der Startanimation (lib/app/launch_splash.dart), die
+# sie dann füllt. Hell und dunkel dasselbe Bild. Es rendert tool/branding/render_icon_test.dart:
 #
 #   flutter test tool/branding/render_icon_test.dart --update-goldens
 #   dart run flutter_native_splash:create
 #
-# Die Logos sind 1152 × 1152 px und gelten als @4x: iOS zeigt sie mit 288 pt, die Kurve darin ist
-# etwa 120 pt breit; Android 12+ nutzt dieselbe Fläche (288 dp, sichtbar ist der Kreis mit 192 dp).
+# Das Bild ist 1152 × 1152 px und gilt als @4x: iOS zeigt es mit 288 pt, die Kachel darin ist 144 pt
+# groß; Android 12+ nutzt dieselbe Fläche (288 dp, sichtbar ist der Kreis mit 192 dp).
 flutter_native_splash:
   color: "#F2F2F7"
   color_dark: "#000000"
   image: assets/branding/splash_logo.png
-  image_dark: assets/branding/splash_logo_dark.png
 
   android_12:
     image: assets/branding/splash_logo.png
-    image_dark: assets/branding/splash_logo_dark.png
     color: "#F2F2F7"
     color_dark: "#000000"
 

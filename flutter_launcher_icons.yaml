@@ -12,14 +12,17 @@ flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
   background_color_ios: "#5856D6"
+  # iOS 18+: dunkel (durchsichtig, den Grund legt iOS) und getönt (Graustufen, iOS färbt).
+  image_path_ios_dark_transparent: assets/branding/app_icon_dark.png
+  image_path_ios_tinted_grayscale: assets/branding/app_icon_tinted.png
 
-  # Android: Adaptive Icon (Android 8+) aus Indigo-Hintergrund und Kurve, dieselbe Kurve als
-  # Monochrom-Ebene für Themed Icons (Android 13+). Android 7 bekommt das abgerundete Icon.
+  # Android: Adaptive Icon (Android 8+) aus Indigo-Hintergrund und Haus, dazu eine Monochrom-Ebene für
+  # Themed Icons (Android 13+). Android 7 bekommt das abgerundete Icon.
   android: true
   image_path_android: assets/branding/app_icon_android.png
   min_sdk_android: 24
   adaptive_icon_background: "#5856D6"
   adaptive_icon_foreground: assets/branding/app_icon_foreground.png
-  # Die Kurve liegt im PNG schon in der sicheren Zone (66 %), daher kein zusätzlicher Rand.
+  # Das Haus liegt im PNG schon in der sicheren Zone (66 %), daher kein zusätzlicher Rand.
   adaptive_icon_foreground_inset: 0
-  adaptive_icon_monochrome: assets/branding/app_icon_foreground.png
+  adaptive_icon_monochrome: assets/branding/app_icon_monochrome.png

@@ -32,6 +32,7 @@ lib/
   main.dart              DI, dann runApp
   app/app.dart           MaterialApp, Themes, Locales; darüber Darstellung, Erinnerungen, Konto, Plus;
                          Einladungslinks öffnen das Beitreten-Sheet; Onboarding vor der Shell
+  app/launch_splash.dart Startanimation (Lottie) über der App: Die Kachel des nativen Splashs wird zum Icon
   core/
     core.dart            Sammel-Import für Features
     di/                  lookup.dart, injection.dart (configureDependencies)
@@ -111,7 +112,7 @@ Commit-Betreffs: Nutzer-Sichtbares auf Deutsch ohne Präfix (landet im TestFligh
 ## Store
 
 - **Texte und Screenshots:** `ios/fastlane/metadata/` (DE/EN, Hinweise in `metadata/README.md`), Screenshots `ios/fastlane/screenshots/` (6,9″, je 5). Hochladen: `cd ios && fastlane metadata` (ohne Binary, reicht nichts zur Prüfung ein; bricht ab, solange `example.com`-Platzhalter drin sind).
-- **Neu erzeugen:** Icons `flutter test tool/branding/render_icon_test.dart --update-goldens && dart run flutter_launcher_icons` (danach das `sed` aus `flutter_launcher_icons.yaml`), Splash `dart run flutter_native_splash:create`, Screenshots `flutter test tool/screenshots/store_screenshots_test.dart --update-goldens`.
+- **Neu erzeugen:** Icons, Startanimation (`assets/branding/launch_animation.json`, aus `tool/branding/launch_animation.dart`) und Splash-Bild `flutter test tool/branding/render_icon_test.dart --update-goldens && dart run flutter_launcher_icons` (danach das `sed` aus `flutter_launcher_icons.yaml`), Splash `dart run flutter_native_splash:create`, Screenshots `flutter test tool/screenshots/store_screenshots_test.dart --update-goldens`.
 - **Rechtstexte:** `assets/legal/*.md` – Platzhalter in eckigen Klammern (Name, Anschrift, E-Mail) vor dem Start ersetzen; dieselben Texte öffentlich hosten (Datenschutz-URL für App Store Connect).
 
 ## Android-Release
