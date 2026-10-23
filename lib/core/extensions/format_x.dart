@@ -53,8 +53,8 @@ extension FormatX on BuildContext {
   /// `Okt. 2026`
   String monthYear(DateTime date) => DateFormat.yMMM(_locale).format(date);
 
-  /// Anfangsbuchstabe des Monats für Achsen (`J`, `F`, `M` …).
-  String monthInitial(DateTime date) => DateFormat('MMMMM', _locale).format(date);
+  /// Monatskürzel für Achsen (`Jan`, `Mär`, `Okt`), immer drei Zeichen ohne Punkt, damit zwölf nebeneinander passen.
+  String monthShort(DateTime date) => DateFormat.LLL(_locale).format(date);
 
   /// `Do., 22. Okt.`
   String shortWeekdayDate(DateTime date) => DateFormat.MMMEd(_locale).format(date);
