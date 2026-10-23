@@ -278,6 +278,48 @@ abstract class AppLocalizations {
   /// **'Starte mit einer Vorlage wie Strom, Wasser oder Miete – oder baue dir eine eigene.'**
   String get homeEmptyBody;
 
+  /// No description provided for @homeStartOverline.
+  ///
+  /// In de, this message translates to:
+  /// **'Erste Schritte'**
+  String get homeStartOverline;
+
+  /// No description provided for @homeStartTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Kostenkurve wartet auf den ersten Eintrag'**
+  String get homeStartTitle;
+
+  /// No description provided for @homeStartBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag einen Zählerstand, einen Abschlag oder eine Rechnung ein – daraus entstehen deine Kosten seit Januar, der Verlauf und die Prognose.'**
+  String get homeStartBody;
+
+  /// No description provided for @homeStartStepCategories.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorien angelegt'**
+  String get homeStartStepCategories;
+
+  /// No description provided for @homeStartStepEntry.
+  ///
+  /// In de, this message translates to:
+  /// **'Ersten Stand oder Betrag eintragen'**
+  String get homeStartStepEntry;
+
+  /// No description provided for @homeStartStepForecast.
+  ///
+  /// In de, this message translates to:
+  /// **'Prognose für {year} ansehen'**
+  String homeStartStepForecast(String year);
+
+  /// No description provided for @homeStartAction.
+  ///
+  /// In de, this message translates to:
+  /// **'Ersten Eintrag erfassen'**
+  String get homeStartAction;
+
   /// No description provided for @quickAddTitle.
   ///
   /// In de, this message translates to:
