@@ -95,6 +95,7 @@ Die Datenbank erzwingt passende Kombinationen (ein Zählerstand ist immer eine Z
 
 ### 5.2 Einträge
 
+- **Details statt Einträge:** Stammdaten und Stichtage (Anbieter, Vertragsnummer, Vertragsende) gehören nicht ins Eintragsformular. Man setzt sie direkt in der Kategorie oder im Verlauf; gespeichert werden sie als Eintrag, der nur Details trägt (`Tracker.isDetailEntry`), und erscheinen nicht in der Liste der Einträge. So laufen sie offline durch dieselbe Warteschlange, ohne eigene Tabelle.
 - **Teil-Einträge:** Ein Eintrag trägt nur die Felder, die sich ändern. Der neue Zählerstand braucht keinen erneuten Arbeitspreis, eine Preiserhöhung keinen Zählerstand.
 - **Im Voraus:** Eine angekündigte Erhöhung („ab 1.3. 920 € Miete“) wird mit künftigem Datum eingetragen und fließt sofort in die Prognose ein.
 - **Zeitraum:** Abrechnungen haben einen Zeitraum von–bis (`period_start`/`period_end`).

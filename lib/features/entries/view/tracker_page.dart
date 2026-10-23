@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../categories/view/tracker_setup_page.dart';
 import '../cubit/tracker_cubit.dart';
 import '../data/tracker_history.dart';
 import 'entry_form_page.dart';
 import 'widgets/history_chart.dart';
+import 'widgets/tracker_details.dart';
 
 /// Verlauf eines Trackers: Graph der letzten zwölf Monate (Kosten oder Verbrauch), Jahresvergleich
-/// und Prognose, aktuelle Werte und alle Einträge zum Bearbeiten.
+/// und Prognose, Details (Anbieter, Vertragsende), aktuelle Werte und alle Einträge zum Bearbeiten.
+/// Der Stift führt zum Aufbau (Felder und Einstellungen).
 class TrackerPage extends StatelessWidget {
   const TrackerPage({super.key, required this.args});
 
@@ -26,7 +29,9 @@ class TrackerPage extends StatelessWidget {
       child: Scaffold(
         body: SafeArea(
           bottom: false,
-          child: BlocBuilder<TrackerCubit, TrackerState>(
+          child: BlocConsumer<TrackerCubit, TrackerState>(
+            listenWhen: (previous, current) => current.event != null && current.event != previous.event,
+            listener: (context, state) => AppToast.show(context, context.l10n.errorSave, icon: CupertinoIcons.exclamationmark_circle_fill),
             builder: (context, state) => switch ((state.status, state.category, state.tracker)) {
               (TrackerStatus.ready, final Category category, final Tracker tracker) => _Content(state: state, category: category, tracker: tracker),
               (TrackerStatus.loading, _, _) => const Center(child: CupertinoActivityIndicator()),
@@ -72,6 +77,7 @@ class _Content extends StatelessWidget {
     final entries = state.entries;
     String format(double v) => history?.metric == HistoryMetric.consumption ? context.amount(v, history!.unit) : context.euros(v);
     void add() => EntryFormPage.open(context, category: category, tracker: tracker);
+    final canAdd = category.canEdit && tracker.entryFields.isNotEmpty;
     final years = <int, List<Entry>>{};
     for (final e in entries) {
       years.putIfAbsent(e.date.year, () => []).add(e);
@@ -85,8 +91,13 @@ class _Content extends StatelessWidget {
           overline: category.name,
           onBack: () => Navigator.of(context).pop(),
           actions: [
-            if (category.canEdit && tracker.fields.isNotEmpty)
-              AppIconButton(icon: CupertinoIcons.plus, semanticLabel: l10n.trackerAddEntry, filled: true, onPressed: add),
+            if (category.canEdit)
+              AppIconButton(
+                icon: CupertinoIcons.pencil,
+                semanticLabel: l10n.trackerSetup,
+                onPressed: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
+              ),
+            if (canAdd) AppIconButton(icon: CupertinoIcons.plus, semanticLabel: l10n.trackerAddEntry, filled: true, onPressed: add),
           ],
         ),
         if (state.includedInName case final String into)
@@ -141,6 +152,10 @@ class _Content extends StatelessWidget {
             ),
           ),
         ],
+        if (tracker.detailFields.isNotEmpty) ...[
+          SectionHeader(title: l10n.detailsTitle),
+          TrackerDetailsGroup(tracker: tracker, onSave: category.canEdit ? cubit.saveDetail : null),
+        ],
         if (state.currentValues.isNotEmpty) ...[
           SectionHeader(title: l10n.trackerCurrentValues),
           AppListGroup(
@@ -170,7 +185,7 @@ class _Content extends StatelessWidget {
               children: [
                 AppText(l10n.trackerNoEntriesTitle, style: (t) => t.title3, align: TextAlign.center),
                 AppText(l10n.trackerNoEntriesBody, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
-                if (category.canEdit && tracker.fields.isNotEmpty) ...[
+                if (canAdd) ...[
                   const SizedBox(height: Spacing.s),
                   AppButton(label: l10n.trackerAddEntry, icon: CupertinoIcons.plus, expand: false, onPressed: add),
                 ],
@@ -193,7 +208,8 @@ class _Content extends StatelessWidget {
                       if (category.sharedWith.where((m) => m.userId == e.createdBy).firstOrNull case final CategoryMember by) l10n.entryBy(by.name.isEmpty ? l10n.shareNoName : by.name),
                       if (e.meterChange) l10n.trackerMeterChanged,
                       for (final f in tracker.fields)
-                        if (e.values[f.id] case final Object v) l10n.entryFieldValue(f.name, context.fieldValue(f, v)),
+                        if (!f.isDetail)
+                          if (e.values[f.id] case final Object v) l10n.entryFieldValue(f.name, context.fieldValue(f, v)),
                       e.note,
                     ]),
                     onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e) : null,

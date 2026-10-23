@@ -36,6 +36,20 @@ class CurrentValue extends Equatable {
   List<Object?> get props => [field, value, since, upcoming, upcomingFrom];
 }
 
+/// Kosten oder Verbrauch eines Trackers im laufenden Jahr bis heute.
+class YearToDate extends Equatable {
+  const YearToDate({required this.metric, required this.value, this.unit = ''});
+
+  final HistoryMetric metric;
+  final double value;
+
+  /// Einheit des Verbrauchs; leer bei Kosten.
+  final String unit;
+
+  @override
+  List<Object?> get props => [metric, value, unit];
+}
+
 /// Verlauf eines Trackers: zwölf Monate, Jahresvergleich, Prognose und aktuelle Werte.
 class TrackerHistory extends Equatable {
   const TrackerHistory({
@@ -69,6 +83,18 @@ class TrackerHistory extends Equatable {
     return [if (costs) HistoryMetric.cost, if (readings >= 2) HistoryMetric.consumption];
   }
 
+  /// Kennzahl des laufenden Jahres bis heute – Kosten, ohne Kosten der Verbrauch; `null` ohne beides.
+  static YearToDate? yearToDate(Tracker tracker, DateTime now) {
+    final metric = metricsFor(tracker).firstOrNull;
+    if (metric == null) return null;
+    final today = CostEngine.day(now);
+    final engine = CostEngine(tracker, today: today);
+    final from = DateTime.utc(today.year), to = today.add(const Duration(days: 1));
+    return metric == HistoryMetric.cost
+        ? YearToDate(metric: metric, value: engine.cost(from, to))
+        : YearToDate(metric: metric, value: engine.consumption(from, to), unit: tracker.firstWithRole(FieldRole.meterReading)?.usageUnit ?? '');
+  }
+
   factory TrackerHistory.build(Tracker tracker, DateTime now, HistoryMetric metric) {
     final today = CostEngine.day(now);
     final tomorrow = today.add(const Duration(days: 1));
@@ -76,7 +102,7 @@ class TrackerHistory extends Equatable {
     double sum(DateTime from, DateTime to) => metric == HistoryMetric.cost ? engine.cost(from, to) : engine.consumption(from, to);
 
     // Erst ab dem Monat des ersten Eintrags – davor gab es nichts zu erfassen.
-    final first = [for (final e in tracker.entries) CostEngine.day(e.hasPeriod ? e.periodStart! : e.date)].fold<DateTime?>(
+    final first = [for (final e in tracker.records) CostEngine.day(e.hasPeriod ? e.periodStart! : e.date)].fold<DateTime?>(
       null,
       (a, b) => a == null || b.isBefore(a) ? b : a,
     );
@@ -100,13 +126,15 @@ class TrackerHistory extends Equatable {
     );
   }
 
-  /// Letzter Wert je Feld bis heute; bei Preisen und Beträgen auch eine schon eingetragene Änderung.
-  /// Formel-Felder zeigen ihren letzten Wert, wenn [tracker] schon durch `Formulas.apply` lief.
+  /// Letzter Wert je Feld mit Verlauf bis heute (Details stehen für sich); bei Preisen und Beträgen
+  /// auch eine schon eingetragene Änderung. Formel-Felder zeigen ihren letzten Wert, wenn [tracker]
+  /// schon durch `Formulas.apply` lief.
   static List<CurrentValue> currentValuesOf(Tracker tracker, DateTime today) {
     final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
     return [
       for (final field in tracker.fields)
-        if (_current(sorted, field, today) case final CurrentValue value) value,
+        if (!field.isDetail)
+          if (_current(sorted, field, today) case final CurrentValue value) value,
     ];
   }
 

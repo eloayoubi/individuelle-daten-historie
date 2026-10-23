@@ -228,7 +228,7 @@ class HomeOverview extends Equatable {
 
   static DateTime? _firstEntry(Tracker tracker) {
     DateTime? first;
-    for (final e in tracker.entries) {
+    for (final e in tracker.records) {
       final d = CostEngine.day(e.hasPeriod ? e.periodStart! : e.date);
       if (first == null || d.isBefore(first)) first = d;
     }

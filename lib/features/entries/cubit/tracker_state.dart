@@ -2,6 +2,15 @@ part of 'tracker_cubit.dart';
 
 enum TrackerStatus { loading, ready, missing, failure }
 
+enum TrackerEventKind { failed }
+
+/// Einmaliges Ereignis für Toasts. Bewusst nicht `const`.
+class TrackerEvent {
+  TrackerEvent(this.kind);
+
+  final TrackerEventKind kind;
+}
+
 class TrackerState extends Equatable {
   const TrackerState({
     this.status = TrackerStatus.loading,
@@ -12,6 +21,7 @@ class TrackerState extends Equatable {
     this.history,
     this.currentValues = const [],
     this.includedInName,
+    this.event,
   });
 
   final TrackerStatus status;
@@ -26,11 +36,13 @@ class TrackerState extends Equatable {
 
   /// Kategorie, in deren Kosten dieser Tracker steckt.
   final String? includedInName;
+  final TrackerEvent? event;
 
-  /// Neueste zuerst.
-  List<Entry> get entries => [...?tracker?.entries]..sort((a, b) => b.date.compareTo(a.date));
+  /// Neueste zuerst, ohne reine Detail-Einträge (die zeigt „Details“).
+  List<Entry> get entries => [...?tracker?.records]..sort((a, b) => b.date.compareTo(a.date));
 
-  TrackerState copyWith({HistoryMetric? metric, TrackerHistory? history}) => TrackerState(
+  /// [event] gilt nur für genau einen Zustand und fällt beim nächsten weg.
+  TrackerState copyWith({HistoryMetric? metric, TrackerHistory? history, TrackerEvent? event}) => TrackerState(
     status: status,
     category: category,
     tracker: tracker,
@@ -39,8 +51,9 @@ class TrackerState extends Equatable {
     history: history ?? this.history,
     currentValues: currentValues,
     includedInName: includedInName,
+    event: event,
   );
 
   @override
-  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues, includedInName];
+  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues, includedInName, event];
 }

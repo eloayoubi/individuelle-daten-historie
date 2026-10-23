@@ -15,6 +15,32 @@ void main() {
   );
 
   blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'rechnet je Tracker die Kosten des Jahres bis heute',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-internet', now: () => DateTime(2026, 10, 22)),
+    act: (cubit) => cubit.load(),
+    expect: () => [
+      isA<CategoryDetailState>()
+          .having((s) => s.yearToDate['t-glasfaser']?.value, 'Glasfaser', greaterThan(400))
+          .having((s) => s.yearToDate['t-handy']?.value, 'Handy', greaterThan(140)),
+    ],
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'setzt ein Detail und lädt neu',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-internet', now: () => DateTime(2026, 10, 22)),
+    act: (cubit) async {
+      await cubit.load();
+      final handy = cubit.state.category!.trackers.firstWhere((t) => t.id == 't-handy');
+      await cubit.saveDetail(handy, handy.detailFields.single, 'Telekom');
+      await pumpEventQueue();
+    },
+    skip: 1,
+    expect: () => [
+      isA<CategoryDetailState>().having((s) => s.category?.trackers.firstWhere((t) => t.id == 't-handy').detailValue('f-handy-anbieter'), 'Anbieter', 'Telekom'),
+    ],
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
     'meldet eine fehlende Kategorie',
     build: () => CategoryDetailCubit(MockCategoriesRepository(), 'gibt-es-nicht'),
     act: (cubit) => cubit.load(),

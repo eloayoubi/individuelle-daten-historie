@@ -183,9 +183,8 @@ class _CategoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final l10n = context.l10n;
-    final summary = category.trackers.isEmpty
-        ? l10n.categoryTrackers(0)
-        : context.joinParts([l10n.categoryTrackers(category.trackers.length), l10n.categoryFields(category.fieldCount)]);
+    // Was drin ist, in den Worten des Nutzers – nicht wie viele Felder.
+    final summary = category.trackers.isEmpty ? l10n.categoryTrackers(0) : category.trackers.map((t) => t.name).join(', ');
     return AppListRow(
       leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
       title: category.name,
@@ -194,7 +193,7 @@ class _CategoryRow extends StatelessWidget {
         runSpacing: Spacing.xxs,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          AppText(summary, style: (t) => t.footnote, color: c.textSecondary),
+          AppText(summary, style: (t) => t.footnote, color: c.textSecondary, maxLines: 1, overflow: TextOverflow.ellipsis),
           if (category.isShared)
             AppChip(
               icon: CupertinoIcons.person_2_fill,

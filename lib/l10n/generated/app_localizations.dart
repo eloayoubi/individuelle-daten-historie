@@ -404,12 +404,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Noch keine Tracker} =1{1 Tracker} other{{count} Tracker}}'**
   String categoryTrackers(int count);
 
-  /// No description provided for @categoryFields.
-  ///
-  /// In de, this message translates to:
-  /// **'{count, plural, =0{keine Felder} =1{1 Feld} other{{count} Felder}}'**
-  String categoryFields(int count);
-
   /// No description provided for @newCategoryTitle.
   ///
   /// In de, this message translates to:
@@ -803,13 +797,13 @@ abstract class AppLocalizations {
   /// No description provided for @roleInfo.
   ///
   /// In de, this message translates to:
-  /// **'Stammdatum'**
+  /// **'Detail'**
   String get roleInfo;
 
   /// No description provided for @roleInfoHint.
   ///
   /// In de, this message translates to:
-  /// **'Ohne Verlauf, z. B. Zählernummer oder Anbieter'**
+  /// **'Legst du einmal fest, z. B. Anbieter oder Vertragsnummer – nicht bei jedem Eintrag'**
   String get roleInfoHint;
 
   /// No description provided for @roleSnapshot.
@@ -881,7 +875,7 @@ abstract class AppLocalizations {
   /// No description provided for @roleDeadlineHint.
   ///
   /// In de, this message translates to:
-  /// **'Erinnert rechtzeitig, z. B. Vertragsende'**
+  /// **'Legst du einmal fest und wirst rechtzeitig erinnert, z. B. Vertragsende'**
   String get roleDeadlineHint;
 
   /// No description provided for @intervalMonthly.
@@ -1325,7 +1319,7 @@ abstract class AppLocalizations {
   /// No description provided for @entryNoFields.
   ///
   /// In de, this message translates to:
-  /// **'Dieser Tracker hat noch keine Felder. Lege sie in der Kategorie an.'**
+  /// **'Dieser Tracker hat noch keine Felder zum Eintragen. Lege sie unter „Bearbeiten“ an.'**
   String get entryNoFields;
 
   /// No description provided for @entrySave.
@@ -2857,6 +2851,84 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Für Was-wäre-wenn braucht es einen Tracker mit Arbeitspreis oder festen Kosten.'**
   String get whatIfEmpty;
+
+  /// No description provided for @entryValidFrom.
+  ///
+  /// In de, this message translates to:
+  /// **'Gilt ab'**
+  String get entryValidFrom;
+
+  /// No description provided for @detailsTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Details'**
+  String get detailsTitle;
+
+  /// No description provided for @detailAdd.
+  ///
+  /// In de, this message translates to:
+  /// **'Hinzufügen'**
+  String get detailAdd;
+
+  /// No description provided for @detailRemove.
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get detailRemove;
+
+  /// No description provided for @detailDueIn.
+  ///
+  /// In de, this message translates to:
+  /// **'{days, plural, =0{Heute} =1{Morgen} other{In {days} Tagen}}'**
+  String detailDueIn(int days);
+
+  /// No description provided for @detailDueInMonths.
+  ///
+  /// In de, this message translates to:
+  /// **'{months, plural, =1{In einem Monat} other{In {months} Monaten}}'**
+  String detailDueInMonths(int months);
+
+  /// No description provided for @detailOverdue.
+  ///
+  /// In de, this message translates to:
+  /// **'Abgelaufen'**
+  String get detailOverdue;
+
+  /// No description provided for @trackerSetup.
+  ///
+  /// In de, this message translates to:
+  /// **'Felder und Einstellungen'**
+  String get trackerSetup;
+
+  /// No description provided for @trackerSetUpFields.
+  ///
+  /// In de, this message translates to:
+  /// **'Felder festlegen'**
+  String get trackerSetUpFields;
+
+  /// No description provided for @trackerName.
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get trackerName;
+
+  /// No description provided for @trackerFieldsHistory.
+  ///
+  /// In de, this message translates to:
+  /// **'Werte mit Verlauf'**
+  String get trackerFieldsHistory;
+
+  /// No description provided for @trackerFieldsHistoryHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Trägst du mit Datum ein – daraus entstehen Verlauf, Kosten und Prognose.'**
+  String get trackerFieldsHistoryHint;
+
+  /// No description provided for @trackerFieldsDetailsHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Legst du einmal fest und änderst sie nur, wenn sich etwas ändert – z. B. Anbieter oder Vertragsende.'**
+  String get trackerFieldsDetailsHint;
 }
 
 class _AppLocalizationsDelegate

@@ -78,7 +78,7 @@ abstract final class Formulas {
   /// Ergebnis mit dem neuesten Eintrag, mit dem sich rechnen lässt (Vorschau im Editor).
   static double? preview(Formula formula, Tracker tracker) {
     final variables = variablesByEntry(tracker);
-    final sorted = [...tracker.entries]..sort((a, b) => b.date.compareTo(a.date));
+    final sorted = tracker.records..sort((a, b) => b.date.compareTo(a.date));
     for (final e in sorted) {
       if (formula.evaluate(variables[e.id]!, window: _window(tracker, e)) case final double v) return v;
     }
@@ -101,7 +101,8 @@ abstract final class Formulas {
   }
 
   /// Rechnet alle Formel-Felder für jeden Eintrag und hängt die Ergebnisse an die Einträge an.
-  /// Danach sehen Verlauf, Kosten und Prognose Formel-Werte wie eingegebene.
+  /// Danach sehen Verlauf, Kosten und Prognose Formel-Werte wie eingegebene. Reine Detail-Einträge
+  /// bleiben, wie sie sind.
   static Tracker apply(Tracker tracker) {
     final parsed = <FieldDefinition, Formula>{
       for (final f in tracker.fields)
@@ -113,13 +114,16 @@ abstract final class Formulas {
     return tracker.copyWith(
       entries: [
         for (final e in tracker.entries)
-          e.copyWith(
-            values: {
-              ...e.values,
-              for (final MapEntry(key: field, value: formula) in parsed.entries)
-                if (formula.evaluate(variables[e.id]!, window: _window(tracker, e)) case final double v) field.id: v,
-            },
-          ),
+          if (tracker.isDetailEntry(e))
+            e
+          else
+            e.copyWith(
+              values: {
+                ...e.values,
+                for (final MapEntry(key: field, value: formula) in parsed.entries)
+                  if (formula.evaluate(variables[e.id]!, window: _window(tracker, e)) case final double v) field.id: v,
+              },
+            ),
       ],
     );
   }
@@ -138,6 +142,13 @@ abstract final class Formulas {
     (DateTime, double)? lastReading;
     final result = <String, Map<String, double>>{};
     for (final e in sorted) {
+      // Details zählen mit ihrem Wert, sind aber kein „voriger Eintrag“ für `tage` und `monate`.
+      if (tracker.isDetailEntry(e)) {
+        for (final f in numeric) {
+          if (e.values[f.id] case final num v) last[f.id] = v.toDouble();
+        }
+        continue;
+      }
       final vars = <String, double>{};
       for (final f in numeric) {
         final own = e.values[f.id];

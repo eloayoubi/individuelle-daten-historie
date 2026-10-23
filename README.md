@@ -58,7 +58,7 @@ Features heute:
 - `shell`: Tab-Leiste, `ShellCubit`.
 - `onboarding`: erster Start ohne Kategorien – Willkommen, Vorlagen wählen, Erinnerungen.
 - `home`: Übersicht.
-- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite, Feld-Editor; dazu das Repository mit allen Schreibwegen und der Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto).
+- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite (je Tracker Verlauf, Wert eintragen und Details wie Anbieter oder Vertragsende), „Felder und Einstellungen“ je Tracker, Feld-Editor; dazu das Repository mit allen Schreibwegen und der Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto).
 - `entries`: Eingabe-Formular aus den Feldern eines Trackers (mit Abrechnungszeitraum für Nachzahlungen), Verlauf je Tracker mit Graph, aktuelle Werte und Einträge („von Anna“ in geteilten Kategorien).
 - `attachments`: Belege (Fotos, PDFs) an Einträgen – Hochladen mit Plus, Ansehen für alle Mitglieder.
 - `reminders`: lokale Benachrichtigungen ans Ablesen und an Stichtage (`flutter_local_notifications`), an- und ausschaltbar in den Einstellungen.

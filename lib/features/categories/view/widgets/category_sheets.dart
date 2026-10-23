@@ -70,12 +70,8 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
   }
 }
 
-/// Was im Tracker-Sheet passiert ist: gespeichert (Name, wohin die Kosten zählen) oder archivieren.
-sealed class TrackerSheetResult {
-  const TrackerSheetResult();
-}
-
-class TrackerRenamed extends TrackerSheetResult {
+/// Im Tracker-Sheet gespeichert: Name und wohin die Kosten zählen.
+class TrackerRenamed {
   const TrackerRenamed(this.name, {this.includedIn});
 
   final String name;
@@ -84,19 +80,15 @@ class TrackerRenamed extends TrackerSheetResult {
   final String? includedIn;
 }
 
-class TrackerArchiveRequested extends TrackerSheetResult {
-  const TrackerArchiveRequested();
-}
-
-/// Tracker anlegen (ohne [tracker]) oder umbenennen, Kosten einer anderen Kategorie zuordnen
-/// ([others]) und archivieren.
+/// Tracker anlegen (ohne [tracker]) oder umbenennen und Kosten einer anderen Kategorie zuordnen
+/// ([others]). Archivieren geht auf der Seite „Felder und Einstellungen“.
 class TrackerSheet extends StatefulWidget {
   const TrackerSheet({super.key, this.tracker, this.others = const []});
 
   final Tracker? tracker;
   final List<Category> others;
 
-  static Future<TrackerSheetResult?> show(BuildContext context, {Tracker? tracker, List<Category> others = const []}) => AppSheet.show<TrackerSheetResult>(
+  static Future<TrackerRenamed?> show(BuildContext context, {Tracker? tracker, List<Category> others = const []}) => AppSheet.show<TrackerRenamed>(
     context,
     title: tracker == null ? context.l10n.trackerNew : context.l10n.detailEditTracker,
     child: TrackerSheet(tracker: tracker, others: others),
@@ -142,12 +134,6 @@ class _TrackerSheetState extends State<TrackerSheet> {
           ),
           if (widget.tracker != null && widget.others.isNotEmpty) _includedPicker(context),
           AppButton(label: l10n.actionSave, onPressed: _name.text.trim().isEmpty ? null : _save),
-          if (widget.tracker != null)
-            AppButton(
-              label: l10n.trackerArchive,
-              variant: AppButtonVariant.destructive,
-              onPressed: () => Navigator.of(context).pop(const TrackerArchiveRequested()),
-            ),
         ],
       ),
     );
