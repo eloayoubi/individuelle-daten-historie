@@ -140,6 +140,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start with a template like electricity, water or rent – or build your own.';
 
   @override
+  String get homeStartOverline => 'Getting started';
+
+  @override
+  String get homeStartTitle => 'Your cost curve is waiting for its first entry';
+
+  @override
+  String get homeStartBody =>
+      'Add a meter reading, a payment or a bill – that\'s what your costs since January, your history and your forecast are built from.';
+
+  @override
+  String get homeStartStepCategories => 'Categories set up';
+
+  @override
+  String get homeStartStepEntry => 'Add your first reading or amount';
+
+  @override
+  String homeStartStepForecast(String year) {
+    return 'See your forecast for $year';
+  }
+
+  @override
+  String get homeStartAction => 'Add first entry';
+
+  @override
   String get quickAddTitle => 'What would you like to log?';
 
   @override

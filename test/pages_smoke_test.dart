@@ -24,6 +24,7 @@ import 'package:kostenkurve/features/entries/view/tracker_page.dart';
 import 'package:kostenkurve/features/home/view/home_page.dart';
 import 'package:kostenkurve/features/insights/view/insights_page.dart';
 import 'package:kostenkurve/features/home/view/widgets/quick_add_sheet.dart';
+import 'package:kostenkurve/features/home/view/widgets/start_card.dart';
 import 'package:kostenkurve/features/legal/data/legal_document.dart';
 import 'package:kostenkurve/features/legal/view/legal_page.dart';
 import 'package:kostenkurve/features/onboarding/cubit/onboarding_cubit.dart';
@@ -60,6 +61,7 @@ void main() {
   final pages = <(String, Widget)>[
     ('shell', const ShellView()),
     ('home', const HomePage()),
+    ('home start card', ListView(children: [StartCard(year: 2026, onAdd: () {})])),
     ('settings', const SettingsPage()),
     ('placeholder', const PlaceholderPage(title: 'Auswertung', icon: CupertinoIcons.chart_bar_alt_fill, description: 'Kommt bald.')),
     ('categories', const CategoriesPage()),

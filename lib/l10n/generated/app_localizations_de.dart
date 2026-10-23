@@ -140,6 +140,31 @@ class AppLocalizationsDe extends AppLocalizations {
       'Starte mit einer Vorlage wie Strom, Wasser oder Miete – oder baue dir eine eigene.';
 
   @override
+  String get homeStartOverline => 'Erste Schritte';
+
+  @override
+  String get homeStartTitle =>
+      'Deine Kostenkurve wartet auf den ersten Eintrag';
+
+  @override
+  String get homeStartBody =>
+      'Trag einen Zählerstand, einen Abschlag oder eine Rechnung ein – daraus entstehen deine Kosten seit Januar, der Verlauf und die Prognose.';
+
+  @override
+  String get homeStartStepCategories => 'Kategorien angelegt';
+
+  @override
+  String get homeStartStepEntry => 'Ersten Stand oder Betrag eintragen';
+
+  @override
+  String homeStartStepForecast(String year) {
+    return 'Prognose für $year ansehen';
+  }
+
+  @override
+  String get homeStartAction => 'Ersten Eintrag erfassen';
+
+  @override
   String get quickAddTitle => 'Wofür möchtest du etwas eintragen?';
 
   @override

@@ -130,6 +130,20 @@
   },
   "homeEmptyTitle": "Noch keine Kategorien",
   "homeEmptyBody": "Starte mit einer Vorlage wie Strom, Wasser oder Miete – oder baue dir eine eigene.",
+  "homeStartOverline": "Erste Schritte",
+  "homeStartTitle": "Deine Kostenkurve wartet auf den ersten Eintrag",
+  "homeStartBody": "Trag einen Zählerstand, einen Abschlag oder eine Rechnung ein – daraus entstehen deine Kosten seit Januar, der Verlauf und die Prognose.",
+  "homeStartStepCategories": "Kategorien angelegt",
+  "homeStartStepEntry": "Ersten Stand oder Betrag eintragen",
+  "homeStartStepForecast": "Prognose für {year} ansehen",
+  "@homeStartStepForecast": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "homeStartAction": "Ersten Eintrag erfassen",
   "quickAddTitle": "Wofür möchtest du etwas eintragen?",
   "settingsAppearance": "Darstellung",
   "appearanceSystem": "Automatisch",

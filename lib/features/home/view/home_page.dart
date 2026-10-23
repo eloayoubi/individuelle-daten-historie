@@ -15,9 +15,10 @@ import 'widgets/category_rows.dart';
 import 'widgets/forecast_card.dart';
 import 'widgets/quick_add_sheet.dart';
 import 'widgets/reminder_rows.dart';
+import 'widgets/start_card.dart';
 import 'widgets/year_to_date_card.dart';
 
-/// Übersicht: Prognose fürs nächste Jahr, Kosten seit Januar, Kategorien und was ansteht.
+/// Übersicht: Prognose fürs nächste Jahr (ohne Einträge: erste Schritte), Kosten seit Januar, Kategorien und was ansteht.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -99,9 +100,14 @@ class _Content extends StatelessWidget {
         else
           SliverList.list(
             children: [
-              ForecastCard(overview: overview),
-              const SizedBox(height: Spacing.m),
-              YearToDateCard(overview: overview),
+              // Noch kein Eintrag: Schritte zum Start statt leerer Kurve und 0 €.
+              if (overview.trackedSince == null)
+                StartCard(year: overview.year, onAdd: canAdd ? () => _quickAdd(context) : null)
+              else ...[
+                ForecastCard(overview: overview),
+                const SizedBox(height: Spacing.m),
+                YearToDateCard(overview: overview),
+              ],
               SectionHeader(title: l10n.homeCategories, action: l10n.homeSeeAll, onAction: () => context.read<ShellCubit>().select(ShellTab.categories)),
               CategoryRows(summaries: overview.categories, onTap: (category) => CategoryDetailPage.open(context, category.id)),
               if (overview.reminders.isNotEmpty) ...[
