@@ -81,7 +81,7 @@ class _StackedMonthsChartState extends State<StackedMonthsChart> {
             for (final m in shown)
               Expanded(
                 child: AppText(
-                  context.monthInitial(DateTime.utc(i.year, m + 1)),
+                  context.monthShort(DateTime.utc(i.year, m + 1)),
                   style: (t) => m == _selected ? t.caption2Emphasized : t.caption2,
                   color: m == _selected ? c.textPrimary : c.textSecondary,
                   align: TextAlign.center,

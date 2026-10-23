@@ -74,7 +74,7 @@ class _HistoryChartState extends State<HistoryChart> {
             for (final (i, m) in months.indexed)
               Expanded(
                 child: AppText(
-                  context.monthInitial(m.month),
+                  context.monthShort(m.month),
                   style: (t) => i == _selected ? t.caption2Emphasized : t.caption2,
                   color: i == _selected ? c.textPrimary : c.textSecondary,
                   align: TextAlign.center,
