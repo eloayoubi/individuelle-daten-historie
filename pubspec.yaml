@@ -23,6 +23,7 @@ dependencies:
   in_app_purchase: ^3.3.1
   in_app_review: ^2.0.12
   intl: ^0.20.2
+  lottie: ^3.6.1
   path_provider: ^2.1.6
   qr_flutter: ^4.1.0
   share_plus: ^13.3.1
@@ -46,6 +47,8 @@ flutter:
   assets:
     # Datenschutz und Nutzungsbedingungen in der App (Markdown, je Sprache).
     - assets/legal/
+    # Startanimation (Lottie), erzeugt von tool/branding/render_icon_test.dart.
+    - assets/branding/launch_animation.json
   fonts:
     # Überschriften: Inter Tight (wie SF Pro Display), Text: Inter mit opsz-Achse (wie SF Pro Text).
     - family: InterTight

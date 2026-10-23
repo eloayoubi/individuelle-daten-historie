@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
 import '../core/di/lookup.dart';
 import '../core/theme/app_theme.dart';
@@ -17,9 +18,13 @@ import '../features/sharing/data/invite_links.dart';
 import '../features/sharing/view/join_sheet.dart';
 import '../features/shell/view/shell_page.dart';
 import '../l10n/generated/app_localizations.dart';
+import 'launch_splash.dart';
 
 class KostenkurveApp extends StatefulWidget {
-  const KostenkurveApp({super.key});
+  const KostenkurveApp({super.key, this.launch});
+
+  /// Startanimation ([LaunchSplash.load]); ohne sie startet die App direkt.
+  final LottieComposition? launch;
 
   @override
   State<KostenkurveApp> createState() => _KostenkurveAppState();
@@ -79,10 +84,13 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
             themeMode: mode,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            // Statusleiste passend zum Design.
+            // Statusleiste passend zum Design; beim Start liegt die Startanimation über allem, auch
+            // über einem Beitreten-Sheet aus einem Einladungslink.
             builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
               value: Theme.of(context).brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-              child: _SyncOnResume(child: child!),
+              child: _SyncOnResume(
+                child: LaunchSplash(composition: widget.launch, child: child!),
+              ),
             ),
             home: const OnboardingGate(child: ShellPage()),
           ),
