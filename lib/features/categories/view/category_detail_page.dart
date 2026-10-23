@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
-import '../cubit/category_detail_cubit.dart';
+import '../../entries/data/tracker_history.dart';
+import '../../entries/view/entry_form_page.dart';
 import '../../entries/view/tracker_page.dart';
+import '../../entries/view/widgets/tracker_details.dart';
 import '../../sharing/view/share_page.dart';
-import '../cubit/field_editor_cubit.dart';
-import 'field_editor_page.dart';
+import '../cubit/category_detail_cubit.dart';
+import 'tracker_setup_page.dart';
 import 'widgets/category_sheets.dart';
-import 'widgets/field_row.dart';
 
-/// Eine Kategorie mit ihren Trackern und Feldern. owner und editor bearbeiten, viewer lesen nur.
+/// Eine Kategorie mit ihren Trackern – je Tracker seine Daten: Verlauf mit der Kennzahl des Jahres,
+/// Wert eintragen und Details (Anbieter, Vertragsende). Der Aufbau (Felder) liegt eine Ebene tiefer
+/// unter „Bearbeiten“. owner und editor bearbeiten, viewer lesen nur.
 class CategoryDetailPage extends StatelessWidget {
   const CategoryDetailPage({super.key, required this.categoryId});
 
@@ -53,7 +56,7 @@ class _DetailView extends StatelessWidget {
           listenWhen: (previous, current) => current.event != null && current.event != previous.event,
           listener: _onEvent,
           builder: (context, state) => switch ((state.status, state.category)) {
-            (CategoryDetailStatus.ready, final Category category) => _Content(category: category, others: state.others),
+            (CategoryDetailStatus.ready, final Category category) => _Content(category: category, others: state.others, yearToDate: state.yearToDate),
             (CategoryDetailStatus.loading, _) => const Center(child: CupertinoActivityIndicator()),
             _ => _Missing(message: state.status == CategoryDetailStatus.failure ? context.l10n.errorLoad : context.l10n.detailMissing),
           },
@@ -64,10 +67,11 @@ class _DetailView extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.category, this.others = const []});
+  const _Content({required this.category, this.others = const [], this.yearToDate = const {}});
 
   final Category category;
   final List<Category> others;
+  final Map<String, YearToDate> yearToDate;
 
   Future<void> _edit(BuildContext context) async {
     final cubit = context.read<CategoryDetailCubit>();
@@ -78,28 +82,6 @@ class _Content extends StatelessWidget {
   Future<void> _addTracker(BuildContext context) async {
     final cubit = context.read<CategoryDetailCubit>();
     if (await TrackerSheet.show(context) case TrackerRenamed(:final name)) await cubit.addTracker(name);
-  }
-
-  Future<void> _editTracker(BuildContext context, Tracker tracker) async {
-    final cubit = context.read<CategoryDetailCubit>();
-    final l10n = context.l10n;
-    final result = await TrackerSheet.show(context, tracker: tracker, others: others);
-    if (!context.mounted) return;
-    switch (result) {
-      case TrackerRenamed(:final name, :final includedIn):
-        await cubit.updateTracker(tracker, name: name, includedIn: includedIn);
-      case TrackerArchiveRequested():
-        final confirmed = await AppDialog.confirm(
-          context,
-          title: l10n.trackerArchiveTitle(tracker.name),
-          message: l10n.trackerArchiveBody,
-          confirmLabel: l10n.actionArchive,
-          destructive: true,
-        );
-        if (confirmed) await cubit.archiveTracker(tracker.id);
-      case null:
-        break;
-    }
   }
 
   Future<void> _archive(BuildContext context) async {
@@ -114,11 +96,6 @@ class _Content extends StatelessWidget {
     );
     if (confirmed) await cubit.archive();
   }
-
-  void _openField(BuildContext context, Tracker tracker, [FieldDefinition? field]) => FieldEditorPage.open(
-    context,
-    FieldEditorArgs(trackerId: tracker.id, tracker: tracker, field: field, hasValues: field != null && tracker.hasValues(field.id), sort: tracker.fields.length),
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -159,31 +136,24 @@ class _Content extends StatelessWidget {
             ),
           ),
         for (final tracker in category.trackers) ...[
-          SectionHeader(title: tracker.name, action: editable ? l10n.actionEdit : null, onAction: () => _editTracker(context, tracker)),
-          AppListGroup(
-            children: [
-              AppListRow(
-                leading: AppIconTile(icon: CupertinoIcons.chart_bar_fill, color: c.swatch(category.swatch)),
-                title: l10n.trackerHistory,
-                subtitle: context.joinParts([
-                  l10n.categoryEntries(tracker.entries.length),
-                  if (others.where((o) => o.id == tracker.includedIn).firstOrNull case final Category into) l10n.trackerIncludedNote(into.name),
-                ]),
-                onTap: () => TrackerPage.open(context, categoryId: category.id, trackerId: tracker.id),
-              ),
-              for (final field in tracker.fields)
-                FieldRow.of(field, swatch: category.swatch, onTap: editable ? () => _openField(context, tracker, field) : null),
-              if (editable)
-                AppListRow(
-                  leading: AppIconTile(icon: CupertinoIcons.plus, color: c.accent),
-                  title: l10n.detailAddField,
-                  chevron: false,
-                  onTap: () => _openField(context, tracker),
-                )
-              else if (tracker.fields.isEmpty)
-                AppListRow(title: l10n.detailNoFields),
-            ],
+          SectionHeader(
+            title: tracker.name,
+            action: editable ? l10n.actionEdit : null,
+            onAction: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
           ),
+          _TrackerGroup(
+            category: category,
+            tracker: tracker,
+            yearToDate: yearToDate[tracker.id],
+            includedIn: others.where((o) => o.id == tracker.includedIn).firstOrNull,
+          ),
+          if (tracker.detailFields.isNotEmpty) ...[
+            const SizedBox(height: Spacing.m),
+            TrackerDetailsGroup(
+              tracker: tracker,
+              onSave: editable ? (field, value) => context.read<CategoryDetailCubit>().saveDetail(tracker, field, value) : null,
+            ),
+          ],
         ],
         if (editable)
           Padding(
@@ -194,6 +164,64 @@ class _Content extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.s, Spacing.l, 0),
             child: AppButton(label: l10n.detailArchive, variant: AppButtonVariant.destructive, onPressed: () => _archive(context)),
+          ),
+      ],
+    );
+  }
+}
+
+/// Daten eines Trackers: Verlauf (mit Kosten oder Verbrauch des Jahres) und – je nach Rechten und
+/// Feldern – Wert eintragen oder Felder festlegen.
+class _TrackerGroup extends StatelessWidget {
+  const _TrackerGroup({required this.category, required this.tracker, this.yearToDate, this.includedIn});
+
+  /// Darunter zeigt die Zeile keine Kennzahl (noch nichts angefallen).
+  static const _minValue = 0.5;
+
+  final Category category;
+  final Tracker tracker;
+  final YearToDate? yearToDate;
+  final Category? includedIn;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final swatch = c.swatch(category.swatch);
+    final figure = switch (yearToDate) {
+      final YearToDate y when y.value.abs() >= _minValue => y.metric == HistoryMetric.cost ? context.euros(y.value) : context.amount(y.value, y.unit),
+      _ => null,
+    };
+    return AppListGroup(
+      children: [
+        AppListRow(
+          leading: AppIconTile(icon: CupertinoIcons.chart_bar_fill, color: swatch),
+          title: l10n.trackerHistory,
+          subtitle: context.joinParts([l10n.categoryEntries(tracker.records.length), if (includedIn != null) l10n.trackerIncludedNote(includedIn!.name)]),
+          trailing: figure == null
+              ? null
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  spacing: 2,
+                  children: [
+                    AppText(figure, style: (t) => t.numberM),
+                    AppText(l10n.trackerThisYear('${DateTime.now().year}'), style: (t) => t.caption, color: c.textSecondary),
+                  ],
+                ),
+          onTap: () => TrackerPage.open(context, categoryId: category.id, trackerId: tracker.id),
+        ),
+        if (category.canEdit && tracker.entryFields.isNotEmpty)
+          AppListRow(
+            leading: AppIconTile(icon: CupertinoIcons.plus, color: c.accent),
+            title: l10n.trackerAddEntry,
+            chevron: false,
+            onTap: () => EntryFormPage.open(context, category: category, tracker: tracker),
+          )
+        else if (category.canEdit && tracker.fields.isEmpty)
+          AppListRow(
+            leading: AppIconTile(icon: CupertinoIcons.slider_horizontal_3, color: c.accent),
+            title: l10n.trackerSetUpFields,
+            onTap: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
           ),
       ],
     );

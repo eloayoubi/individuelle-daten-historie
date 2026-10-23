@@ -109,6 +109,13 @@ class FieldDefinition extends Equatable {
 
   String get usageUnit => consumptionUnit ?? unit ?? '';
 
+  /// Detail des Trackers (Anbieter, Vertragsnummer, Vertragsende): einmal festgelegt, nicht Teil
+  /// der Einträge. Gespeichert wird es trotzdem als Eintrag ([Tracker.isDetailEntry]).
+  bool get isDetail => (role == FieldRole.info || role == FieldRole.deadline) && kind != FieldKind.formula;
+
+  /// Gilt ab dem Datum bis zur nächsten Änderung (Preis, wiederkehrender Betrag, Abschlag).
+  bool get isRate => role == FieldRole.unitPrice || role == FieldRole.recurringCost || role == FieldRole.instalment;
+
   @override
   List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula];
 }
@@ -194,6 +201,39 @@ class Tracker extends Equatable {
   /// Hat das Feld schon gespeicherte Werte? Dann darf sich sein Typ nur eingeschränkt ändern.
   bool hasValues(String fieldId) => entries.any((e) => e.values.containsKey(fieldId));
 
+  /// Details (Anbieter, Vertragsende …): einmal festlegen statt bei jedem Eintrag.
+  List<FieldDefinition> get detailFields => [for (final f in fields) if (f.isDetail) f];
+
+  /// Felder, die ein Eintrag erfasst – alles mit Verlauf; Formeln rechnet die App selbst.
+  List<FieldDefinition> get entryFields => [for (final f in fields) if (!f.isDetail && f.kind != FieldKind.formula) f];
+
+  /// Eintrag, der nur Details festhält (über „Details“ gesetzt, nicht übers Formular). Er gehört
+  /// nicht in die Liste der Einträge und zählt nicht als Beginn des Verlaufs. Formel-Werte, die
+  /// `Formulas.apply` angehängt hat, ändern daran nichts.
+  bool isDetailEntry(Entry e) {
+    if (e.note != null || e.meterChange || e.hasPeriod) return false;
+    var detail = false;
+    for (final id in e.values.keys) {
+      final field = fields.where((f) => f.id == id).firstOrNull;
+      if (field == null || !(field.isDetail || field.kind == FieldKind.formula)) return false;
+      if (field.isDetail) detail = true;
+    }
+    return detail;
+  }
+
+  /// Einträge mit Verlauf, ohne reine Detail-Einträge.
+  List<Entry> get records => [for (final e in entries) if (!isDetailEntry(e)) e];
+
+  /// Aktueller Wert eines Details: der aus dem Eintrag mit dem spätesten Datum (Details haben keinen
+  /// Verlauf, auch ein vorausdatierter Eintrag zählt).
+  Object? detailValue(String fieldId) {
+    Entry? latest;
+    for (final e in entries) {
+      if (e.values.containsKey(fieldId) && (latest == null || e.date.isAfter(latest.date))) latest = e;
+    }
+    return latest?.values[fieldId];
+  }
+
   Tracker copyWith({String? name, List<FieldDefinition>? fields, List<Entry>? entries, String? Function()? includedIn}) => Tracker(
     id: id,
     name: name ?? this.name,
@@ -257,8 +297,6 @@ class Category extends Equatable {
 
   /// Teilen, archivieren, löschen (nur owner).
   bool get isOwner => myRole == MemberRole.owner;
-
-  int get fieldCount => trackers.fold(0, (sum, t) => sum + t.fields.length);
 
   /// Wer geteilt hat (für viewer und editor), sonst `null`.
   CategoryMember? get sharedBy => isOwner ? null : sharedWith.where((m) => m.role == MemberRole.owner).firstOrNull;

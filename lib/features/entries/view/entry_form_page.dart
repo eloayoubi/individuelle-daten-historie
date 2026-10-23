@@ -110,7 +110,7 @@ class _FormViewState extends State<_FormView> {
                 children: [
                   AppListRow(
                     leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
-                    title: l10n.entryDate,
+                    title: s.validFrom ? l10n.entryValidFrom : l10n.entryDate,
                     trailing: AppText(context.shortDate(s.date), style: (t) => t.body, color: c.accent),
                     chevron: false,
                     onTap: () => _pickDate(context, s.date, cubit.setDate),

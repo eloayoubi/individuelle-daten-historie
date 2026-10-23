@@ -167,7 +167,7 @@ class Insights extends Equatable {
     DateTime? first;
     for (final c in categories) {
       for (final t in c.trackers) {
-        for (final e in t.entries) {
+        for (final e in t.records) {
           final d = e.hasPeriod ? e.periodStart! : e.date;
           if (first == null || d.isBefore(first)) first = d;
         }
@@ -178,7 +178,7 @@ class Insights extends Equatable {
 
   /// Hat [tracker] einen Eintrag am oder vor [start]?
   static bool _trackedSince(Tracker tracker, DateTime start) =>
-      tracker.entries.any((e) => !CostEngine.day(e.hasPeriod ? e.periodStart! : e.date).isAfter(start));
+      tracker.records.any((e) => !CostEngine.day(e.hasPeriod ? e.periodStart! : e.date).isAfter(start));
 
   /// Jahre mit Daten (älteste zuerst), höchstens die letzten drei.
   static List<int> yearsOf(List<Category> categories, DateTime now) {

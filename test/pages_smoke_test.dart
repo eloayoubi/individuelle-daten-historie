@@ -16,6 +16,7 @@ import 'package:kostenkurve/features/categories/view/categories_page.dart';
 import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
 import 'package:kostenkurve/features/categories/view/category_setup_page.dart';
 import 'package:kostenkurve/features/categories/view/field_editor_page.dart';
+import 'package:kostenkurve/features/categories/view/tracker_setup_page.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
 import 'package:kostenkurve/features/entries/view/entry_form_page.dart';
@@ -64,6 +65,9 @@ void main() {
     ('categories', const CategoriesPage()),
     ('category detail', const CategoryDetailPage(categoryId: 'c-strom')),
     ('category detail empty', const CategoryDetailPage(categoryId: 'gibt-es-nicht')),
+    ('category detail contracts', const CategoryDetailPage(categoryId: 'c-internet')),
+    ('tracker setup', const TrackerSetupPage(categoryId: 'c-strom', trackerId: 't-strom')),
+    ('tracker setup missing', const TrackerSetupPage(categoryId: 'c-strom', trackerId: 'weg')),
     ('setup from template', CategorySetupPage(template: templates.first)),
     ('setup with two trackers', CategorySetupPage(template: templates.firstWhere((t) => t.key == 'internet'))),
     ('setup custom', const CategorySetupPage()),
@@ -118,6 +122,33 @@ void main() {
         await t.pumpAndSettle();
         expect(find.byType(EntryFormPage), findsNothing);
         expect(find.text('Gespeichert.'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Details: Anbieter in der Kategorie ändern, ohne Eintrag', (t) async {
+        // Die Mock-Daten gelten für alle Tests: ein neuer Name je Durchlauf.
+        final provider = 'Anbieter $mode';
+        await pumpPage(t, const CategoryDetailPage(categoryId: 'c-internet'), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        expect(find.text('Feld hinzufügen'), findsNothing);
+        await t.tap(find.text('Anbieter').first);
+        await t.pumpAndSettle();
+        await t.enterText(find.byType(TextField).last, provider);
+        await t.tap(find.text('Speichern'));
+        await t.pumpAndSettle();
+        expect(find.text(provider), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Bearbeiten führt zu Feldern, getrennt nach Verlauf und Details', (t) async {
+        await pumpPage(t, const CategoryDetailPage(categoryId: 'c-strom'), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Bearbeiten'));
+        await t.pumpAndSettle();
+        expect(find.byType(TrackerSetupPage), findsOneWidget);
+        expect(find.text('Werte mit Verlauf'), findsOneWidget);
+        expect(find.text('Details'), findsOneWidget);
+        expect(find.text('Feld hinzufügen'), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 

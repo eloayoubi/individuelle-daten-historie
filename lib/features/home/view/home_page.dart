@@ -79,7 +79,7 @@ class _Content extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cubit = context.read<HomeCubit>();
-    final canAdd = overview.categories.any((s) => s.category.canEdit && s.category.trackers.any((t) => t.fields.isNotEmpty));
+    final canAdd = overview.categories.any((s) => s.category.canEdit && s.category.trackers.any((t) => t.entryFields.isNotEmpty));
     return CustomScrollView(
       physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       slivers: [

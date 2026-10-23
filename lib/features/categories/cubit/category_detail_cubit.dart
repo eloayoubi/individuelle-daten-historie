@@ -3,19 +3,23 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../entries/data/tracker_history.dart';
 import '../data/categories_repository.dart';
+import '../data/tracker_details.dart';
 
 part 'category_detail_state.dart';
 
-/// Eine Kategorie mit ihren Trackern und Feldern: Aussehen ändern, Tracker anlegen, umbenennen,
-/// archivieren, Kategorie archivieren. Lädt bei jeder Änderung im Repository neu.
+/// Eine Kategorie mit ihren Trackern: Kennzahl des Jahres je Tracker, Details setzen, Aussehen
+/// ändern, Tracker anlegen, umbenennen, archivieren, Kategorie archivieren. Lädt bei jeder
+/// Änderung im Repository neu. Auch die Felder-Seite eines Trackers nutzt diesen Cubit.
 class CategoryDetailCubit extends Cubit<CategoryDetailState> {
-  CategoryDetailCubit(this._repository, this.categoryId) : super(const CategoryDetailState()) {
+  CategoryDetailCubit(this._repository, this.categoryId, {DateTime Function()? now}) : _now = now ?? DateTime.now, super(const CategoryDetailState()) {
     _subscription = _repository.changes.listen((_) => load());
   }
 
   final CategoriesRepository _repository;
   final String categoryId;
+  final DateTime Function() _now;
   late final StreamSubscription<void> _subscription;
 
   Future<void> load() async {
@@ -23,7 +27,18 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
       final category = await _repository.loadCategory(categoryId);
       final others = [for (final c in await _repository.loadCategories()) if (c.id != categoryId && !c.isArchived) c];
       if (isClosed) return;
-      emit(state.copyWith(status: category == null ? CategoryDetailStatus.missing : CategoryDetailStatus.ready, category: category, others: others));
+      final now = _now();
+      emit(
+        state.copyWith(
+          status: category == null ? CategoryDetailStatus.missing : CategoryDetailStatus.ready,
+          category: category,
+          others: others,
+          yearToDate: {
+            for (final t in category?.trackers ?? const <Tracker>[])
+              if (TrackerHistory.yearToDate(t, now) case final YearToDate value) t.id: value,
+          },
+        ),
+      );
     } catch (_) {
       if (!isClosed) emit(state.copyWith(status: state.category == null ? CategoryDetailStatus.failure : state.status));
     }
@@ -42,6 +57,9 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
     if (name.trim() != tracker.name) await _repository.renameTracker(tracker.id, name.trim());
     if (includedIn != tracker.includedIn) await _repository.setTrackerIncludedIn(tracker.id, includedIn);
   });
+
+  /// Detail setzen ([value] `null` entfernt es).
+  Future<void> saveDetail(Tracker tracker, FieldDefinition field, Object? value) => _run(() => _repository.saveDetail(tracker, field, value, now: _now()));
 
   Future<void> archiveTracker(String trackerId) => _run(() => _repository.archiveTracker(trackerId), success: CategoryDetailEventKind.trackerArchived);
 

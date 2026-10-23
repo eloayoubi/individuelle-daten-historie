@@ -17,6 +17,7 @@ class EntryFormState extends Equatable {
     required this.date,
     required this.decimalSeparator,
     this.inputs = const {},
+    this.originalValues = const {},
     this.note = '',
     this.meterChange = false,
     this.periodStart,
@@ -37,6 +38,7 @@ class EntryFormState extends Equatable {
       meterChange: entry?.meterChange ?? false,
       periodStart: entry?.periodStart,
       periodEnd: entry?.periodEnd,
+      originalValues: entry?.values ?? const {},
       inputs: {
         for (final MapEntry(:key, :value) in (entry?.values ?? const <String, Object>{}).entries)
           key: value is num ? formatNumberInput(value, decimalSeparator: args.decimalSeparator) : value,
@@ -58,6 +60,9 @@ class EntryFormState extends Equatable {
   /// Eingaben je Feld: `String` bei Zahlen und Text, `String?` bei Auswahl, `bool?` bei Ja/Nein,
   /// `DateTime?` bei Datum.
   final Map<String, Object?> inputs;
+
+  /// Werte des Eintrags beim Öffnen (leer bei einem neuen).
+  final Map<String, Object> originalValues;
   final String note;
   final bool meterChange;
 
@@ -68,8 +73,19 @@ class EntryFormState extends Equatable {
   final bool saving;
   final EntryFormEvent? event;
 
-  /// Formeln rechnet die App, sie werden nicht eingegeben.
-  List<FieldDefinition> get fields => [for (final f in tracker.fields) if (f.kind != FieldKind.formula) f];
+  /// Nur Felder mit Verlauf: Details (Anbieter, Vertragsende) legt man einmal fest, nicht je
+  /// Eintrag; Formeln rechnet die App.
+  List<FieldDefinition> get fields => tracker.entryFields;
+
+  /// Datum heißt „Gilt ab“, wenn der Eintrag nur Preise und Beträge ändert (Preiserhöhung, Miete).
+  bool get validFrom => fields.isNotEmpty && fields.every((f) => f.isRate);
+
+  /// Details, die ein älterer Eintrag noch selbst trägt: Das Formular zeigt sie nicht, beim
+  /// Speichern bleiben sie erhalten.
+  Map<String, Object> get keptDetails => {
+    for (final f in tracker.detailFields)
+      if (originalValues[f.id] case final Object v) f.id: v,
+  };
 
   bool get hasMeter => tracker.firstWithRole(FieldRole.meterReading) != null;
 
@@ -129,7 +145,7 @@ class EntryFormState extends Equatable {
   Entry toEntry() => Entry(
     id: entryId,
     date: date,
-    values: values,
+    values: {...keptDetails, ...values},
     note: note.trim().isEmpty ? null : note.trim(),
     meterChange: hasMeter && meterChange,
     periodStart: hasOneOff && hasPeriod ? periodStart : null,
@@ -152,6 +168,7 @@ class EntryFormState extends Equatable {
     date: date ?? this.date,
     decimalSeparator: decimalSeparator,
     inputs: inputs ?? this.inputs,
+    originalValues: originalValues,
     note: note ?? this.note,
     meterChange: meterChange ?? this.meterChange,
     periodStart: period == null ? periodStart : period.start,
@@ -161,5 +178,5 @@ class EntryFormState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, inputs, note, meterChange, periodStart, periodEnd, saving, event];
+  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, inputs, originalValues, note, meterChange, periodStart, periodEnd, saving, event];
 }

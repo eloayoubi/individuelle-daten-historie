@@ -60,28 +60,43 @@ void main() {
     expect(cubit.state.canSave, isFalse);
   });
 
-  test('nimmt nur gefüllte Felder in den Eintrag, Text getrimmt', () {
-    final provider = strom.trackers.single.fields.firstWhere((f) => f.kind == FieldKind.text);
-    final end = strom.trackers.single.fields.firstWhere((f) => f.kind == FieldKind.date);
+  test('Details (Anbieter, Vertragsende) gehören nicht ins Formular', () {
+    final s = form().state;
+    expect(s.fields.map((f) => f.id), isNot(contains('f-strom-anbieter')));
+    expect(s.fields.map((f) => f.id), isNot(contains('f-strom-ende')));
+    expect(s.fields.map((f) => f.id), containsAll(['f-strom-stand', 'f-strom-ap', 'f-strom-gp']));
+  });
+
+  test('nimmt nur gefüllte Felder in den Eintrag', () {
     final cubit = form()
-      ..setText(provider.id, '  Ökostrom Plus ')
-      ..setFieldDate(end.id, DateTime(2028, 3, 31))
+      ..setText('f-strom-ap', ' 0,35 ')
+      ..setText('f-strom-gp', '')
       ..setNote('  ')
       ..setDate(DateTime(2026, 10, 1, 14));
     final entry = cubit.state.toEntry();
-    expect(entry.values, {provider.id: 'Ökostrom Plus', end.id: DateTime.utc(2028, 3, 31)});
+    expect(entry.values, {'f-strom-ap': 0.35});
     expect(entry.date, DateTime.utc(2026, 10, 1));
     expect(entry.note, isNull);
     expect(entry.meterChange, isFalse);
   });
 
-  test('vorhandener Eintrag: Werte vorbelegt, mit Komma', () {
+  test('vorhandener Eintrag: Werte vorbelegt, mit Komma; alte Details bleiben beim Speichern', () {
     final price = strom.trackers.single.entries.firstWhere((e) => e.id == 'e-strom-p2');
-    final s = form(entry: price).state;
-    expect(s.isNew, isFalse);
-    expect(s.entryId, 'e-strom-p2');
-    expect(s.inputs['f-strom-ap'], '0,329');
-    expect(s.values, price.values);
+    final cubit = form(entry: price);
+    expect(cubit.state.isNew, isFalse);
+    expect(cubit.state.entryId, 'e-strom-p2');
+    expect(cubit.state.inputs['f-strom-ap'], '0,329');
+    expect(cubit.state.values.keys, isNot(contains('f-strom-anbieter')));
+    expect(cubit.state.toEntry().values, price.values);
+    cubit.setText('f-strom-ap', '0,341');
+    expect(cubit.state.toEntry().values, {...price.values, 'f-strom-ap': 0.341});
+  });
+
+  test('nur Preise und Beträge: Datum heißt „Gilt ab“', () {
+    final internet = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-internet');
+    final contract = EntryFormCubit(repo, EntryFormArgs(category: internet, tracker: internet.trackers.first), now: now);
+    expect(contract.state.validFrom, isTrue);
+    expect(form().state.validFrom, isFalse);
   });
 
   blocTest<EntryFormCubit, EntryFormState>(

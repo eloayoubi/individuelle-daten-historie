@@ -26,7 +26,7 @@ class QuickAddSheet extends StatelessWidget {
           children: [
             for (final category in categories)
               for (final tracker in category.trackers)
-                if (tracker.fields.isNotEmpty)
+                if (tracker.entryFields.isNotEmpty)
                   AppListRow(
                     leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
                     title: tracker.name,

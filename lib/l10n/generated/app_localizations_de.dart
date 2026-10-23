@@ -218,18 +218,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String categoryFields(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Felder',
-      one: '1 Feld',
-      zero: 'keine Felder',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get newCategoryTitle => 'Neue Kategorie';
 
   @override
@@ -449,10 +437,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get kindFormula => 'Formel';
 
   @override
-  String get roleInfo => 'Stammdatum';
+  String get roleInfo => 'Detail';
 
   @override
-  String get roleInfoHint => 'Ohne Verlauf, z. B. Zählernummer oder Anbieter';
+  String get roleInfoHint =>
+      'Legst du einmal fest, z. B. Anbieter oder Vertragsnummer – nicht bei jedem Eintrag';
 
   @override
   String get roleSnapshot => 'Momentwert';
@@ -492,7 +481,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roleDeadline => 'Stichtag';
 
   @override
-  String get roleDeadlineHint => 'Erinnert rechtzeitig, z. B. Vertragsende';
+  String get roleDeadlineHint =>
+      'Legst du einmal fest und wirst rechtzeitig erinnert, z. B. Vertragsende';
 
   @override
   String get intervalMonthly => 'Monatlich';
@@ -731,7 +721,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get entryNoFields =>
-      'Dieser Tracker hat noch keine Felder. Lege sie in der Kategorie an.';
+      'Dieser Tracker hat noch keine Felder zum Eintragen. Lege sie unter „Bearbeiten“ an.';
 
   @override
   String get entrySave => 'Eintrag speichern';
@@ -1674,4 +1664,62 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get whatIfEmpty =>
       'Für Was-wäre-wenn braucht es einen Tracker mit Arbeitspreis oder festen Kosten.';
+
+  @override
+  String get entryValidFrom => 'Gilt ab';
+
+  @override
+  String get detailsTitle => 'Details';
+
+  @override
+  String get detailAdd => 'Hinzufügen';
+
+  @override
+  String get detailRemove => 'Entfernen';
+
+  @override
+  String detailDueIn(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'In $days Tagen',
+      one: 'Morgen',
+      zero: 'Heute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String detailDueInMonths(int months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'In $months Monaten',
+      one: 'In einem Monat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get detailOverdue => 'Abgelaufen';
+
+  @override
+  String get trackerSetup => 'Felder und Einstellungen';
+
+  @override
+  String get trackerSetUpFields => 'Felder festlegen';
+
+  @override
+  String get trackerName => 'Name';
+
+  @override
+  String get trackerFieldsHistory => 'Werte mit Verlauf';
+
+  @override
+  String get trackerFieldsHistoryHint =>
+      'Trägst du mit Datum ein – daraus entstehen Verlauf, Kosten und Prognose.';
+
+  @override
+  String get trackerFieldsDetailsHint =>
+      'Legst du einmal fest und änderst sie nur, wenn sich etwas ändert – z. B. Anbieter oder Vertragsende.';
 }

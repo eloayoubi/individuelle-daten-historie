@@ -375,21 +375,25 @@ class MockCategoriesRepository implements CategoriesRepository {
     ],
   );
 
-  static Tracker _contract(String id, String name, List<(DateTime, double)> prices, {int intervalMonths = 1, DateTime? ends}) => Tracker(
+  /// [provider] landet wie über „Details“ gesetzt in einem eigenen Eintrag, [ends] (ältere Art) im
+  /// letzten Preis-Eintrag.
+  static Tracker _contract(String id, String name, List<(DateTime, double)> prices, {int intervalMonths = 1, DateTime? ends, String? provider}) => Tracker(
     id: 't-$id',
     name: name,
     fields: [
       FieldDefinition(id: 'f-$id-preis', name: 'Beitrag', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: intervalMonths == 12 ? '€/Jahr' : '€/Monat', intervalMonths: intervalMonths),
+      if (provider != null) FieldDefinition(id: 'f-$id-anbieter', name: 'Anbieter', kind: FieldKind.text),
       if (ends != null) FieldDefinition(id: 'f-$id-ende', name: 'Vertragsende', kind: FieldKind.date, role: FieldRole.deadline),
     ],
     entries: [
       for (final (i, (date, price)) in prices.indexed)
         Entry(id: 'e-$id-$i', date: date, values: {'f-$id-preis': price, if (i == prices.length - 1 && ends != null) 'f-$id-ende': ends}),
+      if (provider != null) Entry(id: 'e-$id-anbieter', date: prices.first.$1, values: {'f-$id-anbieter': provider}),
     ],
   );
 
-  static final _glasfaser = _contract('glasfaser', 'Glasfaser 250', [(_d(2024, 1, 1), 39.99), (_d(2026, 2, 1), 44.99)], ends: _d(2026, 12, 31));
-  static final _handy = _contract('handy', 'Handyvertrag', [(_d(2024, 1, 1), 14.99)]);
+  static final _glasfaser = _contract('glasfaser', 'Glasfaser 250', [(_d(2024, 1, 1), 39.99), (_d(2026, 2, 1), 44.99)], ends: _d(2026, 12, 31), provider: 'Telekom');
+  static final _handy = _contract('handy', 'Handyvertrag', [(_d(2024, 1, 1), 14.99)], provider: 'congstar');
   static final _haftpflicht = _contract('haftpflicht', 'Privathaftpflicht', [(_d(2024, 1, 1), 68.40)], intervalMonths: 12);
   static final _hausrat = _contract('hausrat', 'Hausrat', [(_d(2024, 1, 1), 117.60), (_d(2026, 3, 1), 124.80)], intervalMonths: 12);
   static final _streaming = _contract('streaming', 'Streaming', [(_d(2024, 1, 1), 13.99), (_d(2025, 9, 1), 15.99)]);

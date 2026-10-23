@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/utils/formulas.dart';
 import '../../categories/data/categories_repository.dart';
+import '../../categories/data/tracker_details.dart';
 import '../data/tracker_history.dart';
 
 part 'tracker_state.dart';
@@ -17,8 +18,9 @@ class TrackerArgs {
   final String trackerId;
 }
 
-/// Verlauf eines Trackers: Kennzahl wählen (Kosten oder Verbrauch), zwölf Monate, aktuelle Werte
-/// und alle Einträge. Lädt bei jeder Änderung neu, auch nach offline gespeicherten Einträgen.
+/// Verlauf eines Trackers: Kennzahl wählen (Kosten oder Verbrauch), zwölf Monate, Details setzen,
+/// aktuelle Werte und alle Einträge. Lädt bei jeder Änderung neu, auch nach offline gespeicherten
+/// Einträgen.
 class TrackerCubit extends Cubit<TrackerState> {
   TrackerCubit(this._repository, this.args, {DateTime Function()? now}) : _now = now ?? DateTime.now, super(const TrackerState()) {
     _subscription = _repository.changes.listen((_) => load());
@@ -28,6 +30,9 @@ class TrackerCubit extends Cubit<TrackerState> {
   final TrackerArgs args;
   final DateTime Function() _now;
   late final StreamSubscription<void> _subscription;
+
+  /// Der Tracker, wie er gespeichert ist (ohne Formel-Werte) – Grundlage für Details.
+  Tracker? _raw;
 
   Future<void> load() async {
     try {
@@ -39,6 +44,7 @@ class TrackerCubit extends Cubit<TrackerState> {
         emit(const TrackerState(status: TrackerStatus.missing));
         return;
       }
+      _raw = raw;
       // Formel-Werte gleich mitrechnen, damit Einträge und aktuelle Werte sie zeigen.
       final tracker = Formulas.apply(raw);
       final into = all.where((c) => c.id == raw.includedIn).firstOrNull;
@@ -58,6 +64,18 @@ class TrackerCubit extends Cubit<TrackerState> {
       );
     } catch (_) {
       if (!isClosed && state.tracker == null) emit(const TrackerState(status: TrackerStatus.failure));
+    }
+  }
+
+  /// Detail setzen ([value] `null` entfernt es). Gerechnet wird mit dem gespeicherten Tracker, nicht
+  /// mit dem um Formel-Werte ergänzten.
+  Future<void> saveDetail(FieldDefinition field, Object? value) async {
+    final raw = _raw;
+    if (raw == null) return;
+    try {
+      await _repository.saveDetail(raw, field, value, now: _now());
+    } catch (_) {
+      if (!isClosed) emit(state.copyWith(event: TrackerEvent(TrackerEventKind.failed)));
     }
   }
 
