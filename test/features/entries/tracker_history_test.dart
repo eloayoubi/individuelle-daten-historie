@@ -102,6 +102,19 @@ void main() {
     const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
     final bill = Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30));
 
+    test('zwei Stände am selben Tag ergeben noch keinen Verbrauch', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [
+          Entry(id: 'a', date: DateTime.utc(2026, 9, 1), values: const {'stand': 100}),
+          Entry(id: 'b', date: DateTime.utc(2026, 9, 1), values: const {'stand': 120}),
+        ],
+      );
+      expect(TrackerHistory.metricsFor(t), isEmpty);
+    });
+
     test('eine Rechnung reicht für Verbrauch und Kosten', () {
       expect(TrackerHistory.metricsFor(Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: [bill])), [HistoryMetric.cost, HistoryMetric.consumption]);
     });

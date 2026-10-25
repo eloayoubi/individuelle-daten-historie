@@ -126,8 +126,11 @@ class CostEngine {
   /// letzten Rechnung; `null` ohne bekannten Verbrauch.
   DateTime? get lastReading => _end;
 
-  /// Verbrauch bekannt: ab zwei Zählerständen oder einer Rechnung.
+  /// Verbrauch bekannt: ab zwei Zählerständen an verschiedenen Tagen oder einer Rechnung.
   bool get hasMeter => _daily.isNotEmpty;
+
+  /// [hasMeter] für [tracker], ohne Stichtag – der Verbrauch hängt nicht vom heutigen Tag ab.
+  static bool measures(Tracker tracker) => CostEngine(tracker, today: DateTime.utc(2000)).hasMeter;
 
   bool get hasInstalment => _instalments.isNotEmpty;
 

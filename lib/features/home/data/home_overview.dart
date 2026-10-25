@@ -171,8 +171,9 @@ class HomeOverview extends Equatable {
             usage = engine.consumption(yearStart, tomorrow);
             usageUnit = meter.usageUnit;
           }
-          // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung.
-          final lastRead = tracker.readsFromBills ? null : _lastReading(tracker);
+          // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung; wer nur ansehen
+          // darf, auch nicht (wie die Benachrichtigungen).
+          final lastRead = tracker.readsFromBills || !category.canEdit ? null : _lastReading(tracker);
           final unread = lastRead == null ? 0 : today.difference(lastRead).inDays;
           if (unread >= readMeterAfterDays) {
             reminders.add(Reminder(kind: ReminderKind.readMeter, category: category, trackerId: tracker.id, trackerName: tracker.name, days: unread));

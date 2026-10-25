@@ -87,6 +87,13 @@ void main() {
     expect(empty.costChange, isNull);
   });
 
+  test('keine Ablese-Erinnerung in Kategorien, die ich nur ansehen darf', () {
+    final strom = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-strom');
+    final viewer = Category(id: strom.id, name: strom.name, icon: strom.icon, swatch: strom.swatch, trackers: strom.trackers, myRole: MemberRole.viewer);
+    final r = HomeOverview.build([viewer], today).reminders;
+    expect(r.where((x) => x.kind == ReminderKind.readMeter), isEmpty);
+  });
+
   test('keine Ablese-Erinnerung, wenn der Verbrauch aus Rechnungen kommt', () {
     const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
     const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
