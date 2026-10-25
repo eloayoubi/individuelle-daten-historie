@@ -224,6 +224,42 @@ class Tracker extends Equatable {
   /// Einträge mit Verlauf, ohne reine Detail-Einträge.
   List<Entry> get records => [for (final e in entries) if (!isDetailEntry(e)) e];
 
+  /// Das Zählerfeld, `null` ohne Zähler.
+  FieldDefinition? get meter => firstWithRole(FieldRole.meterReading);
+
+  /// Versorgungszähler (Strom, Gas, Wasser): Zähler mit Arbeitspreis. Nur er kennt Rechnungen und
+  /// einen Vertrag; ein Zähler ohne Arbeitspreis (Auto) bleibt bei Ständen.
+  bool get isUtilityMeter => meter != null && firstWithRole(FieldRole.unitPrice) != null;
+
+  /// Preise und Beträge, die ab einem Datum gelten (Arbeitspreis, Grundpreis, Abschlag).
+  List<FieldDefinition> get rateFields => [for (final f in fields) if (f.isRate) f];
+
+  /// Rechnung: Eintrag eines Versorgungszählers mit Zeitraum und Wert im Zählerfeld. Der Wert ist der
+  /// Verbrauch im Zeitraum (in der Verbrauchseinheit), kein Zählerstand.
+  bool isBill(Entry e) => isUtilityMeter && e.hasPeriod && e.values.containsKey(meter!.id);
+
+  /// Zählerstand: Wert im Zählerfeld, der keine Rechnung ist.
+  bool isReading(Entry e) => meter != null && e.values.containsKey(meter!.id) && !isBill(e);
+
+  /// Preisänderung eines Versorgungszählers: trägt nur Preise und Beträge mit „gilt ab“.
+  bool isPriceChange(Entry e) {
+    if (!isUtilityMeter || e.values.isEmpty) return false;
+    final rates = {for (final f in rateFields) f.id};
+    return e.values.keys.every(rates.contains);
+  }
+
+  /// Kommt der Verbrauch zuletzt aus einer Rechnung? Entscheidet über die Ablese-Erinnerung und die
+  /// Art eines neuen Eintrags.
+  bool get readsFromBills {
+    final field = meter;
+    if (field == null) return false;
+    Entry? latest;
+    for (final e in entries) {
+      if (e.values.containsKey(field.id) && (latest == null || e.date.isAfter(latest.date))) latest = e;
+    }
+    return latest != null && isBill(latest);
+  }
+
   /// Aktueller Wert eines Details: der aus dem Eintrag mit dem spätesten Datum (Details haben keinen
   /// Verlauf, auch ein vorausdatierter Eintrag zählt).
   Object? detailValue(String fieldId) {
