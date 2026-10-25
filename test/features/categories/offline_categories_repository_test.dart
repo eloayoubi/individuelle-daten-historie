@@ -6,11 +6,13 @@ import 'package:kostenkurve/features/categories/data/categories_repository.dart'
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/offline_categories_repository.dart';
 
-/// Server zum Abschalten: ohne Netz wirft jeder Aufruf, mit [reject] lehnt er Einträge ab.
+/// Server zum Abschalten: ohne Netz wirft jeder Aufruf, mit [reject] lehnt er Einträge ab,
+/// mit [gate] hält er Einträge an, bis es aufgeht (langsames Netz).
 class _Remote extends MockCategoriesRepository {
   var online = true;
   var reject = false;
   var saves = 0;
+  Completer<void>? gate;
 
   Future<void> _net() async {
     if (!online) throw Exception('offline');
@@ -31,6 +33,7 @@ class _Remote extends MockCategoriesRepository {
   @override
   Future<void> saveEntry(String trackerId, Entry entry) async {
     await _net();
+    await gate?.future;
     if (reject) throw const WriteRejected('42501');
     saves++;
     return super.saveEntry(trackerId, entry);
@@ -83,6 +86,61 @@ void main() {
     expect((await strom(repo)).entries.last, reading);
     expect((await strom(remote..online = true)).entries.where((e) => e.id == 'neu-1'), isEmpty);
     expect((await queue.read())! as Map, containsPair('writes', hasLength(1)));
+  });
+
+  test('mit Netz ist ein Eintrag nach dem Speichern schon auf dem Server', () async {
+    await repo.loadCategories();
+    await repo.saveEntry('t-strom', reading);
+    // Kein Warten auf den Hintergrund: Das Formular entscheidet direkt danach über „offline“.
+    expect(repo.syncState, const SyncState());
+    expect(remote.saves, 1);
+  });
+
+  test('hängt das Netz, wartet Speichern höchstens sendWait', () async {
+    final slow = OfflineCategoriesRepository(
+      remote,
+      cache: cache,
+      queue: queue,
+      retryEvery: const Duration(hours: 1),
+      sendWait: const Duration(milliseconds: 20),
+    );
+    await slow.loadCategories();
+    remote.gate = Completer<void>();
+    await slow.saveEntry('t-strom', reading).timeout(const Duration(seconds: 1));
+    expect(slow.syncState.pending, 1);
+    remote.gate!.complete();
+    await slow.sync();
+    expect(slow.syncState, const SyncState());
+    expect(remote.saves, 1);
+  });
+
+  test('während gesendet wird, zeigen alle Ansichten den Eintrag sofort – ohne aufs Netz zu warten', () async {
+    await repo.loadCategories();
+    remote.gate = Completer<void>();
+    final shown = Completer<(List<Category>, Tracker)>();
+    final subscription = repo.changes.listen((_) async {
+      if (shown.isCompleted) return;
+      final all = await repo.loadCategories();
+      final one = await strom(repo);
+      if (!shown.isCompleted) shown.complete((all, one));
+    });
+    final saving = repo.saveEntry('t-strom', reading);
+    final (all, one) = await shown.future.timeout(const Duration(seconds: 1));
+    expect(all.firstWhere((c) => c.id == 'c-strom').trackers.single.entries.last, reading);
+    expect(one.entries.last, reading);
+    expect(remote.saves, 0);
+    remote.gate!.complete();
+    await saving;
+    expect(repo.syncState, const SyncState());
+    await subscription.cancel();
+  });
+
+  test('ein gesendeter Eintrag steht im Cache, auch ohne neuen Abruf', () async {
+    await repo.loadCategories();
+    await repo.saveEntry('t-strom', reading);
+    remote.online = false;
+    final restarted = OfflineCategoriesRepository(remote, cache: cache, queue: queue);
+    expect((await strom(restarted)).entries.last, reading);
   });
 
   test('wird nachgesendet, sobald wieder Netz da ist – auch nach einem Neustart', () async {

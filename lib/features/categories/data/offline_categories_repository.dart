@@ -40,9 +40,10 @@ class PendingDelete extends PendingWrite {
 ///
 /// - **Lesen:** Jeder erfolgreiche Abruf landet im Cache; ohne Netz kommt der letzte Stand von dort.
 /// - **Einträge schreiben:** gehen zuerst in eine Warteschlange auf dem Gerät und erscheinen sofort
-///   in allen Ansichten. Gesendet wird gleich, nach jedem Abruf, beim Zurückkehren in die App
-///   ([sync]) und alle [retryEvery], solange etwas wartet. Ein Eintrag hat seine Id schon vom
-///   Gerät – mehrfaches Senden ändert nichts (`save_entry` ist ein Upsert).
+///   in allen Ansichten. Gesendet wird gleich (Speichern wartet bis zu [sendWait] darauf), nach
+///   jedem Abruf, beim Zurückkehren in die App ([sync]) und alle [retryEvery], solange etwas
+///   wartet. Ein Eintrag hat seine Id schon vom Gerät – mehrfaches Senden ändert nichts
+///   (`save_entry` ist ein Upsert).
 /// - **Abgelehnt** ([WriteRejected]) wird verworfen und in [syncState] gezählt; bei anderen
 ///   Fehlern (kein Netz) bleibt die Änderung liegen.
 /// - Kategorien, Tracker und Felder ändern geht nur online (direkt an [_remote]).
@@ -57,6 +58,7 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     String? Function()? userId,
     Stream<Object?>? accountChanges,
     this.retryEvery = const Duration(seconds: 30),
+    this.sendWait = const Duration(seconds: 3),
   }) : _cacheStore = cache,
        _queueStore = queue,
        _userId = userId ?? _noUser {
@@ -81,6 +83,10 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   final String? Function() _userId;
   final Duration retryEvery;
 
+  /// So lange wartet Speichern auf den ersten Sendeversuch; danach gilt der Eintrag als offline
+  /// gespeichert und wird im Hintergrund weiter gesendet.
+  final Duration sendWait;
+
   static String? _noUser() => null;
 
   /// Konto, zu dem [_cached] und [_pending] gehören.
@@ -94,6 +100,10 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Future<void>? _syncing;
   Timer? _retry;
 
+  /// Gerade gespeicherte Einträge, deren erster Sendeversuch noch läuft. Solange zeigen alle
+  /// Ansichten den Stand auf dem Gerät, statt aufs Netz zu warten.
+  var _sendingNew = 0;
+
   @override
   Stream<void> get changes => _changes.stream;
 
@@ -104,12 +114,12 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Future<List<Category>> loadCategories() async {
     await _restore();
     _forgetOtherAccount();
+    if (_sendingNew > 0 && _cached != null) return _overlay(_cached!);
     await sync();
     try {
-      final fresh = await _remote.loadCategories();
-      _cached = fresh;
+      _cached = await _remote.loadCategories();
       _owner = _userId();
-      _quietly(_cacheStore.write({'userId': _owner, 'categories': [for (final c in fresh) TrackingCodec.category(c)]}));
+      _quietly(_persistCache());
     } catch (_) {
       if (_cached == null) rethrow;
     }
@@ -138,6 +148,9 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Future<Category?> loadCategory(String id) async {
     await _restore();
     _forgetOtherAccount();
+    if (_sendingNew > 0) {
+      if (_cached?.where((c) => c.id == id).firstOrNull case final cached?) return _overlay([cached]).single;
+    }
     try {
       final fresh = await _remote.loadCategory(id);
       if (fresh != null && _cached != null) _cached = [for (final c in _cached!) c.id == id ? fresh : c];
@@ -242,8 +255,15 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     // Neuere Änderung am selben Eintrag ersetzt die ältere.
     _pending = [..._pending.where((p) => p.entryId != write.entryId), write];
     await _persistQueue();
+    // Gleich senden und darauf warten, damit der Aufrufer an [syncState] sieht, ob der Eintrag schon
+    // auf dem Server ist. Die Ansichten laden derweil vom Gerät und zeigen ihn sofort.
+    _sendingNew++;
     _changes.add(null);
-    _quietly(sync());
+    try {
+      await sync().timeout(sendWait, onTimeout: () {});
+    } finally {
+      _sendingNew--;
+    }
   }
 
   Future<void> _flush() async {
@@ -257,6 +277,11 @@ class OfflineCategoriesRepository implements CategoriesRepository {
             await _remote.saveEntry(trackerId, entry);
           case PendingDelete(:final trackerId, :final entryId):
             await _remote.deleteEntry(trackerId, entryId);
+        }
+        // Der Server hat ihn: auch im Cache, damit er ohne neuen Abruf nicht verschwindet.
+        if (_cached case final cached?) {
+          _cached = _applyAll(cached, [write]);
+          _quietly(_persistCache());
         }
       } on WriteRejected {
         _rejected++;
@@ -273,6 +298,8 @@ class OfflineCategoriesRepository implements CategoriesRepository {
 
   Future<void> _persistQueue() => _queueStore.write({'userId': _owner ?? _userId(), 'writes': [for (final p in _pending) p.toJson()]}).catchError((Object _) {});
 
+  Future<void> _persistCache() => _cacheStore.write({'userId': _owner, 'categories': [for (final c in _cached ?? const <Category>[]) TrackingCodec.category(c)]});
+
   void _scheduleRetry() {
     if (_pending.isEmpty) {
       _retry?.cancel();
@@ -282,13 +309,15 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     }
   }
 
-  List<Category> _overlay(List<Category> categories) {
-    if (_pending.isEmpty) return categories;
-    return [for (final c in categories) c.copyWith(trackers: [for (final t in c.trackers) _apply(t)])];
+  List<Category> _overlay(List<Category> categories) => _applyAll(categories, _pending);
+
+  static List<Category> _applyAll(List<Category> categories, List<PendingWrite> writes) {
+    if (writes.isEmpty) return categories;
+    return [for (final c in categories) c.copyWith(trackers: [for (final t in c.trackers) _apply(t, writes)])];
   }
 
-  Tracker _apply(Tracker tracker) {
-    final writes = [for (final p in _pending) if (p.trackerId == tracker.id) p];
+  static Tracker _apply(Tracker tracker, List<PendingWrite> all) {
+    final writes = [for (final p in all) if (p.trackerId == tracker.id) p];
     if (writes.isEmpty) return tracker;
     final touched = {for (final w in writes) w.entryId};
     return tracker.copyWith(
