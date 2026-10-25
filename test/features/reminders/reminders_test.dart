@@ -47,6 +47,18 @@ void main() {
       expect(plan.length, lessThanOrEqualTo(ReminderPlanner.limit));
     });
 
+    test('ein einzelner Stand erinnert nicht – wie in der Übersicht', () {
+      const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+      final category = Category(
+        id: 'c',
+        name: 'Strom',
+        icon: CategoryIcon.bolt,
+        swatch: CategorySwatch.orange,
+        trackers: [Tracker(id: 't', name: 'Zähler', fields: const [meter], entries: [Entry(id: 'r', date: DateTime.utc(2026, 8, 1), values: const {'stand': 100})])],
+      );
+      expect(ReminderPlanner.plan([category], now, l10n), isEmpty);
+    });
+
     test('archivierte Kategorien erinnern nicht', () {
       final strom = MockCategoriesRepository.categories.first;
       final archived = strom.copyWith(archivedAt: () => DateTime.utc(2026));

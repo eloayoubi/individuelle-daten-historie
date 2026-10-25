@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/models/tracking.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/insights/cubit/what_if_cubit.dart';
 import 'package:kostenkurve/features/insights/data/what_if.dart';
@@ -8,6 +9,18 @@ void main() {
   final categories = MockCategoriesRepository.categories.where((c) => !c.isArchived).toList();
   final strom = categories.firstWhere((c) => c.id == 'c-strom').trackers.single;
   final price = strom.fields.firstWhere((f) => f.role.name == 'unitPrice');
+
+  test('Formel-Felder lassen sich nicht durchspielen – die App rechnet sie selbst', () {
+    const t = Tracker(
+      id: 't',
+      name: 'Strom',
+      fields: [
+        FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice),
+        FieldDefinition(id: 'gp', name: 'Grundpreis', kind: FieldKind.formula, role: FieldRole.recurringCost, formula: 'arbeitspreis * 40'),
+      ],
+    );
+    expect(WhatIf.priceFields(t).map((f) => f.id), ['ap']);
+  });
 
   test('ohne neue Preise: vorher = nachher', () {
     final r = WhatIf.of(strom, today, const {});

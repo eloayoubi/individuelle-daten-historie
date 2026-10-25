@@ -84,12 +84,17 @@ Der Verbrauch wird aus Abschnitten mit festem Tagesverbrauch gerechnet:
 - **Rechnung:** Abschnitt `[periodStart, periodEnd]` (beide Tage eingeschlossen), Tagesverbrauch =
   Verbrauch / Anzahl Tage.
 - **Zählerstände:** wie heute, Abschnitt zwischen zwei Ständen, Zählerwechsel und fallende Stände
-  werden mit dem Nachbarabschnitt gefüllt.
+  werden wie Lücken gefüllt. Zählerwechsel an einem Tag: der Stand ohne Markierung ist der Endstand
+  des alten Zählers, der markierte der Anfangsstand des neuen.
 - **Vorrang:** An einem Tag, den eine Rechnung abdeckt, gilt die Rechnung, nicht ein Abschnitt aus
   Zählerständen. *(Meine Wahl – die Rechnung ist die abgerechnete Zahl.)* Überlappen sich zwei
-  Rechnungen, gilt die mit dem späteren `periodEnd`. *(Meine Wahl.)*
+  Rechnungen, gilt die mit dem späteren `periodEnd`. *(Meine Wahl.)* Deckt eine Rechnung nur einen Teil
+  der Tage zwischen zwei Ständen, verteilt sich der Rest des gemessenen Verbrauchs (Differenz minus
+  Rechnungsverbrauch in diesem Abschnitt, mindestens 0) gleichmäßig auf die übrigen Tage – so stimmt die
+  Summe zwischen den Ständen.
 - **Lücken** zwischen dem ersten und dem letzten bekannten Tag (z. B. ein fehlender Monat zwischen zwei
-  Rechnungen) bekommen den Tagesverbrauch des nächstgelegenen Abschnitts, wie heute beim Zählerwechsel.
+  Rechnungen) bekommen den Tagesverbrauch des nächstgelegenen Abschnitts: die erste Hälfte den davor,
+  die zweite den danach.
 - **Vor dem ersten** bekannten Tag zählt nichts. **Nach dem letzten** gilt die heutige Logik: derselbe
   Tag im Vorjahr × Trend, ohne Vorjahr der Durchschnitt der letzten 365 bekannten Tage.
 - `hasMeter` ist wahr ab einer Rechnung oder zwei Zählerständen. `lastReading` wird zum letzten

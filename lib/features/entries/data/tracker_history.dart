@@ -76,8 +76,8 @@ class TrackerHistory extends Equatable {
 
   /// Welche Kennzahlen der Tracker hergibt – Kosten zuerst.
   static List<HistoryMetric> metricsFor(Tracker tracker) {
-    // Verbrauch ist bekannt ab zwei Zählerständen oder einer Rechnung.
-    final usage = tracker.entries.where(tracker.isReading).length >= 2 || tracker.entries.any(tracker.isBill);
+    // Verbrauch ist bekannt ab zwei Zählerständen an verschiedenen Tagen oder einer Rechnung.
+    final usage = CostEngine.measures(tracker);
     final costs = tracker.fields.any((f) => f.role == FieldRole.recurringCost || f.role == FieldRole.oneOffCost) ||
         (usage && tracker.fields.any((f) => f.role == FieldRole.unitPrice));
     return [if (costs) HistoryMetric.cost, if (usage) HistoryMetric.consumption];
@@ -153,12 +153,14 @@ class TrackerHistory extends Equatable {
     ];
   }
 
-  static CurrentValue? _current(List<Entry> sorted, FieldDefinition field, DateTime today) {
+  /// Tagesgenau: Eine Änderung von heute gilt ab Mitternacht, egal zu welcher Uhrzeit [now] ist.
+  static CurrentValue? _current(List<Entry> sorted, FieldDefinition field, DateTime now) {
+    final today = CostEngine.day(now);
     Entry? current;
     Entry? upcoming;
     for (final e in sorted) {
       if (!e.values.containsKey(field.id)) continue;
-      if (e.date.isAfter(today)) {
+      if (CostEngine.day(e.date).isAfter(today)) {
         upcoming ??= e;
       } else {
         current = e;

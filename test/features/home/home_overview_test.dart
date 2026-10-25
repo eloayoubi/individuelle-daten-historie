@@ -29,6 +29,16 @@ void main() {
     expect(wasser.usageUnit, 'm³');
   });
 
+  test('Kosten, die in einer fehlenden oder archivierten Kategorie stecken sollen, zählen hier', () {
+    final miete = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-miete');
+    final archived = Category(id: miete.id, name: miete.name, icon: miete.icon, swatch: miete.swatch, trackers: miete.trackers, archivedAt: today);
+    final others = [for (final c in MockCategoriesRepository.categories) if (c.id != 'c-miete') c];
+    for (final categories in [others, [...others, archived]]) {
+      final wasser = HomeOverview.build(categories, today).categories.firstWhere((s) => s.category.id == 'c-wasser');
+      expect(wasser.costToDate, greaterThan(0));
+    }
+  });
+
   test('erinnert an nahe Stichtage zuerst, dann an lange nicht abgelesene Zähler', () {
     final r = overview.reminders;
     expect([for (final x in r.where((x) => x.kind == ReminderKind.deadline)) x.trackerName], ['Glasfaser 250', 'Golf', 'Hauptzähler']);
@@ -75,6 +85,13 @@ void main() {
     expect(empty.isEmpty, isTrue);
     expect(empty.forecast, 0);
     expect(empty.costChange, isNull);
+  });
+
+  test('keine Ablese-Erinnerung in Kategorien, die ich nur ansehen darf', () {
+    final strom = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-strom');
+    final viewer = Category(id: strom.id, name: strom.name, icon: strom.icon, swatch: strom.swatch, trackers: strom.trackers, myRole: MemberRole.viewer);
+    final r = HomeOverview.build([viewer], today).reminders;
+    expect(r.where((x) => x.kind == ReminderKind.readMeter), isEmpty);
   });
 
   test('keine Ablese-Erinnerung, wenn der Verbrauch aus Rechnungen kommt', () {

@@ -102,8 +102,41 @@ void main() {
     const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
     final bill = Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30));
 
+    test('zwei Stände am selben Tag ergeben noch keinen Verbrauch', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [
+          Entry(id: 'a', date: DateTime.utc(2026, 9, 1), values: const {'stand': 100}),
+          Entry(id: 'b', date: DateTime.utc(2026, 9, 1), values: const {'stand': 120}),
+        ],
+      );
+      expect(TrackerHistory.metricsFor(t), isEmpty);
+    });
+
     test('eine Rechnung reicht für Verbrauch und Kosten', () {
       expect(TrackerHistory.metricsFor(Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: [bill])), [HistoryMetric.cost, HistoryMetric.consumption]);
+    });
+
+    test('Preisänderung von heute gilt schon kurz nach Mitternacht, nicht erst später', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [Entry(id: 'p1', date: DateTime.utc(2026), values: const {'ap': 0.3}), Entry(id: 'p2', date: DateTime.utc(2026, 10, 25), values: const {'ap': 0.35})],
+      );
+      final contract = TrackerHistory.contractOf(t, DateTime(2026, 10, 25, 0, 30)).single;
+      expect((contract.value, contract.upcoming), (0.35, null));
+      const rent = FieldDefinition(id: 'miete', name: 'Miete', kind: FieldKind.currency, role: FieldRole.recurringCost);
+      final wohnung = Tracker(
+        id: 'w',
+        name: 'Miete',
+        fields: const [rent],
+        entries: [Entry(id: 'm1', date: DateTime.utc(2026), values: const {'miete': 900}), Entry(id: 'm2', date: DateTime(2026, 10, 25, 12), values: const {'miete': 950})],
+      );
+      final value = TrackerHistory.currentValuesOf(wohnung, DateTime(2026, 10, 25, 8)).single;
+      expect((value.value, value.upcoming), (950, null));
     });
 
     test('Versorgungszähler: aktuelle Werte ohne Preise, Zählerstand ohne Rechnungen', () {
