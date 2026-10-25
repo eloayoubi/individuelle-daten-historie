@@ -920,6 +920,37 @@
   "entryPeriodTo": "Bis",
   "entryPeriodHint": "Nachzahlung oder Guthaben für einen Zeitraum: Der Betrag verteilt sich auf dessen Tage statt auf den Stichtag.",
   "entryPeriodInvalid": "Das Ende liegt vor dem Anfang.",
+  "entryKindBill": "Rechnung",
+  "entryKindReading": "Zählerstand",
+  "entryBillConsumption": "Verbrauch",
+  "entryBillPerMonth": "≈ {amount} im Monat",
+  "@entryBillPerMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "entryBillHint": "Zeitraum und Verbrauch stehen auf deiner Rechnung.",
+  "entryBillOverlap": "Überschneidet sich mit einer anderen Rechnung – an diesen Tagen zählt die später endende.",
+  "contractChange": "Preise ändern",
+  "contractEdit": "Preisänderung",
+  "contractDeleteTitle": "Preisänderung vom {date} löschen?",
+  "@contractDeleteTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "contractDeleteBody": "{prices} verschwinden aus Vertrag, Kosten und Prognose.",
+  "@contractDeleteBody": {
+    "placeholders": {
+      "prices": {
+        "type": "String"
+      }
+    }
+  },
   "exportCategory": "Kategorie",
   "exportTracker": "Tracker",
   "exportField": "Feld",

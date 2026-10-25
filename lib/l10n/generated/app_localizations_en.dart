@@ -1421,6 +1421,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get entryPeriodInvalid => 'The end is before the start.';
 
   @override
+  String get entryKindBill => 'Bill';
+
+  @override
+  String get entryKindReading => 'Meter reading';
+
+  @override
+  String get entryBillConsumption => 'Consumption';
+
+  @override
+  String entryBillPerMonth(String amount) {
+    return '≈ $amount per month';
+  }
+
+  @override
+  String get entryBillHint => 'Period and consumption are on your bill.';
+
+  @override
+  String get entryBillOverlap =>
+      'Overlaps another bill – on those days the one ending later counts.';
+
+  @override
+  String get contractChange => 'Change prices';
+
+  @override
+  String get contractEdit => 'Price change';
+
+  @override
+  String contractDeleteTitle(String date) {
+    return 'Delete price change from $date?';
+  }
+
+  @override
+  String contractDeleteBody(String prices) {
+    return '$prices will be removed from contract, costs and forecast.';
+  }
+
+  @override
   String get exportCategory => 'Category';
 
   @override

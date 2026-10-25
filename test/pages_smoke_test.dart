@@ -92,6 +92,8 @@ void main() {
     ('entry form new', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single))),
     ('entry form edit', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single, entry: strom.trackers.single.entries[1]))),
     ('entry form car', EntryFormPage(args: EntryFormArgs(category: auto, tracker: auto.trackers.single))),
+    ('entry form bill', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single.copyWith(entries: [])))),
+    ('entry form contract', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single, contract: true))),
     ('tracker meter', const TrackerPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom'))),
     ('tracker water', const TrackerPage(args: TrackerArgs(categoryId: 'c-wasser', trackerId: 't-wasser'))),
     ('tracker contract', const TrackerPage(args: TrackerArgs(categoryId: 'c-internet', trackerId: 't-glasfaser'))),

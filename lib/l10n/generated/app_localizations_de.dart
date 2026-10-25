@@ -1428,6 +1428,44 @@ class AppLocalizationsDe extends AppLocalizations {
   String get entryPeriodInvalid => 'Das Ende liegt vor dem Anfang.';
 
   @override
+  String get entryKindBill => 'Rechnung';
+
+  @override
+  String get entryKindReading => 'Zählerstand';
+
+  @override
+  String get entryBillConsumption => 'Verbrauch';
+
+  @override
+  String entryBillPerMonth(String amount) {
+    return '≈ $amount im Monat';
+  }
+
+  @override
+  String get entryBillHint =>
+      'Zeitraum und Verbrauch stehen auf deiner Rechnung.';
+
+  @override
+  String get entryBillOverlap =>
+      'Überschneidet sich mit einer anderen Rechnung – an diesen Tagen zählt die später endende.';
+
+  @override
+  String get contractChange => 'Preise ändern';
+
+  @override
+  String get contractEdit => 'Preisänderung';
+
+  @override
+  String contractDeleteTitle(String date) {
+    return 'Preisänderung vom $date löschen?';
+  }
+
+  @override
+  String contractDeleteBody(String prices) {
+    return '$prices verschwinden aus Vertrag, Kosten und Prognose.';
+  }
+
+  @override
   String get exportCategory => 'Kategorie';
 
   @override

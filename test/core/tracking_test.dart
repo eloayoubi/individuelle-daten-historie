@@ -42,6 +42,13 @@ void main() {
       expect(strom.rateFields, [price, base]);
     });
 
+    test('Preisänderung: Formel-Werte zählen nicht mit', () {
+      const formula = FieldDefinition(id: 'f', name: 'Kosten', kind: FieldKind.formula, formula: 'verbrauch * arbeitspreis');
+      const strom = Tracker(id: 't', name: 'Strom', fields: [meter, price, formula]);
+      expect(strom.isPriceChange(Entry(id: 'p', date: d(2026, 1, 1), values: const {'ap': 0.32, 'f': 0})), isTrue);
+      expect(strom.isPriceChange(Entry(id: 'p', date: d(2026, 1, 1), values: const {'f': 0})), isFalse);
+    });
+
     test('readsFromBills folgt dem neuesten Zählereintrag', () {
       final first = [reading(d(2026, 1, 1), 1000), bill(d(2026, 1, 2), d(2026, 6, 30), 900)];
       expect(Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: first).readsFromBills, isTrue);

@@ -126,12 +126,10 @@ class MockCategoriesRepository extends MemoryCategoriesRepository {
       FieldDefinition(id: 'f-strom-anbieter', name: 'Anbieter', kind: FieldKind.text),
     ],
     entries: [
-      Entry(id: 'e-strom-p1', date: _d(2024, 1, 1), values: const {'f-strom-ap': 0.389, 'f-strom-gp': 14.20, 'f-strom-abschlag': 98, 'f-strom-anbieter': 'Stadtwerke'}),
-      Entry(
-        id: 'e-strom-p2',
-        date: _d(2025, 4, 1),
-        values: {'f-strom-ap': 0.329, 'f-strom-gp': 11.90, 'f-strom-abschlag': 85, 'f-strom-anbieter': 'Ökostrom Plus', 'f-strom-ende': _d(2027, 3, 31)},
-      ),
+      Entry(id: 'e-strom-p1', date: _d(2024, 1, 1), values: const {'f-strom-ap': 0.389, 'f-strom-gp': 14.20, 'f-strom-abschlag': 98}),
+      Entry(id: 'e-strom-d1', date: _d(2024, 1, 1), values: const {'f-strom-anbieter': 'Stadtwerke'}),
+      Entry(id: 'e-strom-p2', date: _d(2025, 4, 1), values: const {'f-strom-ap': 0.329, 'f-strom-gp': 11.90, 'f-strom-abschlag': 85}),
+      Entry(id: 'e-strom-d2', date: _d(2025, 4, 1), values: {'f-strom-anbieter': 'Ökostrom Plus', 'f-strom-ende': _d(2027, 3, 31)}),
       ..._readings('e-strom', 'f-strom-stand', start: 41230, yearly: const {2024: 2550, 2025: 2410, 2026: 2280}, season: _flat, until: _d(2026, 9, 12), day: 12),
     ],
   );

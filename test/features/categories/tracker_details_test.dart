@@ -46,9 +46,8 @@ void main() {
       await repo.saveDetail(await tracker('c-strom'), end, DateTime.utc(2028, 3, 31), now: now);
 
       final after = await tracker('c-strom');
-      final details = after.entries.where(after.isDetailEntry).toList();
+      final details = after.entries.where((e) => after.isDetailEntry(e) && e.date == today).toList();
       expect(details, hasLength(1));
-      expect(details.single.date, today);
       expect(details.single.values, {'f-strom-anbieter': 'Grünstrom', 'f-strom-ende': DateTime.utc(2028, 3, 31)});
       expect(after.detailValue('f-strom-anbieter'), 'Grünstrom');
       expect(after.records.length, strom.records.length);

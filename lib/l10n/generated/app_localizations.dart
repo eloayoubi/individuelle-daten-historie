@@ -2450,6 +2450,66 @@ abstract class AppLocalizations {
   /// **'Das Ende liegt vor dem Anfang.'**
   String get entryPeriodInvalid;
 
+  /// No description provided for @entryKindBill.
+  ///
+  /// In de, this message translates to:
+  /// **'Rechnung'**
+  String get entryKindBill;
+
+  /// No description provided for @entryKindReading.
+  ///
+  /// In de, this message translates to:
+  /// **'Zählerstand'**
+  String get entryKindReading;
+
+  /// No description provided for @entryBillConsumption.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbrauch'**
+  String get entryBillConsumption;
+
+  /// No description provided for @entryBillPerMonth.
+  ///
+  /// In de, this message translates to:
+  /// **'≈ {amount} im Monat'**
+  String entryBillPerMonth(String amount);
+
+  /// No description provided for @entryBillHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Zeitraum und Verbrauch stehen auf deiner Rechnung.'**
+  String get entryBillHint;
+
+  /// No description provided for @entryBillOverlap.
+  ///
+  /// In de, this message translates to:
+  /// **'Überschneidet sich mit einer anderen Rechnung – an diesen Tagen zählt die später endende.'**
+  String get entryBillOverlap;
+
+  /// No description provided for @contractChange.
+  ///
+  /// In de, this message translates to:
+  /// **'Preise ändern'**
+  String get contractChange;
+
+  /// No description provided for @contractEdit.
+  ///
+  /// In de, this message translates to:
+  /// **'Preisänderung'**
+  String get contractEdit;
+
+  /// No description provided for @contractDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Preisänderung vom {date} löschen?'**
+  String contractDeleteTitle(String date);
+
+  /// No description provided for @contractDeleteBody.
+  ///
+  /// In de, this message translates to:
+  /// **'{prices} verschwinden aus Vertrag, Kosten und Prognose.'**
+  String contractDeleteBody(String prices);
+
   /// No description provided for @exportCategory.
   ///
   /// In de, this message translates to:

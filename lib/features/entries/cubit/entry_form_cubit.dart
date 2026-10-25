@@ -10,11 +10,14 @@ part 'entry_form_state.dart';
 
 /// Wofür das Formular geöffnet wird: neuer Eintrag in [tracker] oder vorhandener [entry].
 class EntryFormArgs {
-  const EntryFormArgs({required this.category, required this.tracker, this.entry, this.decimalSeparator = ','});
+  const EntryFormArgs({required this.category, required this.tracker, this.entry, this.contract = false, this.decimalSeparator = ','});
 
   final Category category;
   final Tracker tracker;
   final Entry? entry;
+
+  /// Neue Preisänderung im Vertrag eines Versorgungszählers statt Rechnung oder Zählerstand.
+  final bool contract;
 
   /// Aus der App-Sprache (`context.decimalSeparator`), für Eingabe und Vorbelegung.
   final String decimalSeparator;
@@ -24,12 +27,21 @@ class EntryFormArgs {
 /// Notiz und – bei Zählern – „neuer Zähler“. Gespeichert wird über das Repository, das offline
 /// erst in die Warteschlange schreibt.
 class EntryFormCubit extends Cubit<EntryFormState> {
-  EntryFormCubit(this._repository, this.args, {DateTime Function()? now}) : super(EntryFormState.initial(args, (now ?? DateTime.now)()));
+  EntryFormCubit(this._repository, this.args, {DateTime Function()? now}) : _now = now ?? DateTime.now, super(EntryFormState.initial(args, (now ?? DateTime.now)()));
 
   final CategoriesRepository _repository;
   final EntryFormArgs args;
+  final DateTime Function() _now;
 
   void setDate(DateTime date) => emit(state.copyWith(date: CostEngine.day(date)));
+
+  /// Rechnung ↔ Zählerstand (nur bei einem neuen Eintrag). Die Rechnung bekommt ihren Zeitraum
+  /// vorbelegt, der Zählerstand hat keinen.
+  void setMode(EntryFormMode mode) {
+    if (!state.canSwitchMode || mode == state.mode || (mode != EntryFormMode.bill && mode != EntryFormMode.reading)) return;
+    final period = mode == EntryFormMode.bill ? EntryFormState.billPeriod(state.tracker, _now()) : null;
+    emit(state.copyWith(mode: mode, period: (start: period?.start, end: period?.end)));
+  }
 
   void setText(String fieldId, String text) => _set(fieldId, text);
 

@@ -241,11 +241,13 @@ class Tracker extends Equatable {
   /// Zählerstand: Wert im Zählerfeld, der keine Rechnung ist.
   bool isReading(Entry e) => meter != null && e.values.containsKey(meter!.id) && !isBill(e);
 
-  /// Preisänderung eines Versorgungszählers: trägt nur Preise und Beträge mit „gilt ab“.
+  /// Preisänderung eines Versorgungszählers: trägt nur Preise und Beträge mit „gilt ab“. Formel-Werte,
+  /// die `Formulas.apply` angehängt hat, ändern daran nichts.
   bool isPriceChange(Entry e) {
-    if (!isUtilityMeter || e.values.isEmpty) return false;
+    if (!isUtilityMeter) return false;
     final rates = {for (final f in rateFields) f.id};
-    return e.values.keys.every(rates.contains);
+    final formulas = {for (final f in fields) if (f.kind == FieldKind.formula) f.id};
+    return e.values.keys.any(rates.contains) && e.values.keys.every((id) => rates.contains(id) || formulas.contains(id));
   }
 
   /// Kommt der Verbrauch zuletzt aus einer Rechnung? Entscheidet über die Ablese-Erinnerung und die
