@@ -166,8 +166,8 @@ class Entry extends Equatable {
     _ => null,
   };
 
-  Entry copyWith({Map<String, Object>? values}) => Entry(
-    id: id,
+  Entry copyWith({String? id, Map<String, Object>? values}) => Entry(
+    id: id ?? this.id,
     date: date,
     values: values ?? this.values,
     note: note,

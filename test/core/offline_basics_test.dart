@@ -17,6 +17,16 @@ void main() {
     });
   });
 
+  group('derivedId', () {
+    test('gleiche Eingaben, gleiche UUID (Version 5); andere Eingaben, andere UUID', () {
+      final id = derivedId('tracker-a', 'e1');
+      expect(id, derivedId('tracker-a', 'e1'));
+      expect(id, matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')));
+      expect(derivedId('tracker-b', 'e1'), isNot(id));
+      expect(derivedId('tracker-a', 'e2'), isNot(id));
+    });
+  });
+
   group('parseNumber', () {
     double? de(String t) => parseNumber(t, decimalSeparator: ',');
     double? en(String t) => parseNumber(t, decimalSeparator: '.');
