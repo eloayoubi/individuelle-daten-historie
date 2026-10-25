@@ -66,8 +66,9 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
 3. **Verträge:** Unter *Business* den Vertrag „Paid Apps“ abschließen und Steuer- und Bankdaten eintragen. Ohne ihn lassen sich keine Abos laden, auch nicht in TestFlight.
 4. **Abo „Kostenkurve Cloud“** (*Monetization → Subscriptions*; Produkt-Ids aus der Zeit als „Plus“):
    - Gruppe „Kostenkurve Cloud“ mit dem auto-renewable Produkt `de.eloayoubi.kostenkurve.plus.monthly`, Preis **2 € im Monat** (lokal bleibt die App kostenlos).
-   - Ein schon angelegtes `de.eloayoubi.kostenkurve.plus.yearly` nicht mehr anbieten (Verkauf beenden); laufende Jahresabos erkennt der Server weiter. Liegt es noch in der Gruppe, **auf derselben Stufe** wie das Monatsabo lassen.
-   - Name und Beschreibung (DE und EN), z. B. „Kostenkurve Cloud – Deine Daten auf allen Geräten, gesichert, mit Teilen und Belegen“, und ein Screenshot der Abo-Seite für die Prüfung.
+   - Ein schon angelegtes `de.eloayoubi.kostenkurve.plus.yearly` nicht mehr anbieten: in keinem Land verfügbar, nicht zur Prüfung einreichen (nicht löschen – die Produkt-Id wäre sonst für immer verbraucht). Laufende Jahresabos erkennt der Server weiter. Liegt es in der Gruppe, **auf derselben Stufe** wie das Monatsabo lassen.
+   - Stand 25.10.2026 so eingerichtet: Gruppe und Abo heißen „Kostenkurve Cloud“, Monatsabo 2,00 € (Deutschland, 174 Länder angeglichen), Jahresabo „Plus jährlich (nicht anbieten)“ ohne Länder.
+   - Name und Beschreibung (DE und EN), z. B. „Kostenkurve Cloud – Auf allen Geräten, gesichert, mit Teilen und Belegen“, und ein Screenshot der Abo-Seite für die Prüfung (`flutter test tool/screenshots/paywall_review_test.dart --update-goldens` → `build/asc/`).
    - **Familienfreigabe aus** und **Kulanzzeitraum (Billing Grace Period) aus**: Der Server wertet nur `expiresDate` aus.
 5. **Server-Benachrichtigungen:**
    - Unter *App Information → App Store Server Notifications* **Version 2** wählen.
