@@ -641,7 +641,7 @@
   },
   "insightsConsumptionHint": "Bis heute, verglichen mit demselben Zeitraum im Vorjahr.",
   "insightsInstalments": "Abschlags-Check",
-  "insightsInstalmentDetail": "Ø {paid} pro Monat · Kosten {year} ≈ {cost}",
+  "insightsInstalmentDetail": "Abschlag {paid} pro Monat · Kosten {year} ≈ {cost}",
   "@insightsInstalmentDetail": {
     "placeholders": {
       "paid": {

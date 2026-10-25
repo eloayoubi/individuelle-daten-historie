@@ -1024,7 +1024,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String insightsInstalmentDetail(String paid, String year, String cost) {
-    return 'Ø $paid pro Monat · Kosten $year ≈ $cost';
+    return 'Abschlag $paid pro Monat · Kosten $year ≈ $cost';
   }
 
   @override

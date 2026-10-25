@@ -54,4 +54,17 @@ void main() {
     expect(cubit.state.result!.delta, 0);
     cubit.close();
   });
+
+  test('Tracker, dessen Ziel-Kategorie fehlt, zählt selbst und steht zur Wahl', () {
+    const price = FieldDefinition(id: 'p', name: 'Preis', kind: FieldKind.currency, role: FieldRole.recurringCost);
+    final c = Category(
+      id: 'c',
+      name: 'Wasser',
+      icon: CategoryIcon.drop,
+      swatch: CategorySwatch.blue,
+      trackers: [Tracker(id: 't', name: 'Kaltwasser', includedIn: 'weg', fields: const [price], entries: [Entry(id: 'e', date: DateTime.utc(2026), values: const {'p': 30})])],
+    );
+    final cubit = WhatIfCubit(WhatIfArgs(categories: [c], today: DateTime.utc(2026, 10, 22)));
+    expect(cubit.state.options.map((o) => o.tracker.id), ['t']);
+  });
 }

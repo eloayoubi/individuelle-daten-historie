@@ -284,7 +284,7 @@
   "insightsPrevious": "{year}: {value}",
   "insightsConsumptionHint": "To date, compared with the same period last year.",
   "insightsInstalments": "Instalment check",
-  "insightsInstalmentDetail": "avg. {paid} per month · costs {year} ≈ {cost}",
+  "insightsInstalmentDetail": "Instalment {paid} per month · costs {year} ≈ {cost}",
   "insightsCredit": "Credit ≈ {value}",
   "insightsBackPayment": "Back payment ≈ {value}",
   "insightsSuggest": "About {value} per month would fit.",

@@ -1017,7 +1017,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String insightsInstalmentDetail(String paid, String year, String cost) {
-    return 'avg. $paid per month · costs $year ≈ $cost';
+    return 'Instalment $paid per month · costs $year ≈ $cost';
   }
 
   @override

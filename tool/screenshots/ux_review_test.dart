@@ -61,6 +61,8 @@ void main() {
   );
   final screens = <String, (Widget Function(), double)>{
     'home': (() => const ShellView(), 932),
+    'insights': (() => BlocProvider(create: (_) => ShellCubit()..select(ShellTab.insights), child: const ShellView()), 2400),
+    'settings': (() => BlocProvider(create: (_) => ShellCubit()..select(ShellTab.settings), child: const ShellView()), 2000),
     'category_strom': (
       () => const CategoryDetailPage(categoryId: 'c-strom'),
       1600,

@@ -1763,7 +1763,7 @@ abstract class AppLocalizations {
   /// No description provided for @insightsInstalmentDetail.
   ///
   /// In de, this message translates to:
-  /// **'Ø {paid} pro Monat · Kosten {year} ≈ {cost}'**
+  /// **'Abschlag {paid} pro Monat · Kosten {year} ≈ {cost}'**
   String insightsInstalmentDetail(String paid, String year, String cost);
 
   /// No description provided for @insightsCredit.
