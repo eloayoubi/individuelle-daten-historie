@@ -1136,6 +1136,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountSignOut => 'Sign out';
 
   @override
+  String accountSignOutPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Note: $count entries haven\'t been sent yet. They will be lost unless you sign in with this account again.',
+      one:
+          'Note: 1 entry hasn\'t been sent yet. It will be lost unless you sign in with this account again.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get accountAnonymousTitle => 'Only on this device';
 
   @override
@@ -1328,6 +1341,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountDeleteBody =>
       'Your account and your cloud categories with all entries and receipts are deleted immediately – also for everyone you share them with. This cannot be undone. Cancel a cloud subscription separately in iOS Settings.';
+
+  @override
+  String accountDeletePending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Note: $count entries haven\'t been sent yet and will be lost with the account.',
+      one:
+          'Note: 1 entry hasn\'t been sent yet and will be lost with the account.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get accountDeleteFooter =>

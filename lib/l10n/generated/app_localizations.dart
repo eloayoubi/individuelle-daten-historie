@@ -1940,6 +1940,12 @@ abstract class AppLocalizations {
   /// **'Abmelden'**
   String get accountSignOut;
 
+  /// No description provided for @accountSignOutPending.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet. Er geht verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.} other{Achtung: {count} Einträge sind noch nicht gesendet. Sie gehen verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.}}'**
+  String accountSignOutPending(int count);
+
   /// No description provided for @accountAnonymousTitle.
   ///
   /// In de, this message translates to:
@@ -2281,6 +2287,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.'**
   String get accountDeleteBody;
+
+  /// No description provided for @accountDeletePending.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet und geht mit dem Konto verloren.} other{Achtung: {count} Einträge sind noch nicht gesendet und gehen mit dem Konto verloren.}}'**
+  String accountDeletePending(int count);
 
   /// No description provided for @accountDeleteFooter.
   ///

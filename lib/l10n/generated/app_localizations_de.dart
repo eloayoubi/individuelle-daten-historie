@@ -1143,6 +1143,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get accountSignOut => 'Abmelden';
 
   @override
+  String accountSignOutPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Achtung: $count Einträge sind noch nicht gesendet. Sie gehen verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.',
+      one:
+          'Achtung: 1 Eintrag ist noch nicht gesendet. Er geht verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get accountAnonymousTitle => 'Nur auf diesem Gerät';
 
   @override
@@ -1335,6 +1348,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get accountDeleteBody =>
       'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.';
+
+  @override
+  String accountDeletePending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Achtung: $count Einträge sind noch nicht gesendet und gehen mit dem Konto verloren.',
+      one:
+          'Achtung: 1 Eintrag ist noch nicht gesendet und geht mit dem Konto verloren.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get accountDeleteFooter =>
