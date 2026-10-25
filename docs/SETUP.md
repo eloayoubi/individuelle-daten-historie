@@ -27,7 +27,7 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
    Danach im Dashboard unter *Authentication* prüfen:
    - *Sign In / Providers*: Anonymous aus, Apple an, „Allow manual linking“ an.
    - *Emails*: Die Vorlagen „Confirm signup“, „Magic Link“ und „Change Email Address“ zeigen den Code.
-   - **SMTP:** Der eingebaute Mailversand ist auf wenige Mails pro Stunde begrenzt. Für echte Nutzer unter *Authentication → Emails → SMTP Settings* einen eigenen Anbieter eintragen, z. B. Resend, Postmark oder Brevo, Absender `no-reply@<deine-domain>`.
+   - **SMTP (Pflicht für den E-Mail-Code):** Ohne eigenen Anbieter lässt Supabase die Vorlagen nicht ändern – `config push` scheitert dann komplett (siehe `supabase/README.md`, „Auth“), und die Mails enthalten nur einen Link statt des Codes. Der eingebaute Mailversand ist außerdem auf wenige Mails pro Stunde begrenzt. Für echte Nutzer unter *Authentication → Emails → SMTP Settings* einen eigenen Anbieter eintragen, z. B. Resend, Postmark oder Brevo, Absender `no-reply@<deine-domain>`.
 4. **Datenbank einspielen.** Erst lokal testen, dann pushen:
    ```sh
    supabase/scripts/test_local.sh
