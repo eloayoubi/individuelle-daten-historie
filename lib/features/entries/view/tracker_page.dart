@@ -7,11 +7,13 @@ import '../../categories/view/tracker_setup_page.dart';
 import '../cubit/tracker_cubit.dart';
 import '../data/tracker_history.dart';
 import 'entry_form_page.dart';
+import 'price_history_page.dart';
 import 'widgets/history_chart.dart';
 import 'widgets/tracker_details.dart';
 
 /// Verlauf eines Trackers: Graph der letzten zwölf Monate (Kosten oder Verbrauch), Jahresvergleich
 /// und Prognose, Details (Anbieter, Vertragsende), aktuelle Werte und alle Einträge zum Bearbeiten.
+/// Versorgungszähler zeigen statt „Details“ den Vertrag: Preise mit Verlauf und die Details.
 /// Der Stift führt zum Aufbau (Felder und Einstellungen).
 class TrackerPage extends StatelessWidget {
   const TrackerPage({super.key, required this.args});
@@ -152,7 +154,34 @@ class _Content extends StatelessWidget {
             ),
           ),
         ],
-        if (tracker.detailFields.isNotEmpty) ...[
+        if (tracker.isUtilityMeter) ...[
+          SectionHeader(title: l10n.contractTitle),
+          AppListGroup(
+            dividerIndent: Spacing.l,
+            footer: state.missingPrice ? l10n.contractMissingPrice : null,
+            children: [
+              for (final field in tracker.rateFields)
+                _ContractRow(
+                  field: field,
+                  value: state.contract.where((v) => v.field.id == field.id).firstOrNull,
+                  onTap: () => PriceHistoryPage.open(context, cubit: cubit, fieldId: field.id),
+                ),
+            ],
+          ),
+          if (tracker.detailFields.isNotEmpty) ...[
+            const SizedBox(height: Spacing.m),
+            TrackerDetailsGroup(tracker: tracker, onSave: category.canEdit ? cubit.saveDetail : null),
+          ],
+          if (category.canEdit)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.m, Spacing.l, 0),
+              child: AppButton(
+                label: l10n.contractChange,
+                variant: AppButtonVariant.tinted,
+                onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true),
+              ),
+            ),
+        ] else if (tracker.detailFields.isNotEmpty) ...[
           SectionHeader(title: l10n.detailsTitle),
           TrackerDetailsGroup(tracker: tracker, onSave: category.canEdit ? cubit.saveDetail : null),
         ],
@@ -203,13 +232,19 @@ class _Content extends StatelessWidget {
               children: [
                 for (final e in list)
                   AppListRow(
-                    title: context.shortWeekdayDate(e.date),
+                    title: tracker.isBill(e)
+                        ? l10n.entryPeriodRange(context.shortDate(e.periodStart!), context.shortDate(e.periodEnd!))
+                        : context.shortWeekdayDate(e.date),
                     subtitle: context.joinParts([
                       if (category.sharedWith.where((m) => m.userId == e.createdBy).firstOrNull case final CategoryMember by) l10n.entryBy(by.name.isEmpty ? l10n.shareNoName : by.name),
+                      if (tracker.isBill(e)) l10n.entryKindBill,
                       if (e.meterChange) l10n.trackerMeterChanged,
                       for (final f in tracker.fields)
                         if (!f.isDetail)
-                          if (e.values[f.id] case final Object v) l10n.entryFieldValue(f.name, context.fieldValue(f, v)),
+                          if (e.values[f.id] case final Object v)
+                            tracker.isBill(e) && f.role == FieldRole.meterReading
+                                ? l10n.entryFieldValue(l10n.entryBillConsumption, context.amount((v as num).toDouble(), f.usageUnit))
+                                : l10n.entryFieldValue(f.name, context.fieldValue(f, v)),
                       e.note,
                     ]),
                     onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e) : null,
@@ -219,6 +254,41 @@ class _Content extends StatelessWidget {
             const SizedBox(height: Spacing.s),
           ],
       ],
+    );
+  }
+}
+
+/// Preis im Vertrag: aktueller Wert seit …, eine eingetragene Änderung; ohne Wert „Eintragen“.
+class _ContractRow extends StatelessWidget {
+  const _ContractRow({required this.field, required this.value, required this.onTap});
+
+  /// Platz für den Wert rechts (längere werden gekürzt).
+  static const _valueWidth = 180.0;
+
+  final FieldDefinition field;
+  final CurrentValue? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final v = value;
+    return AppListRow(
+      title: field.name,
+      subtitle: v == null
+          ? null
+          : context.joinParts([
+              l10n.trackerSince(context.shortDate(v.since)),
+              if (v.upcoming case final Object next) l10n.trackerUpcoming(context.shortDate(v.upcomingFrom!), context.fieldValue(field, next)),
+            ]),
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _valueWidth),
+        child: v == null
+            ? AppText(l10n.contractSet, style: (t) => t.body, color: c.accent)
+            : AppText(context.fieldValue(field, v.value), style: (t) => t.numberM, maxLines: 1, align: TextAlign.end),
+      ),
+      onTap: onTap,
     );
   }
 }

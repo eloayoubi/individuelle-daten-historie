@@ -20,6 +20,8 @@ class TrackerState extends Equatable {
     this.metric,
     this.history,
     this.currentValues = const [],
+    this.contract = const [],
+    this.missingPrice = false,
     this.includedInName,
     this.event,
   });
@@ -34,12 +36,28 @@ class TrackerState extends Equatable {
   final TrackerHistory? history;
   final List<CurrentValue> currentValues;
 
+  /// Vertrag eines Versorgungszählers: aktueller Wert je Preis (Preise ohne Wert fehlen).
+  final List<CurrentValue> contract;
+
+  /// Verbrauch bekannt, aber noch kein Arbeitspreis – ohne ihn gibt es keine Kosten.
+  final bool missingPrice;
+
   /// Kategorie, in deren Kosten dieser Tracker steckt.
   final String? includedInName;
   final TrackerEvent? event;
 
-  /// Neueste zuerst, ohne reine Detail-Einträge (die zeigt „Details“).
-  List<Entry> get entries => [...?tracker?.records]..sort((a, b) => b.date.compareTo(a.date));
+  /// Neueste zuerst, ohne reine Detail-Einträge (die zeigt „Details“) und ohne Preisänderungen
+  /// eines Versorgungszählers (die zeigt der Vertrag).
+  List<Entry> get entries => [
+    for (final e in tracker?.records ?? const <Entry>[])
+      if (!tracker!.isPriceChange(e)) e,
+  ]..sort((a, b) => b.date.compareTo(a.date));
+
+  /// Alle Werte eines Preises, neueste zuerst.
+  List<Entry> priceHistory(FieldDefinition field) => [
+    for (final e in tracker?.entries ?? const <Entry>[])
+      if (e.values.containsKey(field.id)) e,
+  ]..sort((a, b) => b.date.compareTo(a.date));
 
   /// [event] gilt nur für genau einen Zustand und fällt beim nächsten weg.
   TrackerState copyWith({HistoryMetric? metric, TrackerHistory? history, TrackerEvent? event}) => TrackerState(
@@ -50,10 +68,12 @@ class TrackerState extends Equatable {
     metric: metric ?? this.metric,
     history: history ?? this.history,
     currentValues: currentValues,
+    contract: contract,
+    missingPrice: missingPrice,
     includedInName: includedInName,
     event: event,
   );
 
   @override
-  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues, includedInName, event];
+  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues, contract, missingPrice, includedInName, event];
 }

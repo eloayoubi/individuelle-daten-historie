@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
+import 'package:kostenkurve/features/categories/data/memory_categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
 import 'package:kostenkurve/features/entries/data/tracker_history.dart';
@@ -109,6 +110,70 @@ void main() {
       expect(TrackerHistory.currentValuesOf(tracker('c-strom'), now).where((v) => v.field.isRate), isEmpty);
       final onlyBill = Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: [bill, Entry(id: 'p', date: DateTime.utc(2026), values: const {'ap': 0.3})]);
       expect(TrackerHistory.currentValuesOf(onlyBill, now), isEmpty);
+    });
+  });
+
+  group('Vertrag', () {
+    Future<TrackerState> load(CategoriesRepository repo, String categoryId, String trackerId) async {
+      final cubit = TrackerCubit(repo, TrackerArgs(categoryId: categoryId, trackerId: trackerId), now: () => now);
+      await cubit.load();
+      final state = cubit.state;
+      await cubit.close();
+      return state;
+    }
+
+    test('Strom: Vertrag zeigt Arbeitspreis, Grundpreis und Abschlag', () async {
+      final s = await load(MockCategoriesRepository(), 'c-strom', 't-strom');
+      expect(s.contract.map((v) => v.field.id), ['f-strom-ap', 'f-strom-gp', 'f-strom-abschlag']);
+      expect(s.contract.first.value, 0.329);
+      expect(s.contract.first.since, DateTime.utc(2025, 4, 1));
+      expect(s.missingPrice, isFalse);
+    });
+
+    test('Preisänderungen stehen nicht in den Einträgen', () async {
+      final s = await load(MockCategoriesRepository(), 'c-strom', 't-strom');
+      expect(s.entries.map((e) => e.id), isNot(contains('e-strom-p1')));
+      expect(s.entries.map((e) => e.id), isNot(contains('e-strom-p2')));
+      expect(s.entries, isNotEmpty);
+    });
+
+    test('Preisverlauf neueste zuerst', () async {
+      final s = await load(MockCategoriesRepository(), 'c-strom', 't-strom');
+      final ap = s.tracker!.fields.firstWhere((f) => f.id == 'f-strom-ap');
+      expect(s.priceHistory(ap).map((e) => e.id), ['e-strom-p2', 'e-strom-p1']);
+    });
+
+    test('Auto: kein Vertrag', () async {
+      final s = await load(MockCategoriesRepository(), 'c-auto', 't-golf');
+      expect(s.contract, isEmpty);
+      expect(s.missingPrice, isFalse);
+    });
+
+    test('Rechnung ohne Arbeitspreis: Hinweis', () async {
+      const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+      const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
+      final repo = MemoryCategoriesRepository(
+        seed: [
+          Category(
+            id: 'c',
+            name: 'Strom',
+            icon: CategoryIcon.bolt,
+            swatch: CategorySwatch.orange,
+            trackers: [
+              Tracker(
+                id: 't',
+                name: 'Zähler',
+                fields: const [meter, price],
+                entries: [Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30))],
+              ),
+            ],
+          ),
+        ],
+      );
+      final s = await load(repo, 'c', 't');
+      expect(s.missingPrice, isTrue);
+      expect(s.contract, isEmpty);
+      expect(s.entries.map((e) => e.id), ['b']);
     });
   });
 }

@@ -475,7 +475,7 @@
   "trackerCurrentValues": "Aktuelle Werte",
   "trackerEntries": "Einträge",
   "trackerNoEntriesTitle": "Noch keine Einträge",
-  "trackerNoEntriesBody": "Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.",
+  "trackerNoEntriesBody": "Trag den ersten Wert ein – ab einer Rechnung oder dem zweiten Zählerstand entsteht der Verlauf.",
   "trackerAddEntry": "Wert eintragen",
   "trackerMeterChanged": "Neuer Zähler",
   "homeSyncPending": "{count, plural, =1{1 Eintrag wartet auf Verbindung} other{{count} Einträge warten auf Verbindung}}",
@@ -947,6 +947,30 @@
   "@contractDeleteBody": {
     "placeholders": {
       "prices": {
+        "type": "String"
+      }
+    }
+  },
+  "contractTitle": "Vertrag",
+  "contractSet": "Eintragen",
+  "contractMissingPrice": "Ohne Arbeitspreis rechnet die App noch keine Kosten.",
+  "priceHistoryFrom": "ab {date}",
+  "@priceHistoryFrom": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "priceHistoryPlanned": "geplant",
+  "priceHistoryEmpty": "Noch kein Preis eingetragen.",
+  "entryPeriodRange": "{from} – {to}",
+  "@entryPeriodRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
         "type": "String"
       }
     }

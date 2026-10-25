@@ -1481,7 +1481,7 @@ abstract class AppLocalizations {
   /// No description provided for @trackerNoEntriesBody.
   ///
   /// In de, this message translates to:
-  /// **'Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.'**
+  /// **'Trag den ersten Wert ein – ab einer Rechnung oder dem zweiten Zählerstand entsteht der Verlauf.'**
   String get trackerNoEntriesBody;
 
   /// No description provided for @trackerAddEntry.
@@ -2509,6 +2509,48 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{prices} verschwinden aus Vertrag, Kosten und Prognose.'**
   String contractDeleteBody(String prices);
+
+  /// No description provided for @contractTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Vertrag'**
+  String get contractTitle;
+
+  /// No description provided for @contractSet.
+  ///
+  /// In de, this message translates to:
+  /// **'Eintragen'**
+  String get contractSet;
+
+  /// No description provided for @contractMissingPrice.
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Arbeitspreis rechnet die App noch keine Kosten.'**
+  String get contractMissingPrice;
+
+  /// No description provided for @priceHistoryFrom.
+  ///
+  /// In de, this message translates to:
+  /// **'ab {date}'**
+  String priceHistoryFrom(String date);
+
+  /// No description provided for @priceHistoryPlanned.
+  ///
+  /// In de, this message translates to:
+  /// **'geplant'**
+  String get priceHistoryPlanned;
+
+  /// No description provided for @priceHistoryEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Preis eingetragen.'**
+  String get priceHistoryEmpty;
+
+  /// No description provided for @entryPeriodRange.
+  ///
+  /// In de, this message translates to:
+  /// **'{from} – {to}'**
+  String entryPeriodRange(String from, String to);
 
   /// No description provided for @exportCategory.
   ///

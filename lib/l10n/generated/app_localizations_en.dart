@@ -811,7 +811,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackerNoEntriesBody =>
-      'Enter the first value – the history starts with the second meter reading.';
+      'Add your first value – a bill or a second meter reading starts the history.';
 
   @override
   String get trackerAddEntry => 'Add value';
@@ -1455,6 +1455,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String contractDeleteBody(String prices) {
     return '$prices will be removed from contract, costs and forecast.';
+  }
+
+  @override
+  String get contractTitle => 'Contract';
+
+  @override
+  String get contractSet => 'Add';
+
+  @override
+  String get contractMissingPrice =>
+      'Without a unit price the app can\'t calculate costs yet.';
+
+  @override
+  String priceHistoryFrom(String date) {
+    return 'from $date';
+  }
+
+  @override
+  String get priceHistoryPlanned => 'planned';
+
+  @override
+  String get priceHistoryEmpty => 'No price entered yet.';
+
+  @override
+  String entryPeriodRange(String from, String to) {
+    return '$from – $to';
   }
 
   @override

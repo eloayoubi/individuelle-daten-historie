@@ -142,6 +142,17 @@ class TrackerHistory extends Equatable {
     ];
   }
 
+  /// Vertrag eines Versorgungszählers: je Preis und Betrag der aktuelle Wert samt eingetragener
+  /// Änderung; Preise ohne Wert fehlen. Leer bei anderen Trackern.
+  static List<CurrentValue> contractOf(Tracker tracker, DateTime today) {
+    if (!tracker.isUtilityMeter) return const [];
+    final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
+    return [
+      for (final field in tracker.rateFields)
+        if (_current(sorted, field, today) case final CurrentValue value) value,
+    ];
+  }
+
   static CurrentValue? _current(List<Entry> sorted, FieldDefinition field, DateTime today) {
     Entry? current;
     Entry? upcoming;
@@ -155,7 +166,7 @@ class TrackerHistory extends Equatable {
     }
     final base = current ?? upcoming;
     if (base == null) return null;
-    final showUpcoming = current != null && upcoming != null && (field.role == FieldRole.unitPrice || field.role == FieldRole.recurringCost);
+    final showUpcoming = current != null && upcoming != null && field.isRate;
     return CurrentValue(
       field: field,
       value: base.values[field.id]!,
