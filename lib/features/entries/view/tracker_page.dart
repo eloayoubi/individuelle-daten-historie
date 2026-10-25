@@ -169,6 +169,33 @@ class _Content extends StatelessWidget {
               ),
             ),
           ],
+          // Verbrauch da, Preise fehlen: Kosten gibt es erst mit Vertrag – das sagen wir gleich oben.
+          if (state.missingPrice && category.canEdit)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.m, Spacing.l, 0),
+              child: AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: Spacing.s,
+                  children: [
+                    Row(
+                      spacing: Spacing.m,
+                      children: [
+                        AppIconTile(icon: CupertinoIcons.tag_fill, color: c.swatch(category.swatch)),
+                        Expanded(child: AppText(l10n.contractMissingTitle, style: (t) => t.headline)),
+                      ],
+                    ),
+                    AppText(l10n.contractMissingBody, style: (t) => t.subheadline, color: c.textSecondary),
+                    const SizedBox(height: Spacing.xs),
+                    AppButton(
+                      label: l10n.contractEnterPrices,
+                      variant: AppButtonVariant.tinted,
+                      onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           if (state.currentValues.isNotEmpty && !tracker.isUtilityMeter) ...[
             SectionHeader(title: l10n.trackerCurrentValues),
             AppListGroup(

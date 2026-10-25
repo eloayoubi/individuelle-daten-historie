@@ -1515,6 +1515,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Without a unit price the app can\'t calculate costs yet.';
 
   @override
+  String get contractMissingTitle => 'No prices yet';
+
+  @override
+  String get contractMissingBody =>
+      'Add the unit price, standing charge and instalment from your contract – then the app calculates your costs and checks your instalment.';
+
+  @override
+  String get contractEnterPrices => 'Add prices';
+
+  @override
   String priceHistoryFrom(String date) {
     return 'from $date';
   }

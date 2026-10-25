@@ -27,14 +27,18 @@ class ContractGroup extends StatelessWidget {
       children: [
         AppListGroup(
           dividerIndent: Spacing.l,
-          footer: missingPrice ? l10n.contractMissingPrice : null,
+          // Wer bearbeiten darf, sieht dazu oben eine Karte mit Aktion; hier nur für alle anderen.
+          footer: missingPrice && !category.canEdit ? l10n.contractMissingPrice : null,
           children: [
             for (final field in tracker.contractFields)
               _PriceRow(
                 canEdit: category.canEdit,
                 field: field,
                 value: contract.where((v) => v.field.id == field.id).firstOrNull,
-                onTap: () => PriceHistoryPage.open(context, categoryId: category.id, trackerId: tracker.id, fieldId: field.id),
+                // Noch kein Wert: gleich eintragen statt in einen leeren Verlauf.
+                onTap: category.canEdit && !contract.any((v) => v.field.id == field.id)
+                    ? () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true)
+                    : () => PriceHistoryPage.open(context, categoryId: category.id, trackerId: tracker.id, fieldId: field.id),
               ),
           ],
         ),
@@ -46,7 +50,7 @@ class ContractGroup extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.m, Spacing.l, 0),
             child: AppButton(
-              label: l10n.contractChange,
+              label: contract.isEmpty ? l10n.contractEnterPrices : l10n.contractChange,
               icon: CupertinoIcons.tag,
               variant: AppButtonVariant.tinted,
               onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true),

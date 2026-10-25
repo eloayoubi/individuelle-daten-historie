@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/core/di/lookup.dart';
 import 'package:kostenkurve/core/theme/app_theme.dart';
+import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
@@ -82,6 +83,8 @@ void main() {
       ),
       2000,
     ),
+    'tracker_bill_only': (() => const TrackerPage(args: TrackerArgs(categoryId: 'c-neu', trackerId: 't-neu')), 1400),
+    'category_bill_only': (() => const CategoryDetailPage(categoryId: 'c-neu'), 1400),
     'form_reading': (
       () => EntryFormPage(
         args: EntryFormArgs(category: strom, tracker: strom.trackers.single),
@@ -117,6 +120,28 @@ void main() {
     'entries_all': (() => const EntriesPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom')), 1400),
     'category_heizung': (() => const CategoryDetailPage(categoryId: 'c-heizung'), 1400),
   };
+
+  // Neuer Stromzähler mit nur einer Rechnung, ohne Preise – zeigt die Hinweise für Einsteiger.
+  final strom0 = strom.trackers.single;
+  final fresh = Category(
+    id: 'c-neu',
+    name: 'Strom Wohnung',
+    icon: CategoryIcon.bolt,
+    swatch: CategorySwatch.orange,
+    trackers: [
+      Tracker(
+        id: 't-neu',
+        name: 'Zähler',
+        fields: strom0.fields,
+        entries: [Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: {strom0.meter!.id: 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30))],
+      ),
+    ],
+  );
+  setUp(() {
+    getIt
+      ..unregister<CategoriesRepository>()
+      ..registerLazySingleton<CategoriesRepository>(() => MockCategoriesRepository(seed: [...MockCategoriesRepository.categories, fresh]));
+  });
 
   for (final MapEntry(key: name, value: (page, height)) in screens.entries) {
     testWidgets(name, (t) async {

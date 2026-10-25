@@ -2600,6 +2600,24 @@ abstract class AppLocalizations {
   /// **'Ohne Arbeitspreis rechnet die App noch keine Kosten.'**
   String get contractMissingPrice;
 
+  /// No description provided for @contractMissingTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Preise'**
+  String get contractMissingTitle;
+
+  /// No description provided for @contractMissingBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag Arbeitspreis, Grundpreis und Abschlag aus deinem Vertrag ein – dann rechnet die App deine Kosten und prüft den Abschlag.'**
+  String get contractMissingBody;
+
+  /// No description provided for @contractEnterPrices.
+  ///
+  /// In de, this message translates to:
+  /// **'Preise eintragen'**
+  String get contractEnterPrices;
+
   /// No description provided for @priceHistoryFrom.
   ///
   /// In de, this message translates to:

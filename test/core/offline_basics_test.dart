@@ -65,5 +65,10 @@ void main() {
       final entry = Entry(id: 'e', date: DateTime.utc(2026, 10, 1), values: {'n': 1.5, 'i': 3, 't': 'Text', 'd': DateTime.utc(2027, 3, 31), 'b': true}, note: 'Notiz', meterChange: true);
       expect(TrackingCodec.entryFrom(TrackingCodec.entry(entry)), entry);
     });
+
+    test('Rechnung behält Zeitraum und Verbrauch', () {
+      final bill = Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30));
+      expect(TrackingCodec.entryFrom(TrackingCodec.entry(bill)), bill);
+    });
   });
 }

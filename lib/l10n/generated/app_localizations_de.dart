@@ -1524,6 +1524,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ohne Arbeitspreis rechnet die App noch keine Kosten.';
 
   @override
+  String get contractMissingTitle => 'Noch keine Preise';
+
+  @override
+  String get contractMissingBody =>
+      'Trag Arbeitspreis, Grundpreis und Abschlag aus deinem Vertrag ein – dann rechnet die App deine Kosten und prüft den Abschlag.';
+
+  @override
+  String get contractEnterPrices => 'Preise eintragen';
+
+  @override
   String priceHistoryFrom(String date) {
     return 'ab $date';
   }

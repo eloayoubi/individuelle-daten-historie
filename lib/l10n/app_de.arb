@@ -976,6 +976,9 @@
   "contractTitle": "Vertrag",
   "contractSet": "Eintragen",
   "contractMissingPrice": "Ohne Arbeitspreis rechnet die App noch keine Kosten.",
+  "contractMissingTitle": "Noch keine Preise",
+  "contractMissingBody": "Trag Arbeitspreis, Grundpreis und Abschlag aus deinem Vertrag ein – dann rechnet die App deine Kosten und prüft den Abschlag.",
+  "contractEnterPrices": "Preise eintragen",
   "priceHistoryFrom": "ab {date}",
   "@priceHistoryFrom": {
     "placeholders": {

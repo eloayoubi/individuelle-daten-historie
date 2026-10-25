@@ -172,6 +172,7 @@ void main() {
       );
       final s = await load(repo, 'c', 't');
       expect(s.missingPrice, isTrue);
+      expect(s.metric, HistoryMetric.consumption);
       expect(s.contract, isEmpty);
       expect(s.entries.map((e) => e.id), ['b']);
     });
