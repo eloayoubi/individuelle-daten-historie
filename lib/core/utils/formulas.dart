@@ -174,7 +174,7 @@ abstract final class Formulas {
         final d = e.periodEnd!.difference(e.periodStart!).inDays + 1.0;
         vars[days] = vars[_english[days]!] = d;
         vars[months] = vars[_english[months]!] = d / _daysPerMonth;
-        vars[consumption] = vars[_english[consumption]!] = e.number(meter!.id)!.toDouble();
+        if (e.number(meter!.id) case final num v) vars[consumption] = vars[_english[consumption]!] = v.toDouble();
       } else {
         final since = reading is num && lastReading != null ? lastReading.$1 : lastDate;
         if (since != null) {

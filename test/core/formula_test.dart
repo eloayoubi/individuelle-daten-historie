@@ -259,6 +259,18 @@ void main() {
       expect(vars['tage'], 183);
     });
 
+    test('Rechnung ohne Zahl im Zählerfeld: kein verbrauch, kein Absturz', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [Entry(id: 'b', date: DateTime.utc(2026, 2, 28), values: const {'stand': 'kaputt'}, periodStart: DateTime.utc(2026, 2), periodEnd: DateTime.utc(2026, 2, 28))],
+      );
+      final vars = Formulas.variablesByEntry(t)['b']!;
+      expect(vars.containsKey('verbrauch'), isFalse);
+      expect(vars['tage'], 28);
+    });
+
     test('Stand nach Rechnung rechnet gegen den vorigen Stand', () {
       final t = Tracker(
         id: 't',

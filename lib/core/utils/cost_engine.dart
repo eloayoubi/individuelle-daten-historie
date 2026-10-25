@@ -49,7 +49,7 @@ class CostParts {
 ///   wiederkehrende Beträge für den Abschlags-Check.
 /// - **Formel-Felder** werden vorher je Eintrag ausgerechnet ([Formulas.apply]) und zählen dann
 ///   nach ihrem Zeitverhalten wie eingegebene Werte.
-/// - **Trend:** Liegen zwei volle Jahre Zählerstände vor, wird der Vorjahres-Verbrauch der Prognose
+/// - **Trend:** Liegen zwei volle Jahre Verbrauch vor, wird der Vorjahres-Verbrauch der Prognose
 ///   mit dem Verhältnis der letzten 365 Tage zu den 365 davor angepasst (begrenzt auf −20 … +25 %).
 class CostEngine {
   CostEngine(Tracker source, {required DateTime today}) : _today = day(today) {
