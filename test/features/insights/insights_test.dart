@@ -48,6 +48,17 @@ void main() {
       expect(i.consumption.map((c) => c.tracker.id), contains('t-wasser'));
     });
 
+    test('Kosten, die in einer fehlenden oder archivierten Kategorie stecken sollen, zählen hier', () {
+      final miete = categories.firstWhere((c) => c.id == 'c-miete');
+      final archived = Category(id: miete.id, name: miete.name, icon: miete.icon, swatch: miete.swatch, trackers: miete.trackers, archivedAt: now);
+      final others = [for (final c in categories) if (c.id != 'c-miete') c];
+      for (final list in [others, [...others, archived]]) {
+        final insights = Insights.build(list, now, 2026);
+        expect(insights.comparisons.map((c) => c.category.id), contains('c-wasser'));
+        expect(insights.included.where((n) => n.tracker.id == 't-wasser'), isEmpty);
+      }
+    });
+
     test('Prognose mit Spanne und Aufteilung, Trend der Zähler', () {
       expect(i.forecast, closeTo(i.forecastParts.total, 1e-6));
       expect(i.forecastRange, greaterThan(0));

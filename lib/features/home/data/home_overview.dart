@@ -131,6 +131,7 @@ class HomeOverview extends Equatable {
     var lastYearToDate = 0.0, comparableToDate = 0.0;
     DateTime? trackedSince;
     var rangeSquares = 0.0;
+    final ids = {for (final c in categories) if (!c.isArchived) c.id};
 
     for (final category in categories) {
       var costToDate = 0.0, previous = 0.0, sameTrackersToDate = 0.0, categoryNextYear = 0.0;
@@ -141,8 +142,10 @@ class HomeOverview extends Equatable {
         final engine = CostEngine(tracker, today: today);
         final since = _firstEntry(tracker);
         if (since != null && (trackedSince == null || since.isBefore(trackedSince))) trackedSince = since;
-        // Kosten, die schon in einer anderen Kategorie stecken, zählen nirgends doppelt.
-        if (tracker.includedIn == null) {
+        // Kosten, die schon in einer anderen Kategorie stecken, zählen nirgends doppelt. Fehlt diese
+        // (archiviert, gelöscht, nicht geladen), zählen sie hier – sonst fehlten sie überall.
+        final included = tracker.includedIn != null && tracker.includedIn != category.id && ids.contains(tracker.includedIn);
+        if (!included) {
           final toDate = engine.cost(yearStart, tomorrow);
           costToDate += toDate;
           if (since != null && (categorySince == null || since.isBefore(categorySince))) categorySince = since;

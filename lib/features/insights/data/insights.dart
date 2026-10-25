@@ -217,7 +217,7 @@ class Insights extends Equatable {
     // Verbrauch im laufenden Jahr nur bis heute vergleichen, sonst ganze Jahre.
     final usageEnd = current ? tomorrow : DateTime.utc(year + 1);
     final previousUsageEnd = current ? DateTime.utc(year - 1, today.month, today.day + 1) : DateTime.utc(year);
-    final byId = {for (final c in categories) c.id: c};
+    final byId = {for (final c in categories) if (!c.isArchived) c.id: c};
 
     final months = List.generate(12, (_) => <String, double>{});
     final comparisons = <YearComparison>[];
@@ -233,9 +233,11 @@ class Insights extends Equatable {
       var total = 0.0, previous = 0.0, forecast = 0.0, categoryRange = 0.0, sameTotal = 0.0, samePrevious = 0.0;
       for (final tracker in category.trackers) {
         final engine = CostEngine(tracker, today: today);
-        final into = tracker.includedIn == null ? null : byId[tracker.includedIn];
-        if (tracker.includedIn != null) {
-          if (into != null) included.add(IncludedNote(tracker: tracker, category: category, into: into, cost: engine.costInYear(year)));
+        // Fehlt die Kategorie, in der die Kosten stecken (archiviert, gelöscht, nicht geladen), zählen
+        // sie hier – sonst fehlten sie überall.
+        final into = tracker.includedIn == null || tracker.includedIn == category.id ? null : byId[tracker.includedIn];
+        if (into != null) {
+          included.add(IncludedNote(tracker: tracker, category: category, into: into, cost: engine.costInYear(year)));
         } else {
           var trackerTotal = 0.0;
           for (var m = 1; m <= 12; m++) {
@@ -271,7 +273,7 @@ class Insights extends Equatable {
             ),
           );
           // Nur Zähler, deren Kosten hier zählen, prägen die Prognose.
-          if (engine.trend case final double trend when current && tracker.includedIn == null && (trend - 1).abs() >= 0.02) {
+          if (engine.trend case final double trend when current && into == null && (trend - 1).abs() >= 0.02) {
             trends.add(TrendNote(category: category, tracker: tracker, trend: trend));
           }
         }
