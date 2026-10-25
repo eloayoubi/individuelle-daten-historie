@@ -6,17 +6,20 @@ import '../../../core/core.dart';
 import '../../account/cubit/account_cubit.dart';
 import '../../account/view/account_page.dart';
 import '../../attachments/data/attachments_repository.dart';
+import '../../auth/view/auth_page.dart';
 import '../../categories/data/categories_repository.dart';
 import '../../legal/data/legal_document.dart';
 import '../../legal/view/legal_page.dart';
 import '../../plus/cubit/plus_cubit.dart';
 import '../../plus/view/paywall_page.dart';
 import '../../reminders/cubit/reminders_cubit.dart';
+import '../../storage/cubit/storage_cubit.dart';
+import '../../storage/view/cloud_flow.dart';
 import '../cubit/appearance_cubit.dart';
 import '../data/data_export.dart';
 
-/// Einstellungen: Konto und Plus, Darstellung (Automatisch / Hell / Dunkel), Erinnerungen,
-/// Datenexport, Rechtliches und ein Satz zur App.
+/// Einstellungen: Speicherort (lokal oder Cloud, Konto, Abo), Darstellung (Automatisch / Hell /
+/// Dunkel), Erinnerungen, Datenexport, Rechtliches und ein Satz zur App.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -28,7 +31,8 @@ class SettingsPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: Spacing.tabBarClearance),
       children: [
         AppHeader(title: l10n.tabSettings),
-        const _AccountGroup(),
+        SectionHeader(title: l10n.settingsStorageTitle),
+        const _StorageGroup(),
         SectionHeader(title: l10n.settingsAppearance),
         Padding(
           padding: Spacing.screen,
@@ -102,9 +106,17 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-/// Konto (anonym oder gesichert) und Kostenkurve Plus mit belegtem Speicher.
-class _AccountGroup extends StatelessWidget {
-  const _AccountGroup();
+/// Speicherort: lokal (kostenlos) mit „Cloud aktivieren“ und Anmeldung, oder Cloud mit Konto, Abo
+/// samt belegtem Speicher und „Auf dieses Gerät holen“.
+class _StorageGroup extends StatelessWidget {
+  const _StorageGroup();
+
+  Future<void> _moveToLocal(BuildContext context) async {
+    final l10n = context.l10n;
+    final storage = context.read<StorageCubit>();
+    final ok = await AppDialog.confirm(context, title: l10n.settingsMoveLocalTitle, message: l10n.settingsMoveLocalBody, confirmLabel: l10n.settingsMoveLocal);
+    if (ok) await storage.moveToLocal();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,22 +124,58 @@ class _AccountGroup extends StatelessWidget {
     final l10n = context.l10n;
     final account = context.select((AccountCubit a) => a.state.account);
     final plus = context.watch<PlusCubit>().state;
+    final cloud = context.select((StorageCubit s) => s.state.isCloud);
+    final accountRow = AppListRow(
+      leading: AppIconTile(icon: CupertinoIcons.person_crop_circle_fill, color: account.isRegistered ? c.success : c.warning),
+      title: account.displayName.isEmpty ? l10n.accountTitle : account.displayName,
+      subtitle: account.isAnonymous ? l10n.settingsAccountAnonymous : (account.email ?? l10n.accountSecuredTitle),
+      onTap: () => AccountPage.open(context),
+    );
+    if (cloud) {
+      return AppListGroup(
+        footer: l10n.settingsStorageFooterCloud,
+        children: [
+          accountRow,
+          AppListRow(
+            leading: AppIconTile(icon: CupertinoIcons.cloud_fill, color: c.accent),
+            title: l10n.plusTitle,
+            subtitleWidget: plus.active ? const _Usage() : null,
+            subtitle: plus.active ? null : l10n.settingsPlusHint,
+            trailing: plus.active ? AppChip(label: l10n.plusBadgeActive, background: c.accentSoft, foreground: c.accent) : null,
+            onTap: () => PaywallPage.open(context),
+          ),
+          AppListRow(
+            leading: AppIconTile(icon: CupertinoIcons.device_phone_portrait, color: c.success),
+            title: l10n.settingsMoveLocal,
+            onTap: () => _moveToLocal(context),
+          ),
+        ],
+      );
+    }
     return AppListGroup(
+      footer: l10n.settingsStorageFooterLocal,
       children: [
         AppListRow(
-          leading: AppIconTile(icon: CupertinoIcons.person_crop_circle_fill, color: account.isAnonymous ? c.warning : c.success),
-          title: account.displayName.isEmpty ? l10n.accountTitle : account.displayName,
-          subtitle: account.isAnonymous ? l10n.settingsAccountAnonymous : (account.email ?? l10n.accountSecuredTitle),
-          onTap: () => AccountPage.open(context),
+          leading: AppIconTile(icon: CupertinoIcons.device_phone_portrait, color: c.success),
+          title: l10n.settingsStorageLocal,
+          subtitle: l10n.settingsStorageLocalHint,
+          trailing: Icon(CupertinoIcons.checkmark_alt, color: c.accent),
+          chevron: false,
         ),
         AppListRow(
-          leading: AppIconTile(icon: CupertinoIcons.sparkles, color: c.accent),
-          title: l10n.plusTitle,
-          subtitleWidget: plus.active ? const _Usage() : null,
-          subtitle: plus.active ? null : l10n.settingsPlusHint,
-          trailing: plus.active ? AppChip(label: l10n.plusBadgeActive, background: c.accentSoft, foreground: c.accent) : null,
-          onTap: () => PaywallPage.open(context),
+          leading: AppIconTile(icon: CupertinoIcons.cloud_fill, color: c.accent),
+          title: l10n.settingsCloudActivate,
+          subtitle: l10n.settingsCloudActivateHint(CloudFlow.price(context, plus)),
+          onTap: () => plus.active && account.isRegistered ? CloudFlow.activate(context) : PaywallPage.open(context),
         ),
+        if (account.isRegistered)
+          accountRow
+        else
+          AppListRow(
+            leading: AppIconTile(icon: CupertinoIcons.person_crop_circle_fill, color: c.textSecondary),
+            title: l10n.accountSignIn,
+            onTap: () => AuthPage.open(context, mode: AuthMode.signIn),
+          ),
       ],
     );
   }

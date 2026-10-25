@@ -10,15 +10,15 @@ E-Mail: [E-Mail-Adresse]
 
 ## Kurz gesagt
 
-Kostenkurve speichert, was du einträgst – damit die App rechnen, sichern und teilen kann. Es gibt keine Werbung, kein Tracking und keine Analyse-Dienste. Deine Daten werden nicht verkauft.
+Kostenkurve speichert, was du einträgst – damit die App rechnen, sichern und teilen kann. Nutzt du die App lokal, bleiben deine Daten nur auf deinem Gerät; erst mit einem Cloud-Konto speichern wir sie auf unseren Servern. Es gibt keine Werbung, kein Tracking und keine Analyse-Dienste. Deine Daten werden nicht verkauft.
 
 ## Welche Daten wir verarbeiten
 
-- Konto: eine zufällige Nutzer-ID. Sicherst du dein Konto, zusätzlich deine E-Mail-Adresse oder die Kennung von „Mit Apple anmelden“ (Apple kann dafür eine anonyme Weiterleitungsadresse liefern) und den Namen, den du für geteilte Kategorien angibst.
-- Inhalte: Kategorien, Tracker, Felder, Einträge (z. B. Zählerstände, Preise, Abschläge, Notizen) und Belege (Fotos, PDFs), die du hinzufügst.
+- Konto (nur für die Cloud): eine zufällige Nutzer-ID, deine E-Mail-Adresse oder die Kennung von „Mit Apple anmelden“ (Apple kann dafür eine anonyme Weiterleitungsadresse liefern) und der Name, den du für geteilte Kategorien angibst.
+- Inhalte: Kategorien, Tracker, Felder, Einträge (z. B. Zählerstände, Preise, Abschläge, Notizen) und Belege (Fotos, PDFs), die du hinzufügst. Lokal liegen sie nur auf deinem Gerät, in der Cloud zusätzlich auf unseren Servern.
 - Abo: Produkt, Kauf- und Ablaufdatum sowie die Transaktionskennung von Apple. Zahlungsdaten erhalten wir nicht – die Zahlung läuft vollständig über Apple.
 - Technisch: Beim Zugriff auf den Server fallen Verbindungsdaten wie IP-Adresse und Zeitpunkt in Protokollen des Hosting-Anbieters an.
-- Auf dem Gerät: Erinnerungen, Darstellung und ein Zwischenspeicher für die Nutzung ohne Netz bleiben auf deinem Gerät.
+- Auf dem Gerät: lokal gespeicherte Daten, Erinnerungen, Darstellung und ein Zwischenspeicher für die Nutzung ohne Netz bleiben auf deinem Gerät; deine Anmeldung liegt verschlüsselt im Schlüsselbund des Geräts.
 
 ## Zwecke und Rechtsgrundlagen
 
@@ -36,7 +36,7 @@ Teilst du eine Kategorie, sehen die eingeladenen Personen deren Inhalte einschli
 
 ## Speicherdauer und Löschen
 
-Wir speichern deine Daten, solange dein Konto besteht. In der App unter Einstellungen › Konto › Konto löschen löschst du dein Konto sofort: dein Konto, deine eigenen Kategorien mit allen Einträgen und Belegen sowie deine Mitgliedschaften. Einträge, die du in Kategorien anderer erfasst hast, bleiben dort ohne deinen Namen. Kopien in Sicherungen werden nach spätestens 30 Tagen überschrieben.
+Lokale Daten liegen nur auf deinem Gerät; du löschst sie, indem du die App löschst. Cloud-Daten speichern wir, solange dein Konto besteht. In der App unter Einstellungen › Konto › Konto löschen löschst du dein Konto sofort: dein Konto, deine eigenen Kategorien mit allen Einträgen und Belegen sowie deine Mitgliedschaften. Einträge, die du in Kategorien anderer erfasst hast, bleiben dort ohne deinen Namen. Kopien in Sicherungen werden nach spätestens 30 Tagen überschrieben.
 
 ## Deine Rechte
 

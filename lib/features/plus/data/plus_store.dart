@@ -20,11 +20,12 @@ enum PlusStoreUpdateKind {
   failed,
 }
 
-/// „Kostenkurve Plus“ im App Store: monatlich oder jährlich, eine Abo-Gruppe.
+/// „Kostenkurve Cloud“ im App Store (Produkt-Ids aus der Zeit als „Plus“): 2 € im Monat. Das
+/// Jahresabo verkauft die App nicht mehr; laufende Jahresabos erkennt der Server weiter.
 abstract interface class PlusStore {
   static const monthly = 'de.eloayoubi.kostenkurve.plus.monthly';
   static const yearly = 'de.eloayoubi.kostenkurve.plus.yearly';
-  static const products = [monthly, yearly];
+  static const products = [monthly];
   static const prefix = 'de.eloayoubi.kostenkurve.plus.';
 
   /// Hört auf Käufe, Verlängerungen und offene Transaktionen. Einmal beim App-Start.
@@ -125,7 +126,8 @@ class AppStorePlusStore implements PlusStore {
   }
 }
 
-/// Android vorerst ohne Kauf: Plus gibt es im App Store (Google Play folgt).
+/// Android vorerst ohne Kauf: Die Cloud gibt es im App Store (Google Play folgt); ein dort gekauftes
+/// Abo gilt nach dem Anmelden auch hier.
 class UnavailablePlusStore implements PlusStore {
   const UnavailablePlusStore();
 
@@ -162,10 +164,7 @@ class MockPlusStore implements PlusStore {
   void start() {}
 
   @override
-  Future<Map<String, StorePrice>> prices() async => const {
-    PlusStore.monthly: StorePrice('2,99 €', 2.99, currency: 'EUR'),
-    PlusStore.yearly: StorePrice('19,99 €', 19.99, currency: 'EUR'),
-  };
+  Future<Map<String, StorePrice>> prices() async => const {PlusStore.monthly: StorePrice('2,00 €', 2, currency: 'EUR')};
 
   @override
   Future<void> buy(String productId) async {

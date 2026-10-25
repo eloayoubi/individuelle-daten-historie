@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 
 import '../core/di/lookup.dart';
+import '../core/extensions/context_extensions.dart';
 import '../core/theme/app_theme.dart';
 import '../features/account/cubit/account_cubit.dart';
 import '../features/categories/data/categories_repository.dart';
@@ -17,6 +18,9 @@ import '../features/settings/cubit/appearance_cubit.dart';
 import '../features/sharing/data/invite_links.dart';
 import '../features/sharing/view/join_sheet.dart';
 import '../features/shell/view/shell_page.dart';
+import '../features/storage/cubit/storage_cubit.dart';
+import '../features/storage/view/cloud_flow.dart';
+import '../features/storage/view/start_gate.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launch_splash.dart';
 
@@ -43,14 +47,15 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
     links.start();
   }
 
-  /// Einladungslink geöffnet: Beitreten-Sheet mit dem Code, sobald die App steht.
-  void _onInvite(String code) {
+  /// Einladungslink geöffnet: Beitreten-Sheet mit dem Code, sobald die App steht. Teilen gibt es
+  /// nur in der Cloud – lokal erklärt ein Dialog warum.
+  Future<void> _onInvite(String code) async {
     final context = _navigator.currentContext;
     if (context == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _onInvite(code));
       return;
     }
-    JoinSheet.show(context, code: code);
+    if (await CloudFlow.require(context, context.l10n.cloudRequiredShare) && context.mounted) await JoinSheet.show(context, code: code);
   }
 
   @override
@@ -61,14 +66,15 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Über dem MaterialApp, damit auch Sheets und gepushte Seiten Darstellung, Erinnerungen, Konto
-    // und Plus sehen.
+    // Über dem MaterialApp, damit auch Sheets und gepushte Seiten Darstellung, Erinnerungen, Konto,
+    // Cloud-Abo und Speicherort sehen.
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => lookup<AppearanceCubit>()..load()),
         BlocProvider(create: (_) => lookup<RemindersCubit>()..load()),
         BlocProvider(create: (_) => lookup<AccountCubit>()..load()),
         BlocProvider(create: (_) => lookup<PlusCubit>()..load()),
+        BlocProvider(create: (_) => lookup<StorageCubit>()..load()),
       ],
       child: BlocListener<AccountCubit, AccountState>(
         // Anderes Konto (anmelden, abmelden, löschen): dessen Abo-Stand laden.
@@ -89,10 +95,13 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
             builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
               value: Theme.of(context).brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
               child: _SyncOnResume(
-                child: LaunchSplash(composition: widget.launch, child: child!),
+                child: LaunchSplash(
+                  composition: widget.launch,
+                  child: TransferOverlay(child: child!),
+                ),
               ),
             ),
-            home: const OnboardingGate(child: ShellPage()),
+            home: const StartGate(child: OnboardingGate(child: ShellPage())),
           ),
         ),
       ),

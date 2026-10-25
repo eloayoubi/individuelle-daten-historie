@@ -16,17 +16,17 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
    supabase link --project-ref <project-ref>
    ```
 3. **Auth-Einstellungen hochladen.** `supabase/config.toml` enthält bereits:
-   - anonyme Anmeldung
-   - manuelles Verknüpfen: nötig, damit „Mit Apple sichern“ das anonyme Konto behält
+   - anonyme Anmeldung **aus** (lokal braucht kein Konto, die Cloud ein registriertes)
+   - manuelles Verknüpfen: nötig, damit anonyme Konten aus der Testphase beim Registrieren ihre Daten behalten
    - Apple als Anbieter mit Client-ID `de.eloayoubi.kostenkurve`
-   - E-Mail-Code mit 6 Ziffern, beide Vorlagen aus `supabase/templates/` mit `{{ .Token }}`
+   - E-Mail-Code mit 8 Ziffern (die App nimmt 6 bis 10 an), 10 Minuten gültig, neuer Code frühestens nach 60 s; alle drei Vorlagen aus `supabase/templates/` mit `{{ .Token }}`
    - Redirect `de.eloayoubi.kostenkurve://login-callback`
    ```sh
    supabase config push
    ```
    Danach im Dashboard unter *Authentication* prüfen:
-   - *Sign In / Providers*: Anonymous an, Apple an, „Allow manual linking“ an.
-   - *Emails*: Die Vorlagen „Magic Link“ und „Change Email Address“ zeigen den Code.
+   - *Sign In / Providers*: Anonymous aus, Apple an, „Allow manual linking“ an.
+   - *Emails*: Die Vorlagen „Confirm signup“, „Magic Link“ und „Change Email Address“ zeigen den Code.
    - **SMTP:** Der eingebaute Mailversand ist auf wenige Mails pro Stunde begrenzt. Für echte Nutzer unter *Authentication → Emails → SMTP Settings* einen eigenen Anbieter eintragen, z. B. Resend, Postmark oder Brevo, Absender `no-reply@<deine-domain>`.
 4. **Datenbank einspielen.** Erst lokal testen, dann pushen:
    ```sh
@@ -64,11 +64,10 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
    - Bundle-ID wie oben
    - SKU z. B. `kostenkurve`
 3. **Verträge:** Unter *Business* den Vertrag „Paid Apps“ abschließen und Steuer- und Bankdaten eintragen. Ohne ihn lassen sich keine Abos laden, auch nicht in TestFlight.
-4. **Abo „Kostenkurve Plus“** (*Monetization → Subscriptions*):
-   - Gruppe „Kostenkurve Plus“ mit zwei auto-renewable Produkten, beide **auf derselben Stufe** (sonst ignoriert der Server Wechsel auf das kürzere Abo):
-     - `de.eloayoubi.kostenkurve.plus.monthly`, Vorschlag 2,99 €
-     - `de.eloayoubi.kostenkurve.plus.yearly`, Vorschlag 19,99 €
-   - Je Produkt Name und Beschreibung (DE und EN) und ein Screenshot der Abo-Seite für die Prüfung.
+4. **Abo „Kostenkurve Cloud“** (*Monetization → Subscriptions*; Produkt-Ids aus der Zeit als „Plus“):
+   - Gruppe „Kostenkurve Cloud“ mit dem auto-renewable Produkt `de.eloayoubi.kostenkurve.plus.monthly`, Preis **2 € im Monat** (lokal bleibt die App kostenlos).
+   - Ein schon angelegtes `de.eloayoubi.kostenkurve.plus.yearly` nicht mehr anbieten (Verkauf beenden); laufende Jahresabos erkennt der Server weiter. Liegt es noch in der Gruppe, **auf derselben Stufe** wie das Monatsabo lassen.
+   - Name und Beschreibung (DE und EN), z. B. „Kostenkurve Cloud – Deine Daten auf allen Geräten, gesichert, mit Teilen und Belegen“, und ein Screenshot der Abo-Seite für die Prüfung.
    - **Familienfreigabe aus** und **Kulanzzeitraum (Billing Grace Period) aus**: Der Server wertet nur `expiresDate` aus.
 5. **Server-Benachrichtigungen:**
    - Unter *App Information → App Store Server Notifications* **Version 2** wählen.
@@ -116,4 +115,4 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
 
 - Upload-Schlüssel und `android/key.properties` anlegen (siehe README › Android-Release).
 - App in der Play Console anlegen.
-- Plus-Kauf über Google Play Billing ist noch nicht gebaut. Ein im App Store gekauftes Plus gilt aber auch auf Android.
+- Cloud-Kauf über Google Play Billing ist noch nicht gebaut. Ein im App Store gekauftes Cloud-Abo gilt aber auch auf Android; lokal ist die App dort voll nutzbar.

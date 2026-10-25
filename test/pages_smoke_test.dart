@@ -8,6 +8,8 @@ import 'package:kostenkurve/core/theme/app_theme.dart';
 import 'package:kostenkurve/core/widgets/widgets.dart';
 import 'package:kostenkurve/features/account/view/account_page.dart';
 import 'package:kostenkurve/features/auth/data/auth_repository.dart';
+import 'package:kostenkurve/features/auth/data/mock_auth_repository.dart';
+import 'package:kostenkurve/features/auth/view/auth_page.dart';
 import 'package:kostenkurve/features/categories/cubit/field_editor_cubit.dart';
 import 'package:kostenkurve/features/categories/data/category_templates.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
@@ -29,11 +31,17 @@ import 'package:kostenkurve/features/legal/data/legal_document.dart';
 import 'package:kostenkurve/features/legal/view/legal_page.dart';
 import 'package:kostenkurve/features/onboarding/cubit/onboarding_cubit.dart';
 import 'package:kostenkurve/features/onboarding/view/onboarding_page.dart';
+import 'package:kostenkurve/features/plus/cubit/plus_cubit.dart';
+import 'package:kostenkurve/features/plus/data/plus_repository.dart';
+import 'package:kostenkurve/features/plus/data/plus_store.dart';
 import 'package:kostenkurve/features/plus/view/paywall_page.dart';
 import 'package:kostenkurve/features/settings/view/settings_page.dart';
 import 'package:kostenkurve/features/sharing/view/join_sheet.dart';
 import 'package:kostenkurve/features/sharing/view/share_page.dart';
 import 'package:kostenkurve/features/shell/view/shell_page.dart';
+import 'package:kostenkurve/features/storage/data/storage_mode.dart';
+import 'package:kostenkurve/features/storage/view/cloud_paused_page.dart';
+import 'package:kostenkurve/features/storage/view/start_page.dart';
 import 'package:kostenkurve/l10n/generated/app_localizations.dart';
 
 import 'support/pump_app.dart';
@@ -44,8 +52,14 @@ void main() {
     await ensureMockDependencies();
     await loadAppFonts();
   });
-  // Konto-Tests sichern das Beispielkonto – danach wieder anonym.
-  tearDown(() => lookup<AuthRepository>().signOut());
+  // Konto-Tests melden das Beispielkonto an, Speicherort-Tests wechseln nach „Lokal“ – danach wieder
+  // abgemeldet und in der Mock-Cloud.
+  tearDown(() async {
+    await lookup<AuthRepository>().signOut();
+    // Abmelden in der Cloud führt zum Start-Bildschirm (StorageCubit) – erst danach zurück.
+    await Future<void>.delayed(Duration.zero);
+    await useMockCloud();
+  });
 
   Widget onboarding() => BlocProvider(
     create: (_) => OnboardingCubit(MockCategoriesRepository(seed: const []), MemoryJsonStore())..load(),
@@ -92,6 +106,10 @@ void main() {
     ('share missing', const SharePage(categoryId: 'weg')),
     ('join', const JoinSheet(code: 'K7Q2M9X4TA')),
     ('paywall', const PaywallPage()),
+    ('start', const StartPage()),
+    ('register', const AuthPage()),
+    ('sign in', const AuthPage(mode: AuthMode.signIn)),
+    ('cloud paused', const CloudPausedPage()),
     ('privacy', const LegalPage(document: LegalDocument.privacy)),
     ('terms', const LegalPage(document: LegalDocument.terms)),
     ('imprint', const LegalPage(document: LegalDocument.imprint)),
@@ -242,13 +260,71 @@ void main() {
         expect(t.takeException(), isNull);
       });
 
-      testWidgets('Abo-Seite zeigt beide Abos und Pflicht-Links', (t) async {
+      testWidgets('Start: lokal kostenlos oder Cloud mit Preis, lokal wählen', (t) async {
+        await lookup<StorageModeStore>().set(null);
+        await pumpPage(t, const StartPage(), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        expect(find.text('Kostenlos · ohne Konto'), findsOneWidget);
+        expect(find.text('2,00 € im Monat · mit Konto'), findsOneWidget);
+        expect(find.text('Ich habe schon ein Konto'), findsOneWidget);
+        await t.tap(find.text('Kostenlos lokal starten'));
+        await t.pumpAndSettle();
+        expect(lookup<StorageModeStore>().mode, StorageMode.local);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Registrieren: E-Mail-Code, danach Paywall „lokal kostenlos, Cloud 2 €“', (t) async {
+        await lookup<StorageModeStore>().set(null);
+        await pumpPage(t, Builder(builder: (context) => AppButton(label: 'los', onPressed: () => AuthPage.open(context))), theme: theme, size: const Size(390, 1400));
+        await t.tap(find.text('los'));
+        await t.pumpAndSettle();
+        expect(find.text('Code senden'), findsOneWidget);
+        expect(find.textContaining('Nutzungsbedingungen'), findsOneWidget);
+        await t.enterText(find.byType(TextField).first, 'kein-at');
+        await t.pump();
+        expect(t.widget<AppButton>(find.widgetWithText(AppButton, 'Code senden')).onPressed, isNull);
+        await t.enterText(find.byType(TextField).first, 'elias@example.com');
+        await t.pump();
+        await t.tap(find.text('Code senden'));
+        await t.pumpAndSettle();
+        expect(find.textContaining('Neuen Code senden ('), findsOneWidget);
+        await t.enterText(find.byType(TextField).last, MockAuthRepository.demoCode);
+        await t.pump();
+        await t.tap(find.text('Bestätigen'));
+        await t.pumpAndSettle();
+        expect(find.byType(PaywallPage), findsOneWidget);
+        expect(find.text('Kostenlos'), findsOneWidget);
+        expect(find.text('2,00 €/Monat'), findsOneWidget);
+        expect(find.text('Cloud abonnieren – 2,00 €/Monat'), findsOneWidget);
+        expect(find.text('Kostenlos lokal nutzen'), findsOneWidget);
+        await t.pump(const Duration(seconds: 61));
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Paywall: Abo abschließen führt in die Cloud', (t) async {
+        await lookup<StorageModeStore>().set(StorageMode.local);
+        await lookup<AuthRepository>().signInWithApple();
+        // Eigenes Abo für diesen Test: Der Mock-Kauf bliebe sonst für alle folgenden aktiv.
+        final repo = MockPlusRepository();
+        await pumpPage(
+          t,
+          BlocProvider(create: (_) => PlusCubit(repo, MockPlusStore(repo))..load(), child: const PaywallPage()),
+          theme: theme,
+          size: const Size(390, 1600),
+        );
+        await t.pumpAndSettle();
+        await t.tap(find.text('Cloud abonnieren – 2,00 €/Monat'));
+        await t.pumpAndSettle();
+        expect(lookup<StorageModeStore>().mode, StorageMode.cloud);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Abo-Seite ohne Konto: erst Konto erstellen, Pflicht-Links', (t) async {
         await pumpPage(t, const PaywallPage(), theme: theme, size: const Size(390, 1600));
         await t.pumpAndSettle();
-        expect(find.text('19,99 €/Jahr'), findsOneWidget);
-        expect(find.text('2,99 €/Monat'), findsOneWidget);
-        expect(find.text('Spare 44 %'), findsOneWidget);
-        expect(find.text('Käufe wiederherstellen'), findsOneWidget);
+        expect(find.text('2,00 €/Monat'), findsOneWidget);
+        expect(find.text('Konto erstellen'), findsOneWidget);
+        expect(find.textContaining('Verlängert sich automatisch'), findsOneWidget);
         expect(find.text('Nutzungsbedingungen'), findsOneWidget);
         expect(find.text('Datenschutz'), findsOneWidget);
         await t.tap(find.text('Datenschutz'));

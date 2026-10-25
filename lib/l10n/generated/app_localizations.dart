@@ -1925,7 +1925,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountSignOutBody.
   ///
   /// In de, this message translates to:
-  /// **'Deine Daten bleiben im Konto. Danach startest du auf diesem Gerät neu ohne Konto.'**
+  /// **'Deine Daten bleiben in der Cloud. Auf diesem Gerät wählst du danach neu, wo du speicherst.'**
   String get accountSignOutBody;
 
   /// No description provided for @accountSignOut.
@@ -1955,7 +1955,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountSecuredBody.
   ///
   /// In de, this message translates to:
-  /// **'Angemeldet mit {login}. Deine Daten sind auf jedem Gerät da.'**
+  /// **'Angemeldet mit {login}.'**
   String accountSecuredBody(String login);
 
   /// No description provided for @accountApple.
@@ -2267,7 +2267,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountDeleteBody.
   ///
   /// In de, this message translates to:
-  /// **'Dein Konto, deine Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Plus-Abo kündigst du separat in den iOS-Einstellungen.'**
+  /// **'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.'**
   String get accountDeleteBody;
 
   /// No description provided for @accountDeleteFooter.
@@ -2321,7 +2321,7 @@ abstract class AppLocalizations {
   /// No description provided for @attachmentsEmptyPlus.
   ///
   /// In de, this message translates to:
-  /// **'Mit Plus hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.'**
+  /// **'In der Cloud hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.'**
   String get attachmentsEmptyPlus;
 
   /// No description provided for @attachmentsOffline.
@@ -2627,13 +2627,13 @@ abstract class AppLocalizations {
   /// No description provided for @plusTitle.
   ///
   /// In de, this message translates to:
-  /// **'Kostenkurve Plus'**
+  /// **'Kostenkurve Cloud'**
   String get plusTitle;
 
   /// No description provided for @plusSubtitle.
   ///
   /// In de, this message translates to:
-  /// **'Alle Belege da, wo die Kosten sind.'**
+  /// **'Deine Daten auf jedem Gerät.'**
   String get plusSubtitle;
 
   /// No description provided for @plusBenefitReceipts.
@@ -2672,23 +2672,11 @@ abstract class AppLocalizations {
   /// **'In geteilten Kategorien sieht dein Partner die Belege – ohne eigenes Abo.'**
   String get plusBenefitSharedBody;
 
-  /// No description provided for @plusYearly.
-  ///
-  /// In de, this message translates to:
-  /// **'Jährlich'**
-  String get plusYearly;
-
   /// No description provided for @plusMonthly.
   ///
   /// In de, this message translates to:
   /// **'Monatlich'**
   String get plusMonthly;
-
-  /// No description provided for @plusPerYear.
-  ///
-  /// In de, this message translates to:
-  /// **'{price}/Jahr'**
-  String plusPerYear(String price);
 
   /// No description provided for @plusPerMonth.
   ///
@@ -2696,29 +2684,11 @@ abstract class AppLocalizations {
   /// **'{price}/Monat'**
   String plusPerMonth(String price);
 
-  /// No description provided for @plusYearlyDetail.
-  ///
-  /// In de, this message translates to:
-  /// **'{price} pro Monat, jährlich abgerechnet'**
-  String plusYearlyDetail(String price);
-
   /// No description provided for @plusMonthlyDetail.
   ///
   /// In de, this message translates to:
   /// **'Monatlich kündbar'**
   String get plusMonthlyDetail;
-
-  /// No description provided for @plusSave.
-  ///
-  /// In de, this message translates to:
-  /// **'Spare {percent} %'**
-  String plusSave(int percent);
-
-  /// No description provided for @plusSubscribe.
-  ///
-  /// In de, this message translates to:
-  /// **'Abo starten'**
-  String get plusSubscribe;
 
   /// No description provided for @plusFinePrint.
   ///
@@ -2741,7 +2711,7 @@ abstract class AppLocalizations {
   /// No description provided for @plusWelcome.
   ///
   /// In de, this message translates to:
-  /// **'Willkommen bei Plus'**
+  /// **'Willkommen in der Cloud'**
   String get plusWelcome;
 
   /// No description provided for @plusNothingToRestore.
@@ -2777,19 +2747,19 @@ abstract class AppLocalizations {
   /// No description provided for @plusOnlyIos.
   ///
   /// In de, this message translates to:
-  /// **'Plus schließt du derzeit in der iPhone-App ab – es gilt dann auch hier.'**
+  /// **'Die Cloud buchst du derzeit in der iPhone-App – das Abo gilt dann auch hier.'**
   String get plusOnlyIos;
 
   /// No description provided for @plusActive.
   ///
   /// In de, this message translates to:
-  /// **'Plus ist aktiv.'**
+  /// **'Cloud ist aktiv.'**
   String get plusActive;
 
   /// No description provided for @plusActiveUntil.
   ///
   /// In de, this message translates to:
-  /// **'Plus ist aktiv – verlängert sich am {date}.'**
+  /// **'Cloud ist aktiv – verlängert sich am {date}.'**
   String plusActiveUntil(String date);
 
   /// No description provided for @plusManage.
@@ -2801,7 +2771,7 @@ abstract class AppLocalizations {
   /// No description provided for @plusBadge.
   ///
   /// In de, this message translates to:
-  /// **'Plus'**
+  /// **'Cloud'**
   String get plusBadge;
 
   /// No description provided for @plusBadgeActive.
@@ -2819,7 +2789,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPlusHint.
   ///
   /// In de, this message translates to:
-  /// **'Belege für Rechnungen und Verträge'**
+  /// **'Auf allen Geräten, gesichert, teilen'**
   String get settingsPlusHint;
 
   /// No description provided for @settingsStorage.
@@ -2971,6 +2941,462 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Legst du einmal fest und änderst sie nur, wenn sich etwas ändert – z. B. Anbieter oder Vertragsende.'**
   String get trackerFieldsDetailsHint;
+
+  /// No description provided for @startTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Wo sollen deine Daten liegen?'**
+  String get startTitle;
+
+  /// No description provided for @startBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenkurve ist kostenlos, solange alles auf diesem Gerät bleibt. Mit einem Konto liegen deine Daten in der Cloud – auf jedem Gerät.'**
+  String get startBody;
+
+  /// No description provided for @startLocalTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf diesem Gerät'**
+  String get startLocalTitle;
+
+  /// No description provided for @startLocalPrice.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenlos · ohne Konto'**
+  String get startLocalPrice;
+
+  /// No description provided for @startLocalPointFeatures.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Funktionen: Verlauf, Prognose, Erinnerungen, Export'**
+  String get startLocalPointFeatures;
+
+  /// No description provided for @startLocalPointPrivate.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Daten verlassen dieses Gerät nicht'**
+  String get startLocalPointPrivate;
+
+  /// No description provided for @startLocalPointLimits.
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Teilen, keine Belege, keine Sicherung'**
+  String get startLocalPointLimits;
+
+  /// No description provided for @startLocalAction.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenlos lokal starten'**
+  String get startLocalAction;
+
+  /// No description provided for @startCloudTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'In der Cloud'**
+  String get startCloudTitle;
+
+  /// No description provided for @startCloudPrice.
+  ///
+  /// In de, this message translates to:
+  /// **'{price} im Monat · mit Konto'**
+  String startCloudPrice(String price);
+
+  /// No description provided for @startCloudPointDevices.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf jedem Gerät, auf dem du dich anmeldest'**
+  String get startCloudPointDevices;
+
+  /// No description provided for @startCloudPointBackup.
+  ///
+  /// In de, this message translates to:
+  /// **'Gesichert, auch wenn das Handy weg ist'**
+  String get startCloudPointBackup;
+
+  /// No description provided for @startCloudPointShare.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit dem Partner teilen, Belege anhängen'**
+  String get startCloudPointShare;
+
+  /// No description provided for @startCloudAction.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto erstellen'**
+  String get startCloudAction;
+
+  /// No description provided for @startSignIn.
+  ///
+  /// In de, this message translates to:
+  /// **'Ich habe schon ein Konto'**
+  String get startSignIn;
+
+  /// No description provided for @startFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Du kannst jederzeit in den Einstellungen wechseln – deine Daten ziehen mit um.'**
+  String get startFooter;
+
+  /// No description provided for @cloudPriceFallback.
+  ///
+  /// In de, this message translates to:
+  /// **'2 €'**
+  String get cloudPriceFallback;
+
+  /// No description provided for @authRegisterTab.
+  ///
+  /// In de, this message translates to:
+  /// **'Registrieren'**
+  String get authRegisterTab;
+
+  /// No description provided for @authSignInTab.
+  ///
+  /// In de, this message translates to:
+  /// **'Anmelden'**
+  String get authSignInTab;
+
+  /// No description provided for @authRegisterTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto erstellen'**
+  String get authRegisterTitle;
+
+  /// No description provided for @authRegisterBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit einem Konto liegen deine Daten in der Cloud und auf jedem Gerät, auf dem du dich anmeldest. Im nächsten Schritt siehst du den Preis – lokal bleibt Kostenkurve kostenlos.'**
+  String get authRegisterBody;
+
+  /// No description provided for @authSignInBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Melde dich an, um deine Cloud-Daten auf diesem Gerät zu öffnen.'**
+  String get authSignInBody;
+
+  /// No description provided for @authAppleRegister.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Apple registrieren'**
+  String get authAppleRegister;
+
+  /// No description provided for @authOrEmail.
+  ///
+  /// In de, this message translates to:
+  /// **'oder mit E-Mail'**
+  String get authOrEmail;
+
+  /// No description provided for @authNoPassword.
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Passwort nötig: Du bekommst einen Code per E-Mail.'**
+  String get authNoPassword;
+
+  /// No description provided for @authCodeSentSignIn.
+  ///
+  /// In de, this message translates to:
+  /// **'Wenn es zu {email} ein Konto gibt, ist ein Code unterwegs. Schau auch im Spam-Ordner.'**
+  String authCodeSentSignIn(String email);
+
+  /// No description provided for @authResendIn.
+  ///
+  /// In de, this message translates to:
+  /// **'Neuen Code senden ({seconds} s)'**
+  String authResendIn(int seconds);
+
+  /// No description provided for @authChangeEmail.
+  ///
+  /// In de, this message translates to:
+  /// **'Andere E-Mail'**
+  String get authChangeEmail;
+
+  /// No description provided for @authConsentPrefix.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit dem Registrieren akzeptierst du die'**
+  String get authConsentPrefix;
+
+  /// No description provided for @authConsentMiddle.
+  ///
+  /// In de, this message translates to:
+  /// **'und hast die Hinweise zum'**
+  String get authConsentMiddle;
+
+  /// No description provided for @authConsentSuffix.
+  ///
+  /// In de, this message translates to:
+  /// **'gelesen.'**
+  String get authConsentSuffix;
+
+  /// No description provided for @authRateLimited.
+  ///
+  /// In de, this message translates to:
+  /// **'Zu viele Versuche. Bitte warte ein paar Minuten.'**
+  String get authRateLimited;
+
+  /// No description provided for @authNetwork.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Verbindung. Prüfe dein Netz und versuch es noch einmal.'**
+  String get authNetwork;
+
+  /// No description provided for @authEmailUsed.
+  ///
+  /// In de, this message translates to:
+  /// **'Zu dieser E-Mail gibt es schon ein Konto. Melde dich dort an.'**
+  String get authEmailUsed;
+
+  /// No description provided for @cloudPaywallSubtitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenkurve bleibt kostenlos, solange deine Daten auf diesem Gerät liegen. Für die Cloud zahlst du {price} im Monat.'**
+  String cloudPaywallSubtitle(String price);
+
+  /// No description provided for @cloudCompareLocal.
+  ///
+  /// In de, this message translates to:
+  /// **'Lokal'**
+  String get cloudCompareLocal;
+
+  /// No description provided for @cloudCompareFree.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenlos'**
+  String get cloudCompareFree;
+
+  /// No description provided for @cloudCompareCloud.
+  ///
+  /// In de, this message translates to:
+  /// **'Cloud'**
+  String get cloudCompareCloud;
+
+  /// No description provided for @cloudFeatureAll.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Funktionen'**
+  String get cloudFeatureAll;
+
+  /// No description provided for @cloudFeatureDevices.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf allen Geräten'**
+  String get cloudFeatureDevices;
+
+  /// No description provided for @cloudFeatureBackup.
+  ///
+  /// In de, this message translates to:
+  /// **'Gesichert'**
+  String get cloudFeatureBackup;
+
+  /// No description provided for @cloudFeatureShare.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit dem Partner teilen'**
+  String get cloudFeatureShare;
+
+  /// No description provided for @cloudFeatureReceipts.
+  ///
+  /// In de, this message translates to:
+  /// **'Belege, 5 GB'**
+  String get cloudFeatureReceipts;
+
+  /// No description provided for @cloudIncluded.
+  ///
+  /// In de, this message translates to:
+  /// **'enthalten'**
+  String get cloudIncluded;
+
+  /// No description provided for @cloudNotIncluded.
+  ///
+  /// In de, this message translates to:
+  /// **'nicht enthalten'**
+  String get cloudNotIncluded;
+
+  /// No description provided for @cloudSubscribe.
+  ///
+  /// In de, this message translates to:
+  /// **'Cloud abonnieren – {price}/Monat'**
+  String cloudSubscribe(String price);
+
+  /// No description provided for @cloudStayLocal.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenlos lokal nutzen'**
+  String get cloudStayLocal;
+
+  /// No description provided for @cloudStayLocalHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Daten bleiben auf diesem Gerät. Die Cloud kannst du später in den Einstellungen buchen.'**
+  String get cloudStayLocalHint;
+
+  /// No description provided for @cloudContinue.
+  ///
+  /// In de, this message translates to:
+  /// **'In die Cloud wechseln'**
+  String get cloudContinue;
+
+  /// No description provided for @storageUploading.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Daten ziehen in die Cloud …'**
+  String get storageUploading;
+
+  /// No description provided for @storageDownloading.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Daten kommen aufs Gerät …'**
+  String get storageDownloading;
+
+  /// No description provided for @storageUploaded.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles in der Cloud'**
+  String get storageUploaded;
+
+  /// No description provided for @storageDownloaded.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles auf diesem Gerät'**
+  String get storageDownloaded;
+
+  /// No description provided for @storageFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Umzug unterbrochen – deine Daten sind noch da. Versuch es mit Netz noch einmal.'**
+  String get storageFailed;
+
+  /// No description provided for @storageAskUploadTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Daten vom Gerät mitnehmen?'**
+  String get storageAskUploadTitle;
+
+  /// No description provided for @storageAskUploadBody.
+  ///
+  /// In de, this message translates to:
+  /// **'In deinem Konto liegen schon Daten. Sollen die Kategorien von diesem Gerät dazukommen?'**
+  String get storageAskUploadBody;
+
+  /// No description provided for @storageAskUploadYes.
+  ///
+  /// In de, this message translates to:
+  /// **'Hinzufügen'**
+  String get storageAskUploadYes;
+
+  /// No description provided for @storageAskUploadNo.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf dem Gerät lassen'**
+  String get storageAskUploadNo;
+
+  /// No description provided for @cloudPausedTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Cloud pausiert'**
+  String get cloudPausedTitle;
+
+  /// No description provided for @cloudPausedBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.'**
+  String get cloudPausedBody;
+
+  /// No description provided for @cloudPausedRenew.
+  ///
+  /// In de, this message translates to:
+  /// **'Abo erneuern'**
+  String get cloudPausedRenew;
+
+  /// No description provided for @cloudPausedMove.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenlos aufs Gerät holen'**
+  String get cloudPausedMove;
+
+  /// No description provided for @settingsStorageTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Speicherort'**
+  String get settingsStorageTitle;
+
+  /// No description provided for @settingsStorageLocal.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf diesem Gerät'**
+  String get settingsStorageLocal;
+
+  /// No description provided for @settingsStorageLocalHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenlos · nur dieses Gerät'**
+  String get settingsStorageLocalHint;
+
+  /// No description provided for @settingsStorageCloud.
+  ///
+  /// In de, this message translates to:
+  /// **'In der Cloud'**
+  String get settingsStorageCloud;
+
+  /// No description provided for @settingsCloudActivate.
+  ///
+  /// In de, this message translates to:
+  /// **'Cloud aktivieren'**
+  String get settingsCloudActivate;
+
+  /// No description provided for @settingsCloudActivateHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf allen Geräten, gesichert – {price}/Monat'**
+  String settingsCloudActivateHint(String price);
+
+  /// No description provided for @settingsMoveLocal.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf dieses Gerät holen'**
+  String get settingsMoveLocal;
+
+  /// No description provided for @settingsMoveLocalTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Daten aufs Gerät holen?'**
+  String get settingsMoveLocalTitle;
+
+  /// No description provided for @settingsMoveLocalBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Kategorien und Einträge werden auf dieses Gerät kopiert, danach speicherst du lokal und kostenlos. Belege bleiben in der Cloud. Dein Abo kündigst du in den iOS-Einstellungen.'**
+  String get settingsMoveLocalBody;
+
+  /// No description provided for @settingsStorageFooterLocal.
+  ///
+  /// In de, this message translates to:
+  /// **'Lokal ist kostenlos. In der Cloud sind deine Daten auf jedem Gerät und gesichert.'**
+  String get settingsStorageFooterLocal;
+
+  /// No description provided for @settingsStorageFooterCloud.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Daten liegen in der Cloud (Rechenzentrum in Frankfurt) und als Kopie auf diesem Gerät.'**
+  String get settingsStorageFooterCloud;
+
+  /// No description provided for @cloudRequiredTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Dafür brauchst du die Cloud'**
+  String get cloudRequiredTitle;
+
+  /// No description provided for @cloudRequiredShare.
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Teilen müssen deine Daten in der Cloud liegen. Lokal bleiben sie nur auf diesem Gerät.'**
+  String get cloudRequiredShare;
+
+  /// No description provided for @cloudRequiredAction.
+  ///
+  /// In de, this message translates to:
+  /// **'Cloud ansehen'**
+  String get cloudRequiredAction;
 }
 
 class _AppLocalizationsDelegate

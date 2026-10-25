@@ -193,11 +193,17 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   /// eigene `raise exception` (P0). Netzwerk- und Serverfehler bleiben vorübergehend.
   static final _permanent = RegExp(r'^(22|23|42|P0)');
 
+  /// Fehlende Schreibrechte (42501) und fehlendes Cloud-Abo (P0064) können vorübergehend sein: Das
+  /// Abo ist abgelaufen oder noch nicht verbucht. Einträge in der Warteschlange sind dann oft die
+  /// einzige Kopie – sie bleiben liegen, bis das Abo wieder läuft oder alles aufs Gerät umzieht.
+  static const _maybeTemporary = {'42501', 'P0064'};
+
   static Future<void> _rejectable(Future<void> Function() write) async {
     try {
       await write();
     } on PostgrestException catch (e) {
-      if (_permanent.hasMatch(e.code ?? '')) throw WriteRejected(e.message);
+      final code = e.code ?? '';
+      if (_permanent.hasMatch(code) && !_maybeTemporary.contains(code)) throw WriteRejected(e.message);
       rethrow;
     }
   }

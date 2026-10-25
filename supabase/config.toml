@@ -177,9 +177,11 @@ enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
 enable_signup = true
-# Allow/disallow anonymous sign-ins to your project. Für Kostenkurve an (auch im Dashboard
-# einschalten: Authentication → Sign In / Providers → Allow anonymous sign-ins).
-enable_anonymous_sign_ins = true
+# Allow/disallow anonymous sign-ins to your project. Für Kostenkurve aus: Lokal braucht kein Konto,
+# die Cloud ein registriertes (Apple oder E-Mail-Code). Bestehende anonyme Sitzungen aus der
+# Testphase bleiben gültig und werden beim Registrieren verknüpft. Auch im Dashboard ausschalten:
+# Authentication → Sign In / Providers → Allow anonymous sign-ins.
+enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts. Für Kostenkurve an: „Mit Apple sichern“
 # verknüpft die Apple-ID mit dem anonymen Konto (linkIdentityWithIdToken), so bleiben die Daten.
 enable_manual_linking = true
@@ -211,7 +213,8 @@ token_refresh = 150
 # Number of sign up and sign-in requests that can be made in a 5 minute interval per IP address (excludes anonymous users).
 sign_in_sign_ups = 30
 # Number of OTP / Magic link verifications that can be made in a 5 minute interval per IP address.
-token_verifications = 30
+# Kostenkurve: 15 – genug für Vertipper, wenig für Raten eines 6-stelligen Codes.
+token_verifications = 15
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
 web3 = 30
 
@@ -232,11 +235,13 @@ enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
-max_frequency = "1s"
-# Number of characters used in the email OTP.
-otp_length = 6
-# Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# Kostenkurve: wie in der App, ein neuer Code frühestens nach 60 Sekunden.
+max_frequency = "60s"
+# Number of characters used in the email OTP. Kostenkurve: 8 Ziffern (100 Mio. Möglichkeiten gegen
+# Raten); die App nimmt 6 bis 10 an.
+otp_length = 8
+# Number of seconds before the email OTP expires (defaults to 1 hour). Kostenkurve: 10 Minuten.
+otp_expiry = 600
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -253,13 +258,18 @@ otp_expiry = 3600
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
-# Kostenkurve fragt 6-stellige Codes ab, Links gibt es nicht: beide Vorlagen enthalten {{ .Token }}.
+# Kostenkurve fragt 6-stellige Codes ab, Links gibt es nicht: alle Vorlagen enthalten {{ .Token }}.
+# Registrieren (signInWithOtp mit shouldCreateUser):
+[auth.email.template.confirmation]
+subject = "Dein Code für Kostenkurve"
+content_path = "./supabase/templates/confirmation.html"
+
 # Anmelden mit bestehendem Konto (signInWithOtp):
 [auth.email.template.magic_link]
 subject = "Dein Anmeldecode für Kostenkurve"
 content_path = "./supabase/templates/magic_link.html"
 
-# Konto mit E-Mail sichern (updateUser(email) aus dem anonymen Konto):
+# Anonymes Konto aus der Testphase mit E-Mail sichern (updateUser(email)):
 [auth.email.template.email_change]
 subject = "Bestätige deine E-Mail für Kostenkurve"
 content_path = "./supabase/templates/email_change.html"

@@ -16,6 +16,7 @@ import '../../features/categories/cubit/category_setup_cubit.dart';
 import '../../features/categories/cubit/field_editor_cubit.dart';
 import '../../features/categories/data/categories_repository.dart';
 import '../../features/categories/data/category_templates.dart';
+import '../../features/categories/data/local_categories_repository.dart';
 import '../../features/categories/data/mock_categories_repository.dart';
 import '../../features/categories/data/offline_categories_repository.dart';
 import '../../features/categories/data/supabase_categories_repository.dart';
@@ -39,6 +40,10 @@ import '../../features/settings/data/review_prompter.dart';
 import '../../features/sharing/cubit/sharing_cubit.dart';
 import '../../features/sharing/data/invite_links.dart';
 import '../../features/shell/cubit/shell_cubit.dart';
+import '../../features/storage/cubit/storage_cubit.dart';
+import '../../features/storage/data/storage_categories_repository.dart';
+import '../../features/storage/data/storage_mode.dart';
+import '../../features/storage/data/storage_transfer.dart';
 import '../config/app_config.dart';
 import '../network/supabase_api.dart';
 import '../utils/json_store.dart';
@@ -51,22 +56,41 @@ import 'lookup.dart';
 /// - Cubits/Blocs: `registerFactory` (jeder BlocProvider bekommt eine frische Instanz),
 ///   mit Parameter `registerFactoryParam` (Abruf über `lookup<T>(param1: …)`)
 ///
-/// Mit Supabase-Konfiguration (siehe [AppConfig]) werden die echten Repositories registriert,
-/// sonst die Mocks mit den Beispieldaten aus dem Design.
+/// Daten: `CategoriesRepository` ist die Weiche [StorageCategoriesRepository] – lokal an die Datei
+/// auf dem Gerät, in der Cloud an Supabase (mit Supabase-Konfiguration, siehe [AppConfig]) bzw. an
+/// die Mocks mit den Beispieldaten aus dem Design.
 Future<void> configureDependencies() async {
+  final mode = StorageModeStore(FileJsonStore('storage_mode'));
+  await mode.load();
+  getIt
+    ..registerSingleton<StorageModeStore>(mode)
+    ..registerLazySingleton<LocalCategoriesRepository>(() => LocalCategoriesRepository(FileJsonStore('local_data', strict: true)));
   if (AppConfig.hasSupabase) {
     await SupabaseBootstrap.init();
     getIt
       ..registerLazySingleton<SupabaseApi>(() => SupabaseApi(SupabaseBootstrap.client))
       ..registerLazySingleton<AuthRepository>(() => SupabaseAuthRepository(SupabaseBootstrap.client))
+      ..registerLazySingleton<SupabaseCategoriesRepository>(() => SupabaseCategoriesRepository(lookup<SupabaseApi>(), lookup<AuthRepository>()))
       // Offline-Schicht: Cache zum Lesen, Warteschlange für Einträge (siehe OfflineCategoriesRepository).
-      ..registerLazySingleton<CategoriesRepository>(
+      ..registerLazySingleton<OfflineCategoriesRepository>(
         () => OfflineCategoriesRepository(
-          SupabaseCategoriesRepository(lookup<SupabaseApi>(), lookup<AuthRepository>()),
+          lookup<SupabaseCategoriesRepository>(),
           cache: FileJsonStore('categories_cache'),
           queue: FileJsonStore('entry_queue'),
           userId: () => lookup<AuthRepository>().userId,
           accountChanges: lookup<AuthRepository>().accountChanges,
+        ),
+      )
+      ..registerLazySingleton<CategoriesRepository>(
+        () => StorageCategoriesRepository(local: lookup<LocalCategoriesRepository>(), cloud: lookup<OfflineCategoriesRepository>(), mode: lookup<StorageModeStore>()),
+      )
+      ..registerLazySingleton<StorageTransfer>(
+        () => StorageTransfer(
+          local: lookup<LocalCategoriesRepository>(),
+          remote: lookup<SupabaseCategoriesRepository>(),
+          cloud: lookup<OfflineCategoriesRepository>(),
+          journal: FileJsonStore('transfer_journal'),
+          userId: () => lookup<AuthRepository>().userId,
         ),
       )
       ..registerLazySingleton<AppearanceStore>(FileAppearanceStore.new)
@@ -79,7 +103,20 @@ Future<void> configureDependencies() async {
   } else {
     getIt
       ..registerLazySingleton<AuthRepository>(MockAuthRepository.new)
-      ..registerLazySingleton<CategoriesRepository>(MockCategoriesRepository.new)
+      // Der Mock steht für die Cloud; lokal ist auch im Mock-Modus die Datei auf dem Gerät.
+      ..registerLazySingleton<MockCategoriesRepository>(MockCategoriesRepository.new)
+      ..registerLazySingleton<CategoriesRepository>(
+        () => StorageCategoriesRepository(local: lookup<LocalCategoriesRepository>(), cloud: lookup<MockCategoriesRepository>(), mode: lookup<StorageModeStore>()),
+      )
+      ..registerLazySingleton<StorageTransfer>(
+        () => StorageTransfer(
+          local: lookup<LocalCategoriesRepository>(),
+          remote: lookup<MockCategoriesRepository>(),
+          cloud: lookup<MockCategoriesRepository>(),
+          journal: MemoryJsonStore(),
+          userId: () => lookup<AuthRepository>().userId,
+        ),
+      )
       ..registerLazySingleton<AppearanceStore>(MemoryAppearanceStore.new)
       ..registerLazySingleton<PlusRepository>(MockPlusRepository.new)
       ..registerLazySingleton<PlusStore>(() => MockPlusStore(lookup<PlusRepository>()))
@@ -96,6 +133,7 @@ Future<void> configureDependencies() async {
       () => StoreReviewPrompter(FileJsonStore('review'), available: InAppReview.instance.isAvailable, request: InAppReview.instance.requestReview),
     )
     ..registerFactory<AccountCubit>(() => AccountCubit(lookup<AuthRepository>()))
+    ..registerFactory<StorageCubit>(() => StorageCubit(lookup<StorageModeStore>(), lookup<StorageTransfer>(), lookup<AuthRepository>(), lookup<PlusRepository>()))
     ..registerFactory<PlusCubit>(() => PlusCubit(lookup<PlusRepository>(), lookup<PlusStore>()))
     ..registerFactory<OnboardingCubit>(() => OnboardingCubit(lookup<CategoriesRepository>(), FileJsonStore('onboarding')))
     ..registerFactory<ShellCubit>(ShellCubit.new)

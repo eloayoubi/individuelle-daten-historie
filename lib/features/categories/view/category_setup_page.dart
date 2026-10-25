@@ -6,6 +6,7 @@ import '../../../core/core.dart';
 import '../cubit/category_setup_cubit.dart';
 import '../data/category_templates.dart';
 import '../../sharing/view/join_sheet.dart';
+import '../../storage/view/cloud_flow.dart';
 import 'add_category_sheet.dart';
 import 'category_detail_page.dart';
 import 'widgets/appearance_pickers.dart';
@@ -22,7 +23,11 @@ class CategorySetupPage extends StatelessWidget {
   static Future<void> start(BuildContext context) async {
     final choice = await AddCategorySheet.show(context);
     if (choice == null || !context.mounted) return;
-    if (choice.join) return JoinSheet.show(context);
+    if (choice.join) {
+      // Beitreten gibt es nur in der Cloud.
+      if (await CloudFlow.require(context, context.l10n.cloudRequiredShare) && context.mounted) await JoinSheet.show(context);
+      return;
+    }
     await Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => CategorySetupPage(template: choice.template)));
   }
 

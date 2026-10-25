@@ -8,19 +8,19 @@ Kostenkurve wird angeboten von [Vorname Nachname], [Straße Hausnummer], [PLZ Or
 
 ## Leistung
 
-Mit Kostenkurve erfasst du Zählerstände, Verträge und Kosten in eigenen Kategorien, siehst Verläufe und eine Prognose und teilst Kategorien mit anderen. Die Grundfunktionen sind kostenlos.
+Mit Kostenkurve erfasst du Zählerstände, Verträge und Kosten in eigenen Kategorien, siehst Verläufe und eine Prognose und teilst Kategorien mit anderen. Die App ist kostenlos, solange deine Daten nur auf deinem Gerät liegen; für die Cloud brauchst du ein Konto und ein Abo.
 
 ## Konto
 
-Die App legt beim ersten Start ein Konto ohne Anmeldung an. Du kannst es mit Apple oder per E-Mail sichern. Halte deinen Zugang geschützt; für Handlungen in deinem Konto bist du verantwortlich.
+Lokal brauchst du kein Konto. Für die Cloud registrierst du dich mit Apple oder per E-Mail-Code. Halte deinen Zugang geschützt; für Handlungen in deinem Konto bist du verantwortlich.
 
-## Kostenkurve Plus
+## Kostenkurve Cloud
 
-- Plus erweitert die App um Belege (Fotos und PDFs an Einträgen) mit bis zu 5 GB Speicher.
-- Plus ist ein Abo über den App Store, monatlich oder jährlich. Der Preis wird vor dem Kauf angezeigt. Die Zahlung wird mit Bestätigung des Kaufs über deinen Apple-Account abgerechnet.
-- Das Abo verlängert sich automatisch um die gewählte Laufzeit, wenn es nicht spätestens 24 Stunden vor Ablauf gekündigt wird. Kündigen kannst du in den Einstellungen deines Apple-Accounts.
+- Die Cloud speichert deine Daten auf unseren Servern, macht sie auf allen Geräten verfügbar, auf denen du dich anmeldest, und ermöglicht Teilen und Belege (Fotos und PDFs an Einträgen, bis zu 5 GB).
+- Die Cloud ist ein monatliches Abo über den App Store. Der Preis wird vor dem Kauf angezeigt. Die Zahlung wird mit Bestätigung des Kaufs über deinen Apple-Account abgerechnet.
+- Das Abo verlängert sich automatisch um einen Monat, wenn es nicht spätestens 24 Stunden vor Ablauf gekündigt wird. Kündigen kannst du in den Einstellungen deines Apple-Accounts.
 - Erstattungen richten sich nach den Regeln von Apple.
-- Endet Plus, bleiben vorhandene Belege lesbar; neue kannst du erst wieder mit Plus hinzufügen.
+- Endet das Abo, bleiben deine Cloud-Daten lesbar und exportierbar; ändern kannst du sie erst wieder mit Abo, oder du holst sie kostenlos auf dein Gerät.
 
 ## Deine Inhalte
 

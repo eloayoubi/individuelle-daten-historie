@@ -47,6 +47,8 @@ class PendingDelete extends PendingWrite {
 ///   Fehlern (kein Netz) bleibt die Änderung liegen.
 /// - Kategorien, Tracker und Felder ändern geht nur online (direkt an [_remote]).
 /// - Cache und Warteschlange gehören dem angemeldeten Konto; nach einem Wechsel werden sie verworfen.
+///   Nach dem Abmelden verschwindet der Cache vom Gerät; noch nicht gesendete Einträge bleiben und
+///   gehen raus, sobald sich dasselbe Konto wieder anmeldet.
 class OfflineCategoriesRepository implements CategoriesRepository {
   OfflineCategoriesRepository(
     this._remote, {
@@ -62,7 +64,11 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     // Anmelden, Abmelden, Löschen: alte Daten sofort weg, alle Ansichten laden das neue Konto.
     accountChanges?.listen((_) {
       final before = _owner;
-      _forgetOtherAccount();
+      if (_userId() == null) {
+        _forgetCache();
+      } else {
+        _forgetOtherAccount();
+      }
       if (_owner != before) _changes.add(null);
     });
   }
@@ -118,6 +124,13 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     _pending = [];
     _owner = current;
     _quietly(_persistQueue());
+    _quietly(_cacheStore.write(null));
+  }
+
+  /// Abgemeldet: keine Cloud-Daten mehr auf dem Gerät lesbar lassen.
+  void _forgetCache() {
+    if (_cached == null) return;
+    _cached = null;
     _quietly(_cacheStore.write(null));
   }
 

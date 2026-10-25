@@ -8,9 +8,21 @@ class PlusEvent {
 }
 
 class PlusState extends Equatable {
-  const PlusState({this.loaded = false, this.supported = true, this.status = const PlusStatus(), this.prices = const {}, this.busy = false, this.event});
+  const PlusState({
+    this.loaded = false,
+    this.checked = false,
+    this.supported = true,
+    this.status = const PlusStatus(),
+    this.prices = const {},
+    this.busy = false,
+    this.event,
+  });
 
   final bool loaded;
+
+  /// Der Server hat den Stand bestätigt. Nur dann darf die App „Cloud pausiert“ zeigen – ohne Netz
+  /// bleibt alles, wie es ist.
+  final bool checked;
 
   /// Kauf auf diesem Gerät möglich (App Store).
   final bool supported;
@@ -21,15 +33,12 @@ class PlusState extends Equatable {
 
   bool get active => status.active;
 
-  /// Ersparnis des Jahresabos gegenüber zwölf Monaten (0,44 = 44 %), `null` ohne beide Preise.
-  double? get yearlySaving {
-    final m = prices[PlusStore.monthly]?.raw, y = prices[PlusStore.yearly]?.raw;
-    if (m == null || y == null || m <= 0) return null;
-    return 1 - y / (m * 12);
-  }
+  /// Monatspreis aus dem Store, `null` ohne Store (Android, Simulator ohne StoreKit-Datei).
+  StorePrice? get monthly => prices[PlusStore.monthly];
 
-  PlusState copyWith({bool? loaded, PlusStatus? status, Map<String, StorePrice>? prices, bool? busy, PlusEvent? event}) => PlusState(
+  PlusState copyWith({bool? loaded, bool? checked, PlusStatus? status, Map<String, StorePrice>? prices, bool? busy, PlusEvent? event}) => PlusState(
     loaded: loaded ?? this.loaded,
+    checked: checked ?? this.checked,
     supported: supported,
     status: status ?? this.status,
     prices: prices ?? this.prices,
@@ -38,5 +47,5 @@ class PlusState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [loaded, supported, status, prices, busy, event];
+  List<Object?> get props => [loaded, checked, supported, status, prices, busy, event];
 }

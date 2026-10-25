@@ -26,6 +26,8 @@ class AppTextField extends StatelessWidget {
     this.label,
     this.textCapitalization = TextCapitalization.sentences,
     this.autocorrect = true,
+    this.autofillHints,
+    this.enabled = true,
   });
 
   final TextEditingController? controller;
@@ -51,6 +53,11 @@ class AppTextField extends StatelessWidget {
   final bool autocorrect;
   final TextCapitalization textCapitalization;
 
+  /// Für den Schlüsselbund und die Code-Übernahme aus Mails, z. B. [AutofillHints.email],
+  /// [AutofillHints.oneTimeCode].
+  final Iterable<String>? autofillHints;
+  final bool enabled;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -64,6 +71,8 @@ class AppTextField extends StatelessWidget {
       textCapitalization: textCapitalization,
       autocorrect: autocorrect,
       enableSuggestions: autocorrect,
+      autofillHints: autofillHints,
+      enabled: enabled,
       inputFormatters: [
         if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
         ...?inputFormatters,

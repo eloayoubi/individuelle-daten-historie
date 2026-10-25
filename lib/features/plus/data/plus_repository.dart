@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Stand von „Kostenkurve Plus“ beim Server (Tabelle `entitlements`).
+/// Stand des Cloud-Abos („Kostenkurve Cloud“, technisch weiter `plus`) beim Server (Tabelle `entitlements`).
 class PlusStatus extends Equatable {
   const PlusStatus({this.active = false, this.validUntil});
 

@@ -8,19 +8,19 @@ Kostenkurve is provided by [First name Last name], [Street No.], [Postcode City]
 
 ## Service
 
-With Kostenkurve you record meter readings, contracts and costs in your own categories, see histories and a forecast and share categories with others. The basic features are free.
+With Kostenkurve you record meter readings, contracts and costs in your own categories, see histories and a forecast and share categories with others. The app is free as long as your data stays on your device; the cloud needs an account and a subscription.
 
 ## Account
 
-On first launch the app creates an account without sign-in. You can secure it with Apple or by email. Keep your access safe; you are responsible for actions in your account.
+You don’t need an account to use the app locally. For the cloud you sign up with Apple or an email code. Keep your access safe; you are responsible for actions in your account.
 
-## Kostenkurve Plus
+## Kostenkurve Cloud
 
-- Plus adds receipts (photos and PDFs on entries) with up to 5 GB of storage.
-- Plus is an App Store subscription, monthly or yearly. The price is shown before purchase. Payment is charged to your Apple account at confirmation of purchase.
-- The subscription renews automatically for the chosen period unless cancelled at least 24 hours before it ends. You can cancel in your Apple account settings.
+- The cloud stores your data on our servers, makes it available on every device you sign in on and enables sharing and receipts (photos and PDFs on entries, up to 5 GB).
+- The cloud is a monthly App Store subscription. The price is shown before purchase. Payment is charged to your Apple account at confirmation of purchase.
+- The subscription renews automatically for one month unless cancelled at least 24 hours before it ends. You can cancel in your Apple account settings.
 - Refunds follow Apple's rules.
-- When Plus ends, existing receipts stay readable; you can add new ones once Plus is active again.
+- When the subscription ends, your cloud data stays readable and exportable; you can edit it again with a subscription, or move it to your device for free.
 
 ## Your content
 

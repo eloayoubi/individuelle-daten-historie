@@ -5,6 +5,7 @@ import '../../auth/data/auth_repository.dart';
 import 'plus_repository.dart';
 
 /// Abo-Stand aus `entitlements` (RLS: nur der eigene), Kaufprüfung über `verify-purchase`.
+/// Ohne Konto (Speicherort „Lokal“) gibt es kein Abo und keinen Netzaufruf.
 class SupabasePlusRepository implements PlusRepository {
   SupabasePlusRepository(this._api, this._auth);
 
@@ -13,7 +14,7 @@ class SupabasePlusRepository implements PlusRepository {
 
   @override
   Future<PlusStatus> status() async {
-    await _auth.ensureSignedIn();
+    if (_auth.userId == null) return const PlusStatus();
     final row = await _api.table('entitlements').select('tier, valid_until').eq('user_id', _auth.userId!).maybeSingle();
     if (row == null) return const PlusStatus();
     final until = switch (row['valid_until']) {

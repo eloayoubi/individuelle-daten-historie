@@ -169,6 +169,21 @@ void main() {
     await switches.close();
   });
 
+  test('abmelden: Cache weg, wartende Einträge bleiben fürs selbe Konto', () async {
+    String? user = 'a';
+    final accounts = StreamController<Object?>();
+    final mine = OfflineCategoriesRepository(remote, cache: cache, queue: queue, userId: () => user, accountChanges: accounts.stream, retryEvery: const Duration(hours: 1));
+    await mine.loadCategories();
+    remote.online = false;
+    await mine.saveEntry((await strom(mine)).id, reading);
+    user = null;
+    accounts.add(null);
+    await pumpEventQueue();
+    expect(await cache.read(), isNull);
+    expect(mine.syncState.pending, 1);
+    await accounts.close();
+  });
+
   test('Kategorien und Felder ändern geht direkt an den Server', () async {
     await repo.updateCategory('c-strom', name: 'Strom Wohnung', icon: CategoryIcon.bolt, swatch: CategorySwatch.orange);
     expect((await remote.loadCategory('c-strom'))?.name, 'Strom Wohnung');

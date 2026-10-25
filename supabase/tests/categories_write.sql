@@ -1,10 +1,11 @@
 -- Schreibwege aus Meilenstein 1: create_category, reorder_categories, Schutz-Trigger, Rechte je Rolle.
 -- Eigene Transaktion, rollt am Ende zurück. Nutzer: Demo (…001, owner), Anna (…002, editor bei
--- Miete, viewer bei Auto), Neu (…004, ohne Kategorien).
+-- Miete, viewer bei Auto), Neu (…004, ohne Kategorien, mit Cloud-Abo).
 
 begin;
 
 insert into auth.users (id, email) values ('00000000-0000-4000-8000-000000000004', 'neu@kostenkurve.test');
+insert into public.entitlements (user_id, tier, source) values ('00000000-0000-4000-8000-000000000004', 'plus', 'promo');
 
 set local role authenticated;
 

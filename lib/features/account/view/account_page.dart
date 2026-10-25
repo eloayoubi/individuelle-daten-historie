@@ -55,6 +55,10 @@ class _AccountPageState extends State<AccountPage> {
         if (signIn) await cubit.signInWithApple();
       case AccountEventKind.invalidCode:
         AppToast.show(context, l10n.accountInvalidCode, icon: CupertinoIcons.exclamationmark_circle_fill);
+      case AccountEventKind.rateLimited:
+        AppToast.show(context, l10n.authRateLimited, icon: CupertinoIcons.exclamationmark_circle_fill);
+      case AccountEventKind.network:
+        AppToast.show(context, l10n.authNetwork, icon: CupertinoIcons.wifi_slash);
       case AccountEventKind.failed:
         AppToast.show(context, l10n.errorSave, icon: CupertinoIcons.exclamationmark_circle_fill);
       case AccountEventKind.deleted:

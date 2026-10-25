@@ -187,22 +187,53 @@ Geteilt wird **je Kategorie**: Haushalt und Auto mit dem Partner, das eigene Han
 
 Backend ist fertig: `category_members`, `category_invites`, `create_category_invite`, `accept_category_invite`, RLS je Rolle, Smoke-Test.
 
-## 8. Kostenkurve Plus (Abo)
+## 8. Lokal oder Cloud (Abo)
 
-Die App funktioniert vollständig ohne Abo. Plus deckt, was Server-Kosten verursacht:
+Kostenkurve ist **kostenlos, solange die Daten auf dem Gerät bleiben**. Wer von mehreren Geräten zugreifen, gesichert sein oder teilen will, legt ein Konto an und bucht **Kostenkurve Cloud für 2 € im Monat**. Die Wahl steht beim ersten Start im Mittelpunkt und lässt sich jederzeit in den Einstellungen ändern.
 
-| Kostenlos | Plus |
+| | Lokal – kostenlos, ohne Konto | Cloud – 2 € im Monat, mit Konto |
+|---|---|---|
+| Kategorien, Felder, Einträge, Formeln, Verlauf, Auswertung, Prognose, Erinnerungen, Export | ✓ | ✓ |
+| Speicherort | nur dieses Gerät (`local_data.json` in der App-Sandbox) | Supabase in Frankfurt, Cache auf dem Gerät, offline erfassen |
+| Auf allen Geräten, gesichert bei Verlust des Handys | – | ✓ |
+| Kategorie mit dem Partner teilen | – | ✓ (das Abo des Eigentümers reicht für den Haushalt) |
+| Belege (Fotos, PDFs, 5 GB) | – | ✓ |
+
+### 8.1 Ablauf
+
+1. **Start-Bildschirm** (erster Start oder nach dem Update, solange kein Speicherort gewählt ist): zwei Karten „Auf diesem Gerät – kostenlos, ohne Konto“ und „In der Cloud – auf allen Geräten, 2 € im Monat“, darunter „Ich habe schon ein Konto“.
+2. **Lokal** → Onboarding (Vorlagen, Erinnerungen) → App.
+3. **Cloud** → **Registrieren** (Mit Apple oder E-Mail + 8-stelliger Code, kein Passwort; Hinweis auf Nutzungsbedingungen und Datenschutz) → **Paywall**: „Lokal · kostenlos“ neben „Cloud · 2 €/Monat“ mit Store-Preis, „Cloud abonnieren“ oder „Kostenlos lokal nutzen“. Erst wenn der Server den Kauf bestätigt, wechselt die App in die Cloud und lädt vorhandene lokale Daten hoch.
+4. **Anmelden** (Apple oder E-Mail-Code) → Abo aktiv: Cloud. Kein Abo: Paywall.
+5. **Wechseln in den Einstellungen:** „Cloud aktivieren“ (Registrieren/Anmelden → Paywall → Hochladen) oder „Auf dieses Gerät holen“ (kopiert alles aus der Cloud aufs Gerät; Belege bleiben in der Cloud).
+6. **Abo beendet:** Die Cloud-Daten bleiben lesbar (Export, Umzug aufs Gerät), ändern sperrt der Server. Die App zeigt „Cloud pausiert“: Abo erneuern, aufs Gerät holen oder abmelden. Ohne Netz sperrt die App nicht – nur eine Antwort des Servers zählt.
+7. **Bestandskonten aus der Testphase** (anonym in der Cloud) sehen beim Update den Start-Bildschirm. „Lokal“ kopiert ihre Daten aufs Gerät und löscht das anonyme Konto; „Cloud“ verknüpft Apple bzw. E-Mail mit dem vorhandenen Konto, die Daten bleiben.
+
+### 8.2 Technik
+
+- **Speicherort:** `StorageMode` (`local`, `cloud`, nicht gewählt) in `storage_mode.json`, `StorageCubit` über dem `MaterialApp`, `StartGate` vor dem Onboarding (Start-Bildschirm, „Cloud pausiert“ oder App).
+- **Daten:** `CategoriesRepository` ist ein `StorageCategoriesRepository`, das je nach Speicherort an `LocalCategoriesRepository` (Datei; dieselbe Logik wie der Mock über `MemoryCategoriesRepository`) oder an die Cloud-Kette (`OfflineCategoriesRepository` → `SupabaseCategoriesRepository`) weitergibt. Ein Wechsel meldet `changes`, alle Ansichten laden neu.
+- **Umzug** (`StorageTransfer`): **hoch** legt jede Kategorie per `create_category` an, ordnet Tracker und Felder über ihre Reihenfolge zu, sendet Einträge mit ihren Geräte-Ids per `save_entry` und setzt danach „enthalten in“ und Archiv. Ein Journal merkt sich jede angelegte Kategorie – bricht der Umzug ab, macht der nächste Versuch dort weiter, ohne doppelt anzulegen. **Runter** kopiert alle sichtbaren Kategorien als eigene aufs Gerät.
+- **Konto:** keine neuen anonymen Konten. Registrieren = `signInWithOtp(shouldCreateUser: true)` bzw. Apple (`signInWithIdToken`), Anmelden = `shouldCreateUser: false`. Ein noch angemeldetes anonymes Bestandskonto wird verknüpft (`linkIdentityWithIdToken`, `updateUser(email)`).
+- **Abo:** Kostenkurve Cloud ist das bisherige Plus-Produkt `de.eloayoubi.kostenkurve.plus.monthly` (Ids bleiben, Prüfung über `verify-purchase` wie bisher). In App Store Connect: Anzeigename „Kostenkurve Cloud“, Preis 2 € im Monat; das Jahresabo bietet die App nicht mehr an.
+- **Server** (`…_cloud_access.sql`): `has_cloud(category)` = Aufrufer oder Eigentümer der Kategorie hat ein laufendes Abo. `can_edit_category` verlangt das zusätzlich – damit gelten alle Schreib-Policies (Kategorien, Tracker, Felder, Einträge, Werte, Belege) und `save_entry`/`create_category` nur mit Cloud. Neue Kategorien und Einladungen brauchen das eigene Abo, Beitreten das des Eigentümers. Lesen, Löschen und Verlassen bleiben ohne Abo möglich (DSGVO Art. 17 und 20).
+- **Kauf** wie bisher: `in_app_purchase` (StoreKit 2), `applicationUserName` = Nutzer-Id wird zum `appAccountToken`; `verify-purchase` prüft die signierte Transaktion gegen Apples Root-Zertifikat und schreibt `entitlements` über `apply_plus_transaction` (nur Service-Role); Verlängerung, Kündigung und Erstattung kommen über `app-store-notifications`.
+- **Pflichtangaben** auf der Paywall: Preis und Laufzeit aus dem Store, automatische Verlängerung und Kündigung, Links zu Nutzungsbedingungen, Datenschutz und Apples EULA, „Käufe wiederherstellen“ (App-Store-Richtlinie 3.1.2). Konto löschen bleibt in der App (5.1.1(v)).
+
+### 8.3 Sicherheit (OWASP Top 10, 2021)
+
+| Risiko | Maßnahme |
 |---|---|
-| unbegrenzt Kategorien, Felder, Einträge, Formeln | **Belege:** Fotos und PDFs an Einträgen (Abrechnung, Zählerfoto, Vertrag) |
-| Verlauf, Auswertung, Prognose | 5 GB Speicher (Fair Use), Bilder werden vor dem Hochladen komprimiert |
-| Teilen mit dem Partner | später: KI-Import von Abrechnungen (PDF → Werte), Zählerstand per Foto (OCR auf dem Gerät), Export als PDF-Bericht |
-
-- **Preisvorschlag:** 2,99 € im Monat oder 19,99 € im Jahr, eine Woche kostenlos testen.
-- **Wer Plus braucht:** Hochladen braucht Plus beim Hochladenden. Mitglieder einer geteilten Kategorie sehen die Belege auch ohne eigenes Abo, so reicht ein Plus für den Haushalt.
-- **Kauf:** `in_app_purchase` (StoreKit 2) wie bei MyBoo; `applicationUserName` = Nutzer-Id wird zum `appAccountToken`.
-- **Prüfung und Freischaltung:** Die Edge Function `verify-purchase` prüft die signierte Transaktion (JWS) offline gegen Apples Root-Zertifikat und schreibt `entitlements` über `apply_plus_transaction` mit Service-Role. Verlängerung, Kündigung und Erstattung kommen über `app-store-notifications` (App Store Server Notifications V2).
-- **Durchsetzung:** RLS auf `attachments` und auf Storage (`has_plus()`) verhindert Uploads ohne Abo serverseitig, nicht nur in der App. Backend ist fertig; Tests decken ab, dass ohne Plus kein Beleg möglich ist.
-- **Pflichtangaben:** Abo-Seite mit Preis, Laufzeit, Links zu Datenschutz und Nutzungsbedingungen, „Käufe wiederherstellen“ (App-Store-Richtlinie 3.1.2).
+| A01 Broken Access Control | Bezahlte Cloud wird **im Server** durchgesetzt (RLS über `can_edit_category`/`has_cloud`), nicht nur in der App; `entitlements` schreibt nur die Service-Role nach geprüftem Kauf; jede Tabelle mit RLS; der Speicherort auf dem Gerät öffnet keine Rechte. |
+| A02 Cryptographic Failures | Nur HTTPS; Sitzung (Refresh-Token) im iOS-Schlüsselbund bzw. Android Keystore (`flutter_secure_storage`, nur dieses Gerät, nach dem ersten Entsperren) statt in NSUserDefaults; lokale Daten in der App-Sandbox mit iOS-Datenschutz; keine Schlüssel im Repo. |
+| A03 Injection | Kein SQL aus der App: PostgREST und RPCs mit Parametern; Eingaben geprüft (E-Mail-Format und ≤ 254 Zeichen, Code nur Ziffern, 6 bis 10). |
+| A04 Insecure Design | Kauf erst nach Serverbestätigung wirksam; Abo-Ende sperrt nur Schreiben, Daten bleiben exportierbar und Beleg-Dateien löschbar; offline erfasste Einträge gehen bei fehlendem Abo nicht verloren (bleiben in der Warteschlange, ziehen beim Umzug aufs Gerät mit); Umzug wiederholbar ohne Doppelungen, Journal je Konto; die lokale Datei wird bei einem Lesefehler nie überschrieben; offline keine Aussperrung. |
+| A05 Security Misconfiguration | Anonyme Anmeldung aus; Codes 8-stellig und 10 Minuten gültig; Rate-Limits für Mails und Code-Prüfungen; interne Hilfsfunktionen (`has_cloud`, `owner_has_plus`, `next_category_sort`) nicht per RPC aufrufbar; Auth-Einstellungen erreichen das Projekt nur per `supabase config push` (Schritt vor dem Release); `verify_jwt` an allen Funktionen außer `health` und den Apple-Benachrichtigungen (die prüfen Apples Signatur). |
+| A06 Vulnerable Components | Versionen in `pubspec.lock`, `flutter pub outdated` vor jedem Release; nur verbreitete, gepflegte Pakete. |
+| A07 Identification and Authentication Failures | Kein Passwort (kein Credential Stuffing, keine schwachen Passwörter): Apple mit Nonce oder 8-stelliger Einmal-Code (10 Minuten); Supabase begrenzt Code-Versuche je IP (15 in 5 Minuten), Captcha als nächste Stufe; die App verrät beim Anmelden nicht, ob es eine E-Mail gibt (gleiche Antwort für bekannte und unbekannte Adressen; wer die Auth-API direkt aufruft, sieht es weiterhin – Restrisiko); neuer Code erst nach 60 s; Refresh-Token-Rotation; Abmelden löscht Sitzung und Cache. |
+| A08 Software and Data Integrity Failures | StoreKit-Transaktionen und App-Store-Benachrichtigungen werden gegen Apples Zertifikatskette geprüft; die App schreibt nie selbst ein Abo. |
+| A09 Logging and Monitoring Failures | Keine Tokens, Codes oder E-Mail-Adressen in Logs; Edge Functions loggen nur Fehlercodes; Anmeldungen protokolliert Supabase Auth. |
+| A10 Server-Side Request Forgery | Der Server ruft nur feste Apple-Adressen auf, keine URLs aus Eingaben. |
 
 ## 9. Geschäftsmodell später: passende Angebote
 
@@ -251,12 +282,13 @@ Jeder Meilenstein endet mit grünem `flutter analyze && flutter test` bzw. `test
 | **M4** ✅ | **Konto & Teilen:**<br>• Konto sichern mit Apple oder E-Mail-Code (6 Ziffern, ohne Passwort), mit bestehendem Konto anmelden, Name für geteilte Kategorien, abmelden.<br>• Kategorie teilen: Einladung mit Rolle (Bearbeiten / Nur ansehen) als Code, Link (`de.eloayoubi.kostenkurve://invite?code=…`) und QR, 7 Tage gültig, einmal einlösbar; Mitglieder verwalten, verlassen.<br>• Realtime: Änderungen des Partners erscheinen sofort (Supabase Realtime, 500 ms gebündelt), „von Anna“ am Eintrag.<br>• Cache und Warteschlange je Konto, Kontowechsel lädt alles neu. | erledigt. Bewusst weggelassen: Google-Anmeldung (braucht Google-Cloud-Projekt), Universal Links (brauchen eine Domain) – beides später möglich |
 | **M5** ✅ | **Plus & Belege:**<br>• Abo-Seite (Monat/Jahr, Ersparnis, Wiederherstellen, Pflicht-Links), StoreKit 2 über `in_app_purchase`, Prüfung der signierten Transaktion in `verify-purchase` gegen Apples Root-Zertifikat, Verlängerung/Kündigung über `app-store-notifications`.<br>• Belege: Kamera, Fotos (auf 2048 px / JPEG 80 % verkleinert), PDF; Vorschau, Ansicht mit Zoom, Teilen/Sichern, Löschen; Speicheranzeige (5 GB) in den Einstellungen. | erledigt. Android-Kauf folgt (Google Play Billing); ein im App Store gekauftes Plus gilt auch auf Android |
 | **M6** ✅ | **Launch:**<br>• App-Icon, Splash (hell/dunkel), Onboarding (Willkommen → Vorlagen → Erinnerungen).<br>• Datenexport (CSV + JSON), Konto löschen (inkl. Belege und Widerruf des Apple-Tokens), Datenschutz, Nutzungsbedingungen, Impressum in der App.<br>• Store-Texte DE/EN, Screenshots (6,9″), Fastlane-Lane `metadata`, Bewertungsbitte nach dem 3. Eintrag, Android-Release-Signatur über `key.properties`.<br>• Nur iPhone (läuft auf dem iPad im Kompatibilitätsmodus), nur Hochformat. | Code fertig. Offen: Supabase-Projekt verbinden und TestFlight (siehe [SETUP.md](SETUP.md)), Platzhalter in Rechtstexten und Store-URLs, Play Console |
+| **M7** | **Lokal oder Cloud:** Start-Bildschirm mit der Wahl, Registrieren und Anmelden (Apple, E-Mail-Code), Paywall „lokal kostenlos – Cloud 2 €/Monat“, lokaler Speicher, Umzug hoch und runter, „Cloud pausiert“, Speicherort in den Einstellungen; Server-Durchsetzung über RLS, Sitzung im Schlüsselbund (Abschnitt 8) | Code fertig. Offen: Migration einspielen, `config push` (anonyme Anmeldung aus, Code-Gültigkeit), Abo in App Store Connect auf 2 € und „Kostenkurve Cloud“ |
 | Danach | KI-Import von Abrechnungen (Edge Function + Claude, nur mit Einwilligung), Zählerstand per Foto (OCR auf dem Gerät), Home-Screen-Widgets, Vergleichswerte, Angebote (Abschnitt 9), Kosten aufteilen | – |
 
 ## 12. Offene Entscheidungen
 
 1. ~~**Kauf-Technik**~~ entschieden: `in_app_purchase` + eigene Prüfung wie MyBoo (keine Gebühr, kein Drittanbieter). Android-Kauf später über Google Play Billing.
-2. **Plus-Preis** und Testzeitraum (Vorschlag oben) – wird in App Store Connect gesetzt.
+2. ~~**Abo-Preis**~~ entschieden: Kostenkurve Cloud 2 € im Monat, lokal kostenlos (Abschnitt 8) – Preis in App Store Connect setzen.
 3. **Name final** nach Markenrecherche.
 4. **Supabase-Projekt** anlegen (Region Frankfurt) – danach Projekt-Ref in `.env.local` und als GitHub-Secrets.
 5. ~~**Offline-Speicher**~~ entschieden: Datei-Cache und -Warteschlange je Konto (`FileJsonStore`); `drift` erst, wenn Auswertungen lokal Abfragen brauchen.

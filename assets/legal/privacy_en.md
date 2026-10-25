@@ -10,15 +10,15 @@ Email: [Email address]
 
 ## In short
 
-Kostenkurve stores what you enter – so the app can calculate, back up and share. There are no ads, no tracking and no analytics services. Your data is never sold.
+Kostenkurve stores what you enter – so the app can calculate, back up and share. If you use the app locally, your data stays on your device only; we store it on our servers only once you have a cloud account. There are no ads, no tracking and no analytics services. Your data is never sold.
 
 ## Data we process
 
-- Account: a random user ID. If you secure your account, also your email address or the identifier from Sign in with Apple (Apple may provide an anonymous relay address) and the name you set for shared categories.
-- Content: categories, trackers, fields, entries (e.g. meter readings, prices, instalments, notes) and receipts (photos, PDFs) you add.
+- Account (cloud only): a random user ID, your email address or the identifier from Sign in with Apple (Apple may provide an anonymous relay address) and the name you set for shared categories.
+- Content: categories, trackers, fields, entries (e.g. meter readings, prices, instalments, notes) and receipts (photos, PDFs) you add. Locally they stay on your device only; in the cloud they are also stored on our servers.
 - Subscription: product, purchase and expiry date and Apple's transaction identifier. We never receive payment details – payment is handled entirely by Apple.
 - Technical: accessing the server creates connection data such as IP address and time in the hosting provider's logs.
-- On your device: reminders, appearance and an offline cache stay on your device.
+- On your device: locally stored data, reminders, appearance and an offline cache stay on your device; your sign-in is kept encrypted in the device keychain.
 
 ## Purposes and legal bases
 
@@ -36,7 +36,7 @@ If you share a category, invited people see its content including entries, recei
 
 ## Retention and deletion
 
-We keep your data as long as your account exists. In the app under Settings › Account › Delete account you delete your account immediately: your account, your own categories with all entries and receipts and your memberships. Entries you recorded in other people's categories stay there without your name. Copies in backups are overwritten after 30 days at the latest.
+Local data stays on your device only; you delete it by deleting the app. We keep cloud data as long as your account exists. In the app under Settings › Account › Delete account you delete your account immediately: your account, your own categories with all entries and receipts and your memberships. Entries you recorded in other people's categories stay there without your name. Copies in backups are overwritten after 30 days at the latest.
 
 ## Your rights
 

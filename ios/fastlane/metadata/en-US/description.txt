@@ -28,11 +28,11 @@ WORKS OFFLINE
 
 PRIVACY
 • Get started without signing up, no ads, no trackers
-• Your data is stored on servers in the EU
+• Locally on your iPhone – or in the cloud on servers in the EU
 • Delete your account in the app at any time
 
-KOSTENKURVE PLUS
-Kostenkurve is fully usable without a subscription. The optional Kostenkurve Plus subscription lets you attach receipts to entries – photos and PDFs such as bills, meter photos or contracts, with 5 GB of storage. It renews automatically; cancel anytime in your Apple Account settings.
+KOSTENKURVE CLOUD
+Kostenkurve is free and fully usable as long as your data stays on your iPhone. The optional Kostenkurve Cloud subscription keeps it backed up in the cloud and on every device you sign in on; it also lets you share categories with your partner and attach receipts – photos and PDFs such as bills, meter photos or contracts, with 5 GB of storage. It renews monthly; cancel anytime in your Apple Account settings.
 
 Amounts are shown in euros.
 

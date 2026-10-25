@@ -1,12 +1,12 @@
-No login and no demo account are needed. On first launch Kostenkurve signs in automatically with an anonymous account, so every feature can be tried right away.
+No login and no demo account are needed. On first launch Kostenkurve asks where to store data: "Start locally for free" (no account, data stays on the device, every feature except sharing and attachments) or "Create account" for the cloud (Sign in with Apple or an 8-digit email code, no password), followed by the subscription screen.
 
 Suggested path (labels in English when the device language is English; German is the primary language):
 1. On first launch a short welcome lets you pick templates (Electricity, Heating and Water are preselected) → "Create 3 categories" → reminders "Allow" or "Later". Later on, more categories via the Categories tab → "+".
 2. Open the category and add an entry, e.g. a meter reading → "Save entry". Add a second reading with a later date to see usage, costs and the history chart.
 3. Insights tab: costs per month, year-over-year comparison, forecast with a range and the instalment check.
 
-Sharing a category (category → Share) requires a secured account: Settings → Account → "Secure with Apple" or "Secure with email" (one-time code). The partner joins with the invite code, link or QR code via "Accept invite".
+Sharing a category (category → Share) requires the cloud: Settings → "Turn on cloud" → sign up → subscribe. The partner joins with the invite code, link or QR code via "Accept invite".
 
-Kostenkurve Plus is an optional auto-renewable subscription (monthly or yearly). It only unlocks attachments (photos and PDFs on entries, 5 GB storage); everything else is free. It can be purchased with a Sandbox account, and "Restore Purchases" is on the subscription screen.
+Kostenkurve Cloud is an optional auto-renewable monthly subscription. It stores the data in the cloud (available on every device after signing in) and unlocks sharing and attachments (photos and PDFs on entries, 5 GB storage); using the app on the device alone is free. It can be purchased with a Sandbox account after signing up, and "Restore Purchases" is on the subscription screen. When the subscription ends, the data stays readable and can be moved to the device for free.
 
 The account can be deleted in the app under Settings → Account.
