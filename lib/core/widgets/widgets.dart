@@ -2,6 +2,7 @@
 /// dann vorhandene um Parameter ergänzen – erst dann neu bauen.
 library;
 
+export 'app_action_bar.dart';
 export 'app_button.dart';
 export 'app_card.dart';
 export 'app_chip.dart';

@@ -49,6 +49,13 @@ void main() {
       expect(strom.isPriceChange(Entry(id: 'p', date: d(2026, 1, 1), values: const {'f': 0})), isFalse);
     });
 
+    test('Vertrag zeigt nur eintragbare Preise, keine Formeln', () {
+      const computed = FieldDefinition(id: 'k', name: 'Kosten je Tag', kind: FieldKind.formula, role: FieldRole.recurringCost, formula: 'arbeitspreis * 2');
+      const strom = Tracker(id: 't', name: 'Strom', fields: [meter, price, base, computed]);
+      expect(strom.rateFields, [price, base, computed]);
+      expect(strom.contractFields, [price, base]);
+    });
+
     test('readsFromBills folgt dem neuesten Zählereintrag', () {
       final first = [reading(d(2026, 1, 1), 1000), bill(d(2026, 1, 2), d(2026, 6, 30), 900)];
       expect(Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: first).readsFromBills, isTrue);

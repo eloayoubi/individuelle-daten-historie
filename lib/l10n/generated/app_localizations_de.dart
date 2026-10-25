@@ -749,6 +749,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get entryNeedsValue => 'Trag mindestens einen Wert ein.';
 
   @override
+  String get wordAnd => 'und';
+
+  @override
+  String get entryNoteHintBill => 'Optional, z. B. Rechnungsnummer';
+
+  @override
+  String get entryNoteHintContract =>
+      'Optional, z. B. Preiserhöhung laut Schreiben';
+
+  @override
+  String get entryNeedsConsumption => 'Trag den Verbrauch laut Rechnung ein.';
+
+  @override
+  String get entryNeedsPrice => 'Trag mindestens einen Preis ein.';
+
+  @override
+  String get contractSave => 'Preise speichern';
+
+  @override
   String get entryNoFields =>
       'Dieser Tracker hat noch keine Felder zum Eintragen. Lege sie unter „Bearbeiten“ an.';
 
@@ -817,6 +836,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get trackerEntries => 'Einträge';
 
   @override
+  String trackerAllEntries(int count) {
+    return 'Alle $count';
+  }
+
+  @override
   String get trackerNoEntriesTitle => 'Noch keine Einträge';
 
   @override
@@ -825,6 +849,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get trackerAddEntry => 'Wert eintragen';
+
+  @override
+  String get trackerAddEntryFor => 'Wert eintragen für …';
 
   @override
   String get trackerMeterChanged => 'Neuer Zähler';
@@ -1465,8 +1492,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String contractDeleteBody(String prices) {
-    return '$prices verschwinden aus Vertrag, Kosten und Prognose.';
+  String contractDeleteBody(int count, String prices) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$prices verschwinden',
+      one: '$prices verschwindet',
+    );
+    return '$_temp0 aus Vertrag, Kosten und Prognose.';
   }
 
   @override

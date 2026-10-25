@@ -744,6 +744,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get entryNeedsValue => 'Enter at least one value.';
 
   @override
+  String get wordAnd => 'and';
+
+  @override
+  String get entryNoteHintBill => 'Optional, e.g. invoice number';
+
+  @override
+  String get entryNoteHintContract => 'Optional, e.g. price increase letter';
+
+  @override
+  String get entryNeedsConsumption => 'Enter the consumption from your bill.';
+
+  @override
+  String get entryNeedsPrice => 'Enter at least one price.';
+
+  @override
+  String get contractSave => 'Save prices';
+
+  @override
   String get entryNoFields =>
       'This tracker has no fields to enter yet. Add them under “Edit”.';
 
@@ -811,6 +829,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackerEntries => 'Entries';
 
   @override
+  String trackerAllEntries(int count) {
+    return 'All $count';
+  }
+
+  @override
   String get trackerNoEntriesTitle => 'No entries yet';
 
   @override
@@ -819,6 +842,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackerAddEntry => 'Add value';
+
+  @override
+  String get trackerAddEntryFor => 'Add a value for …';
 
   @override
   String get trackerMeterChanged => 'New meter';
@@ -1457,8 +1483,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String contractDeleteBody(String prices) {
-    return '$prices will be removed from contract, costs and forecast.';
+  String contractDeleteBody(int count, String prices) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$prices will be removed',
+      one: '$prices will be removed',
+    );
+    return '$_temp0 from contract, costs and forecast.';
   }
 
   @override

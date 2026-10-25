@@ -1364,6 +1364,42 @@ abstract class AppLocalizations {
   /// **'Trag mindestens einen Wert ein.'**
   String get entryNeedsValue;
 
+  /// No description provided for @wordAnd.
+  ///
+  /// In de, this message translates to:
+  /// **'und'**
+  String get wordAnd;
+
+  /// No description provided for @entryNoteHintBill.
+  ///
+  /// In de, this message translates to:
+  /// **'Optional, z. B. Rechnungsnummer'**
+  String get entryNoteHintBill;
+
+  /// No description provided for @entryNoteHintContract.
+  ///
+  /// In de, this message translates to:
+  /// **'Optional, z. B. Preiserhöhung laut Schreiben'**
+  String get entryNoteHintContract;
+
+  /// No description provided for @entryNeedsConsumption.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag den Verbrauch laut Rechnung ein.'**
+  String get entryNeedsConsumption;
+
+  /// No description provided for @entryNeedsPrice.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag mindestens einen Preis ein.'**
+  String get entryNeedsPrice;
+
+  /// No description provided for @contractSave.
+  ///
+  /// In de, this message translates to:
+  /// **'Preise speichern'**
+  String get contractSave;
+
   /// No description provided for @entryNoFields.
   ///
   /// In de, this message translates to:
@@ -1478,6 +1514,12 @@ abstract class AppLocalizations {
   /// **'Einträge'**
   String get trackerEntries;
 
+  /// No description provided for @trackerAllEntries.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle {count}'**
+  String trackerAllEntries(int count);
+
   /// No description provided for @trackerNoEntriesTitle.
   ///
   /// In de, this message translates to:
@@ -1495,6 +1537,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Wert eintragen'**
   String get trackerAddEntry;
+
+  /// No description provided for @trackerAddEntryFor.
+  ///
+  /// In de, this message translates to:
+  /// **'Wert eintragen für …'**
+  String get trackerAddEntryFor;
 
   /// No description provided for @trackerMeterChanged.
   ///
@@ -2513,8 +2561,8 @@ abstract class AppLocalizations {
   /// No description provided for @contractDeleteBody.
   ///
   /// In de, this message translates to:
-  /// **'{prices} verschwinden aus Vertrag, Kosten und Prognose.'**
-  String contractDeleteBody(String prices);
+  /// **'{count, plural, =1{{prices} verschwindet} other{{prices} verschwinden}} aus Vertrag, Kosten und Prognose.'**
+  String contractDeleteBody(int count, String prices);
 
   /// No description provided for @contractTitle.
   ///

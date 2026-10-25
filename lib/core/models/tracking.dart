@@ -234,6 +234,9 @@ class Tracker extends Equatable {
   /// Preise und Beträge, die ab einem Datum gelten (Arbeitspreis, Grundpreis, Abschlag).
   List<FieldDefinition> get rateFields => [for (final f in fields) if (f.isRate) f];
 
+  /// Preise, die man im Vertrag einträgt – ohne Formeln, die rechnet die App.
+  List<FieldDefinition> get contractFields => [for (final f in rateFields) if (f.kind != FieldKind.formula) f];
+
   /// Rechnung: Eintrag eines Versorgungszählers mit Zeitraum und Wert im Zählerfeld. Der Wert ist der
   /// Verbrauch im Zeitraum (in der Verbrauchseinheit), kein Zählerstand.
   bool isBill(Entry e) => isUtilityMeter && e.hasPeriod && e.values.containsKey(meter!.id);

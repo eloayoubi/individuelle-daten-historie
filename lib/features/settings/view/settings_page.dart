@@ -226,6 +226,7 @@ class _ExportRowState extends State<_ExportRow> {
         ],
         yes: l10n.toggleYes,
         no: l10n.toggleNo,
+        consumption: l10n.entryBillConsumption,
         decimalSeparator: context.decimalSeparator,
       );
       final files = await DataExport.files(lookup<CategoriesRepository>(), labels);

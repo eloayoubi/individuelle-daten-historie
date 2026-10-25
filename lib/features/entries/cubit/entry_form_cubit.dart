@@ -37,11 +37,25 @@ class EntryFormCubit extends Cubit<EntryFormState> {
 
   /// Rechnung ↔ Zählerstand (nur bei einem neuen Eintrag). Die Rechnung bekommt ihren Zeitraum
   /// vorbelegt, der Zählerstand hat keinen.
+  ///
+  /// Der Zählerwert wird geleert – als Verbrauch und als Stand bedeutet dieselbe Zahl etwas anderes.
+  /// Ein selbst gewählter Zeitraum kommt beim Zurückwechseln wieder.
   void setMode(EntryFormMode mode) {
     if (!state.canSwitchMode || mode == state.mode || (mode != EntryFormMode.bill && mode != EntryFormMode.reading)) return;
-    final period = mode == EntryFormMode.bill ? EntryFormState.billPeriod(state.tracker, _now()) : null;
-    emit(state.copyWith(mode: mode, period: (start: period?.start, end: period?.end)));
+    if (state.isBill && state.hasPeriod) _billPeriod = (start: state.periodStart!, end: state.periodEnd!);
+    final period = mode == EntryFormMode.bill ? _billPeriod ?? EntryFormState.billPeriod(state.tracker, _now()) : null;
+    final meter = state.tracker.meter;
+    emit(
+      state.copyWith(
+        mode: mode,
+        period: (start: period?.start, end: period?.end),
+        inputs: {...state.inputs}..remove(meter?.id),
+      ),
+    );
   }
+
+  /// Zuletzt gewählter Zeitraum der Rechnung, solange man zwischen Rechnung und Stand wechselt.
+  ({DateTime start, DateTime end})? _billPeriod;
 
   void setText(String fieldId, String text) => _set(fieldId, text);
 

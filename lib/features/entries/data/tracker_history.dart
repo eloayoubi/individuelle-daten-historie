@@ -148,7 +148,7 @@ class TrackerHistory extends Equatable {
     if (!tracker.isUtilityMeter) return const [];
     final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
     return [
-      for (final field in tracker.rateFields)
+      for (final field in tracker.contractFields)
         if (_current(sorted, field, today) case final CurrentValue value) value,
     ];
   }

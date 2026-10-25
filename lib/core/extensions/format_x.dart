@@ -89,6 +89,13 @@ extension FormatX on BuildContext {
 
   /// Teile einer Zeile mit Mittelpunkt verbinden: `Zählerstand · kWh`. Leere Teile fallen weg.
   String joinParts(Iterable<String?> parts) => parts.whereType<String>().where((p) => p.isNotEmpty).join(' · ');
+
+  /// Namen als Aufzählung: „Anna“, „Anna und Ben“, „Anna, Ben und Carla“.
+  String joinNames(List<String> names) => switch (names) {
+    [] => '',
+    [final only] => only,
+    [...final init, final last] => '${init.join(', ')} ${AppLocalizations.of(this).wordAnd} $last',
+  };
 }
 
 extension TrendX on double? {

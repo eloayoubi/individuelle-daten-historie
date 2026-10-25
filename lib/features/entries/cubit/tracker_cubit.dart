@@ -61,6 +61,7 @@ class TrackerCubit extends Cubit<TrackerState> {
           currentValues: TrackerHistory.currentValuesOf(tracker, _now()),
           contract: TrackerHistory.contractOf(tracker, _now()),
           missingPrice: _missingPrice(raw, metrics),
+          today: _now(),
           includedInName: into?.name,
         ),
       );
