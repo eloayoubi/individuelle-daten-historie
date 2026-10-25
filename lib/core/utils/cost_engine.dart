@@ -42,8 +42,9 @@ class CostParts {
 ///   ([FieldRole.recurringCost]) gelten ab ihrem Datum bis zur nächsten Änderung. Im Voraus
 ///   eingetragene Erhöhungen fließen so von selbst in die Prognose ein.
 /// - **Einmalige Beträge** ([FieldRole.oneOffCost]) zählen an ihrem Tag – mit Abrechnungszeitraum
-///   verteilt auf dessen Tage; ab morgen gilt der Tagesdurchschnitt der letzten 365 Tage (Tanken,
-///   Nachzahlungen …).
+///   bis heute verteilt auf dessen Tage; ab morgen gilt der Tagesdurchschnitt dessen, was in den
+///   letzten 365 Tagen gezahlt wurde (nach Datum des Eintrags; Tanken, Nachzahlungen …), dazu im
+///   Voraus eingetragene Beträge an ihrem Tag.
 /// - **Abschläge** ([FieldRole.instalment]) sind keine Kosten; [paid] summiert sie wie
 ///   wiederkehrende Beträge für den Abschlags-Check.
 /// - **Formel-Felder** werden vorher je Eintrag ausgerechnet ([Formulas.apply]) und zählen dann
@@ -54,6 +55,9 @@ class CostEngine {
   CostEngine(Tracker source, {required DateTime today}) : _today = day(today) {
     final tracker = Formulas.apply(source);
     _prepareConsumption(tracker);
+    // Durchschnitt einmaliger Beträge: was in den letzten 365 Tagen gezahlt wurde (nach Zahltag).
+    final yearAgo = _today.subtract(const Duration(days: 365));
+    var paidLastYear = 0.0;
     for (final field in tracker.fields) {
       final timeline = _timeline(tracker, field);
       if (timeline.isEmpty) continue;
@@ -66,6 +70,14 @@ class CostEngine {
           for (final e in tracker.entries) {
             final value = e.number(field.id)?.toDouble();
             if (value == null) continue;
+            final paidOn = day(e.date);
+            if (paidOn.isAfter(_today)) {
+              // Im Voraus eingetragen: zählt an seinem Tag, zusätzlich zum Durchschnitt.
+              _oneOffAhead[paidOn] = (_oneOffAhead[paidOn] ?? 0) + value;
+              continue;
+            }
+            // Heute zählt schon mit: ein heute eingetragener Betrag ist bekannt, kein Durchschnitt.
+            if (paidOn.isAfter(yearAgo)) paidLastYear += value;
             if (e.hasPeriod) {
               // Abrechnung für einen Zeitraum: gleichmäßig auf dessen Tage.
               final from = day(e.periodStart!), to = day(e.periodEnd!);
@@ -74,8 +86,7 @@ class CostEngine {
                 _oneOff[d] = (_oneOff[d] ?? 0) + value / days;
               }
             } else {
-              final d = day(e.date);
-              _oneOff[d] = (_oneOff[d] ?? 0) + value;
+              _oneOff[paidOn] = (_oneOff[paidOn] ?? 0) + value;
             }
           }
         case FieldRole.instalment:
@@ -85,10 +96,7 @@ class CostEngine {
       }
     }
     _unitPrices.sort((a, b) => a.$1.compareTo(b.$1));
-    final yearAgo = _today.subtract(const Duration(days: 365));
-    // Heute zählt schon mit: ein heute eingetragener Betrag ist bekannt, kein Durchschnitt.
-    final lastYear = _oneOff.entries.where((e) => e.key.isAfter(yearAgo) && !e.key.isAfter(_today));
-    _oneOffDaily = lastYear.fold(0.0, (sum, e) => sum + e.value) / 365;
+    _oneOffDaily = paidLastYear / 365;
   }
 
   final DateTime _today;
@@ -104,7 +112,11 @@ class CostEngine {
   final _unitPrices = <(DateTime, double)>[];
   final _recurring = <(List<(DateTime, double)>, int)>[];
   final _instalments = <(List<(DateTime, double)>, int)>[];
+  /// Einmalige Beträge bis heute je Tag (mit Zeitraum auf dessen Tage verteilt).
   final _oneOff = <DateTime, double>{};
+
+  /// Im Voraus eingetragene einmalige Beträge je Zahltag.
+  final _oneOffAhead = <DateTime, double>{};
   double _oneOffDaily = 0;
 
   /// Datum ohne Uhrzeit in UTC – so verschiebt keine Zeitumstellung die Tage.
@@ -170,7 +182,7 @@ class CostEngine {
   (double, double, double) _partsOn(DateTime d) => (
     _rateOn(d) * _valueAt(_unitPrices, d, beforeFirst: _unitPrices.firstOrNull?.$2 ?? 0),
     _monthly(_recurring, d),
-    d.isAfter(_today) ? _oneOffDaily : _oneOff[d] ?? 0,
+    d.isAfter(_today) ? _oneOffDaily + (_oneOffAhead[d] ?? 0) : _oneOff[d] ?? 0,
   );
 
   /// Tagesanteil wiederkehrender Beträge (Betrag je Intervall, auf die Tage des Monats verteilt).

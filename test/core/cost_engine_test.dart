@@ -165,6 +165,35 @@ void main() {
       expect(engine.cost(d(2026, 1, 1), d(2026, 10, 23)), closeTo(100, 1e-9));
       expect(engine.costInYear(2027), closeTo(100, 1e-9));
     });
+
+    test('künftig datierte einmalige Beträge zählen an ihrem Tag zusätzlich zum Durchschnitt', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Auto',
+        fields: const [FieldDefinition(id: 'tanken', name: 'Tanken', kind: FieldKind.currency, role: FieldRole.oneOffCost)],
+        entries: [
+          Entry(id: 'a', date: d(2026, 3, 10), values: const {'tanken': 365}),
+          Entry(id: 'b', date: d(2026, 8, 1), values: const {'tanken': 50}),
+        ],
+      );
+      final engine = CostEngine(t, today: d(2026, 7, 1));
+      expect(engine.cost(d(2026, 8, 1), d(2026, 8, 2)), closeTo(1 + 50, 1e-9));
+      expect(engine.cost(d(2026, 8, 2), d(2026, 8, 3)), closeTo(1, 1e-9));
+    });
+
+    test('Prognose einmaliger Beträge mit Zeitraum nach dem Zahltag, nicht nach dem Zeitraum', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Versicherung',
+        fields: const [FieldDefinition(id: 'beitrag', name: 'Beitrag', kind: FieldKind.currency, role: FieldRole.oneOffCost)],
+        entries: [Entry(id: 'a', date: d(2026, 1, 1), values: const {'beitrag': 1200}, periodStart: d(2026, 1, 1), periodEnd: d(2026, 12, 31))],
+      );
+      final engine = CostEngine(t, today: d(2026, 10, 25));
+      expect(engine.costInYear(2027), closeTo(1200 / 365 * 365, 1e-9));
+      expect(engine.costInYear(2026), closeTo(1200, 1e-9));
+      // Bis heute nach dem Zeitraum verteilt.
+      expect(engine.cost(d(2026, 1, 1), d(2026, 2, 1)), closeTo(1200 / 365 * 31, 1e-9));
+    });
   });
 
   group('Rechnungen', () {
