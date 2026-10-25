@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/core.dart';
 import '../cubit/tracker_cubit.dart';
 import 'entry_form_page.dart';
+import 'tracker_page.dart';
 import 'widgets/entry_row.dart';
 
 /// Alle Einträge eines Trackers, nach Jahren gruppiert, neueste zuerst; unten „Wert eintragen“.
@@ -15,7 +16,7 @@ class EntriesPage extends StatelessWidget {
   final TrackerArgs args;
 
   static Future<void> open(BuildContext context, {required String categoryId, required String trackerId}) => Navigator.of(context).push(
-    CupertinoPageRoute<void>(builder: (_) => EntriesPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId))),
+    CupertinoPageRoute<void>(settings: const RouteSettings(name: TrackerPage.routeName), builder: (_) => EntriesPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId))),
   );
 
   @override
@@ -45,7 +46,7 @@ class _EntriesView extends StatelessWidget {
                 children: [
                   AppHeader(title: '', onBack: () => Navigator.of(context).pop()),
                   Expanded(
-                    child: Center(child: AppText(l10n.detailMissing, style: (t) => t.body, color: c.textSecondary)),
+                    child: Center(child: AppText(l10n.trackerMissing, style: (t) => t.body, color: c.textSecondary)),
                   ),
                 ],
               );

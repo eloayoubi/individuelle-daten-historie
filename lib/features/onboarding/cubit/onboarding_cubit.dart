@@ -44,13 +44,15 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   void toggle(String key) =>
       emit(state.copyWith(selected: state.selected.contains(key) ? ({...state.selected}..remove(key)) : {...state.selected, key}));
 
-  /// Legt die gewählten Vorlagen an (in der Reihenfolge der Liste) und geht weiter.
+  /// Legt die gewählten Vorlagen an (in der Reihenfolge der Liste) und geht weiter. Schon angelegte
+  /// überspringt ein zweiter Versuch nach einem Fehler – sonst gäbe es sie doppelt.
   Future<void> create(List<CategoryTemplate> templates) async {
     emit(state.copyWith(busy: true));
     try {
       for (final t in templates) {
-        if (!state.selected.contains(t.key)) continue;
+        if (!state.selected.contains(t.key) || state.created.contains(t.key)) continue;
         await _repository.createCategory(CategoryDraft(name: t.name, icon: t.icon, swatch: t.swatch, templateKey: t.key, trackers: t.trackers));
+        if (!isClosed) emit(state.copyWith(created: {...state.created, t.key}));
       }
       if (!isClosed) emit(state.copyWith(busy: false, step: OnboardingStep.reminders));
     } catch (_) {

@@ -335,6 +335,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get detailMissing => 'Diese Kategorie gibt es nicht mehr.';
 
   @override
+  String get trackerMissing => 'Diesen Tracker gibt es nicht mehr.';
+
+  @override
   String get detailTrackerAdded => 'Tracker angelegt.';
 
   @override
@@ -425,6 +428,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fieldKeepsBills =>
       'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.';
+
+  @override
+  String get fieldKeepsMeter =>
+      'Dieser Zählerstand hat schon Werte – er bleibt ein Zählerstand, sonst würden alle Stände umgedeutet.';
+
+  @override
+  String get trackerNoEntriesViewer =>
+      'Sobald jemand einen Wert einträgt, erscheint er hier.';
 
   @override
   String fieldArchiveTitle(String name) {
@@ -2032,7 +2043,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cloudPausedBody =>
-      'Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.';
+      'Dein Cloud-Abo ist beendet. Deine Daten sind sicher gespeichert – mit Abo kannst du sie wieder ansehen und ändern. Oder du holst alles kostenlos auf dieses Gerät.';
 
   @override
   String get cloudPausedRenew => 'Abo erneuern';

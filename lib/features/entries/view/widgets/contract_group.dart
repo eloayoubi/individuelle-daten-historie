@@ -31,6 +31,7 @@ class ContractGroup extends StatelessWidget {
           children: [
             for (final field in tracker.contractFields)
               _PriceRow(
+                canEdit: category.canEdit,
                 field: field,
                 value: contract.where((v) => v.field.id == field.id).firstOrNull,
                 onTap: () => PriceHistoryPage.open(context, categoryId: category.id, trackerId: tracker.id, fieldId: field.id),
@@ -58,7 +59,7 @@ class ContractGroup extends StatelessWidget {
 
 /// Preis im Vertrag: aktueller Wert seit …, eine eingetragene Änderung; ohne Wert „Eintragen“.
 class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.field, required this.value, required this.onTap});
+  const _PriceRow({required this.field, required this.value, required this.onTap, this.canEdit = true});
 
   /// Platz für den Wert rechts (längere werden gekürzt).
   static const _valueWidth = 180.0;
@@ -66,6 +67,7 @@ class _PriceRow extends StatelessWidget {
   final FieldDefinition field;
   final CurrentValue? value;
   final VoidCallback onTap;
+  final bool canEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +85,7 @@ class _PriceRow extends StatelessWidget {
       trailing: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: _valueWidth),
         child: v == null
-            ? AppText(l10n.contractSet, style: (t) => t.body, color: c.accent)
+            ? AppText(canEdit ? l10n.contractSet : '–', style: (t) => t.body, color: canEdit ? c.accent : c.textTertiary)
             : AppText(context.fieldValue(field, v.value), style: (t) => t.numberM, maxLines: 1, align: TextAlign.end),
       ),
       onTap: onTap,

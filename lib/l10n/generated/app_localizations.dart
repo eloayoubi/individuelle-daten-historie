@@ -602,6 +602,12 @@ abstract class AppLocalizations {
   /// **'Diese Kategorie gibt es nicht mehr.'**
   String get detailMissing;
 
+  /// No description provided for @trackerMissing.
+  ///
+  /// In de, this message translates to:
+  /// **'Diesen Tracker gibt es nicht mehr.'**
+  String get trackerMissing;
+
   /// No description provided for @detailTrackerAdded.
   ///
   /// In de, this message translates to:
@@ -769,6 +775,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.'**
   String get fieldKeepsBills;
+
+  /// No description provided for @fieldKeepsMeter.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Zählerstand hat schon Werte – er bleibt ein Zählerstand, sonst würden alle Stände umgedeutet.'**
+  String get fieldKeepsMeter;
+
+  /// No description provided for @trackerNoEntriesViewer.
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald jemand einen Wert einträgt, erscheint er hier.'**
+  String get trackerNoEntriesViewer;
 
   /// No description provided for @fieldArchiveTitle.
   ///
@@ -3455,7 +3473,7 @@ abstract class AppLocalizations {
   /// No description provided for @cloudPausedBody.
   ///
   /// In de, this message translates to:
-  /// **'Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.'**
+  /// **'Dein Cloud-Abo ist beendet. Deine Daten sind sicher gespeichert – mit Abo kannst du sie wieder ansehen und ändern. Oder du holst alles kostenlos auf dieses Gerät.'**
   String get cloudPausedBody;
 
   /// No description provided for @cloudPausedRenew.

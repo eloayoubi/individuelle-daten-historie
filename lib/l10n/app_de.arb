@@ -233,6 +233,7 @@
   },
   "detailReadOnlyUnknown": "Nur lesen – diese Kategorie wurde mit dir geteilt.",
   "detailMissing": "Diese Kategorie gibt es nicht mehr.",
+  "trackerMissing": "Diesen Tracker gibt es nicht mehr.",
   "detailTrackerAdded": "Tracker angelegt.",
   "detailTrackerArchived": "Tracker archiviert.",
   "trackerNew": "Neuer Tracker",
@@ -275,6 +276,8 @@
   "fieldChoicesEmpty": "Mindestens einen Wert hinzufügen.",
   "fieldArchive": "Feld entfernen",
   "fieldKeepsBills": "Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.",
+  "fieldKeepsMeter": "Dieser Zählerstand hat schon Werte – er bleibt ein Zählerstand, sonst würden alle Stände umgedeutet.",
+  "trackerNoEntriesViewer": "Sobald jemand einen Wert einträgt, erscheint er hier.",
   "fieldArchiveTitle": "„{name}“ entfernen?",
   "@fieldArchiveTitle": {
     "placeholders": {
@@ -1239,7 +1242,7 @@
   "storageAskUploadYes": "Hinzufügen",
   "storageAskUploadNo": "Auf dem Gerät lassen",
   "cloudPausedTitle": "Cloud pausiert",
-  "cloudPausedBody": "Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.",
+  "cloudPausedBody": "Dein Cloud-Abo ist beendet. Deine Daten sind sicher gespeichert – mit Abo kannst du sie wieder ansehen und ändern. Oder du holst alles kostenlos auf dieses Gerät.",
   "cloudPausedRenew": "Abo erneuern",
   "cloudPausedMove": "Kostenlos aufs Gerät holen",
   "settingsStorageTitle": "Speicherort",

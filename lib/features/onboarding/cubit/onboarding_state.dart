@@ -14,6 +14,7 @@ class OnboardingState extends Equatable {
     this.step = OnboardingStep.welcome,
     this.selected = OnboardingCubit.suggested,
     this.busy = false,
+    this.created = const {},
     this.event,
   });
 
@@ -24,17 +25,21 @@ class OnboardingState extends Equatable {
   /// Gewählte Vorlagen (Schlüssel).
   final Set<String> selected;
   final bool busy;
+
+  /// Schon angelegte Vorlagen – ein zweiter Versuch nach einem Fehler legt sie nicht noch einmal an.
+  final Set<String> created;
   final OnboardingEvent? event;
 
-  OnboardingState copyWith({bool? loaded, bool? show, OnboardingStep? step, Set<String>? selected, bool? busy, OnboardingEvent? event}) => OnboardingState(
+  OnboardingState copyWith({bool? loaded, bool? show, OnboardingStep? step, Set<String>? selected, bool? busy, Set<String>? created, OnboardingEvent? event}) => OnboardingState(
     loaded: loaded ?? this.loaded,
     show: show ?? this.show,
     step: step ?? this.step,
     selected: selected ?? this.selected,
     busy: busy ?? this.busy,
+    created: created ?? this.created,
     event: event,
   );
 
   @override
-  List<Object?> get props => [loaded, show, step, selected, busy, event];
+  List<Object?> get props => [loaded, show, step, selected, busy, created, event];
 }

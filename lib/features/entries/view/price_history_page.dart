@@ -6,6 +6,7 @@ import '../../../core/core.dart';
 import '../../../core/utils/cost_engine.dart';
 import '../cubit/tracker_cubit.dart';
 import 'entry_form_page.dart';
+import 'tracker_page.dart';
 
 /// Verlauf eines Preises im Vertrag (Arbeitspreis, Grundpreis, Abschlag): alle Werte mit „ab …“,
 /// neueste zuerst, künftige als geplant. Antippen ändert die Preisänderung; unten „Preise ändern“.
@@ -19,6 +20,7 @@ class PriceHistoryPage extends StatelessWidget {
   static Future<void> open(BuildContext context, {required String categoryId, required String trackerId, required String fieldId}) =>
       Navigator.of(context).push(
         CupertinoPageRoute<void>(
+          settings: const RouteSettings(name: TrackerPage.routeName),
           builder: (_) => PriceHistoryPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId), fieldId: fieldId),
         ),
       );
@@ -53,7 +55,7 @@ class _PriceHistoryView extends StatelessWidget {
                 children: [
                   AppHeader(title: '', onBack: () => Navigator.of(context).pop()),
                   Expanded(
-                    child: Center(child: AppText(l10n.detailMissing, style: (t) => t.body, color: c.textSecondary)),
+                    child: Center(child: AppText(l10n.trackerMissing, style: (t) => t.body, color: c.textSecondary)),
                   ),
                 ],
               );

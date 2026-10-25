@@ -131,7 +131,7 @@ class _Content extends StatelessWidget {
         children: [
           AppHeader(
             title: category.name,
-            overline: category.isShared ? l10n.homeSharedWith(category.sharedWith.map((m) => m.name).join(', ')) : null,
+            overline: category.isShared ? l10n.homeSharedWith(context.memberNames(category.sharedWith)) : null,
             onBack: () => Navigator.of(context).pop(),
             actions: [
               AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch), size: Sizes.iconTileLarge),
@@ -236,7 +236,7 @@ class _TrackerGroup extends StatelessWidget {
         AppListRow(
           leading: AppIconTile(icon: CupertinoIcons.chart_bar_fill, color: swatch),
           title: l10n.trackerHistory,
-          subtitle: context.joinParts([l10n.categoryEntries(tracker.records.length), if (includedIn != null) l10n.trackerIncludedNote(includedIn!.name)]),
+          subtitle: context.joinParts([l10n.categoryEntries(tracker.records.where((e) => !tracker.isPriceChange(e)).length), if (includedIn != null) l10n.trackerIncludedNote(includedIn!.name)]),
           trailing: figure == null
               ? null
               : Column(

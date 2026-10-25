@@ -332,6 +332,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailMissing => 'This category no longer exists.';
 
   @override
+  String get trackerMissing => 'This tracker no longer exists.';
+
+  @override
   String get detailTrackerAdded => 'Tracker added.';
 
   @override
@@ -422,6 +425,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fieldKeepsBills =>
       'Your bills need this unit price – it stays a price per unit and can\'t be archived.';
+
+  @override
+  String get fieldKeepsMeter =>
+      'This meter reading already has values – it stays a meter reading, otherwise all readings would change meaning.';
+
+  @override
+  String get trackerNoEntriesViewer =>
+      'As soon as someone adds a value, it shows up here.';
 
   @override
   String fieldArchiveTitle(String name) {
@@ -2016,7 +2027,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudPausedBody =>
-      'Your cloud subscription has ended. Your data is safe and stays readable – you can edit it again with a subscription. Or move everything to this device for free.';
+      'Your cloud subscription has ended. Your data is stored safely – renew to view and edit it again. Or move everything to this device for free.';
 
   @override
   String get cloudPausedRenew => 'Renew subscription';

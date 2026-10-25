@@ -90,6 +90,9 @@ extension FormatX on BuildContext {
   /// Teile einer Zeile mit Mittelpunkt verbinden: `Zählerstand · kWh`. Leere Teile fallen weg.
   String joinParts(Iterable<String?> parts) => parts.whereType<String>().where((p) => p.isNotEmpty).join(' · ');
 
+  /// Mitglieder als Aufzählung; ohne Namen „Ohne Namen“ statt einer Lücke.
+  String memberNames(List<CategoryMember> members) => joinNames([for (final m in members) m.name.trim().isEmpty ? AppLocalizations.of(this).shareNoName : m.name]);
+
   /// Namen als Aufzählung: „Anna“, „Anna und Ben“, „Anna, Ben und Carla“.
   String joinNames(List<String> names) => switch (names) {
     [] => '',

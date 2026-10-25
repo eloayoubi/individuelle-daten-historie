@@ -20,10 +20,14 @@ import 'widgets/tracker_details.dart';
 class TrackerPage extends StatelessWidget {
   const TrackerPage({super.key, required this.args});
 
+  /// Seiten eines Trackers (Verlauf, alle Einträge, Preisverlauf, Aufbau) – nach dem Archivieren
+  /// des Trackers geht es hinter sie zurück.
+  static const routeName = 'tracker';
+
   final TrackerArgs args;
 
   static Future<void> open(BuildContext context, {required String categoryId, required String trackerId}) => Navigator.of(context).push(
-    CupertinoPageRoute<void>(builder: (_) => TrackerPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId))),
+    CupertinoPageRoute<void>(settings: const RouteSettings(name: routeName), builder: (_) => TrackerPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId))),
   );
 
   @override
@@ -46,7 +50,7 @@ class TrackerPage extends StatelessWidget {
                   Expanded(
                     child: Center(
                       child: AppText(
-                        state.status == TrackerStatus.failure ? context.l10n.errorLoad : context.l10n.detailMissing,
+                        state.status == TrackerStatus.failure ? context.l10n.errorLoad : context.l10n.trackerMissing,
                         style: (t) => t.body,
                         color: context.colors.textSecondary,
                       ),
@@ -197,7 +201,7 @@ class _Content extends StatelessWidget {
                 spacing: Spacing.s,
                 children: [
                   AppText(l10n.trackerNoEntriesTitle, style: (t) => t.title3, align: TextAlign.center),
-                  AppText(l10n.trackerNoEntriesBody, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
+                  AppText(category.canEdit ? l10n.trackerNoEntriesBody : l10n.trackerNoEntriesViewer, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
                 ],
               ),
             )
