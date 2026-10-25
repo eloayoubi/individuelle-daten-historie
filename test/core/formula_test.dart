@@ -105,6 +105,30 @@ void main() {
       expect(vars['e-golf-p1']!.containsKey('tanken'), isFalse);
     });
 
+    test('Momentwerte und Zählerstände gelten nicht weiter, Preise schon', () {
+      const t = Tracker(
+        id: 't',
+        name: 'Heizöl',
+        fields: [
+          FieldDefinition(id: 'stand', name: 'Stand', kind: FieldKind.number, role: FieldRole.meterReading),
+          FieldDefinition(id: 'liter', name: 'Liter', kind: FieldKind.number, role: FieldRole.snapshot),
+          FieldDefinition(id: 'lp', name: 'Literpreis', kind: FieldKind.currency, role: FieldRole.unitPrice),
+          FieldDefinition(id: 'kosten', name: 'Kosten', kind: FieldKind.formula, role: FieldRole.oneOffCost, formula: 'liter * literpreis'),
+        ],
+      );
+      final tracker = t.copyWith(
+        entries: [
+          Entry(id: 'e1', date: DateTime.utc(2026, 3, 1), values: const {'stand': 100, 'liter': 40, 'lp': 1.8}),
+          Entry(id: 'e2', date: DateTime.utc(2026, 3, 10), values: const {'lp': 1.9}),
+        ],
+      );
+      final vars = Formulas.variablesByEntry(tracker)['e2']!;
+      expect(vars['literpreis'], 1.9);
+      expect(vars.containsKey('liter'), isFalse);
+      expect(vars.containsKey('stand'), isFalse);
+      expect(CostEngine(tracker, today: DateTime.utc(2026, 6, 1)).cost(DateTime.utc(2026, 3, 1), DateTime.utc(2026, 4, 1)), closeTo(72, 1e-9));
+    });
+
     test('hängt Formel-Werte an die Einträge (l/100 km)', () {
       final applied = Formulas.apply(golf);
       final entry = applied.entries.firstWhere((e) => e.id == 'e-golf-1');

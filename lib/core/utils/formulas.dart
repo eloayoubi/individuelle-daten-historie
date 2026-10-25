@@ -15,9 +15,10 @@ class FormulaCheck {
 ///
 /// Eine Formel rechnet je Eintrag. Ihre Namen bekommen dabei diese Werte:
 /// - Felder mit Wert im Eintrag: diesen Wert.
-/// - Preise, Beträge, Abschläge, Momentwerte, Stammdaten und Zählerstände ohne Wert im Eintrag:
-///   den zuletzt eingetragenen.
-/// - Einmalige Beträge ohne Wert im Eintrag: keinen, die Formel liefert dann nichts.
+/// - Preise, wiederkehrende Beträge, Abschläge und Stammdaten ohne Wert im Eintrag: den zuletzt
+///   eingetragenen – sie gelten bis zur nächsten Änderung.
+/// - Einmalige Beträge, Momentwerte und Zählerstände ohne Wert im Eintrag: keinen, die Formel liefert
+///   dann nichts (sonst zählte eine Tankfüllung bei jedem späteren Eintrag noch einmal).
 /// - `verbrauch`: Zählerstand minus vorigen Stand (× Umrechnung); nur in Einträgen mit Stand,
 ///   nicht beim Zählerwechsel.
 /// - `tage`: Tage seit dem vorigen Eintrag (bei Zählern: seit dem vorigen Stand).
@@ -157,7 +158,7 @@ abstract final class Formulas {
         final value = e.values[f.id];
         if (value is num && own(f)) {
           vars[keys[f.id]!] = value.toDouble();
-        } else if (f.role != FieldRole.oneOffCost && last.containsKey(f.id)) {
+        } else if ((f.isRate || f.role == FieldRole.info) && last.containsKey(f.id)) {
           vars[keys[f.id]!] = last[f.id]!;
         }
       }
