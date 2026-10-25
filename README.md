@@ -94,6 +94,7 @@ Cubits mit Parameter (z. B. die Kategorie-Id) sind per `registerFactoryParam` re
 - **Keine Hex-Farben, keine `TextStyle(...)`, keine festen Strings in Widgets** – immer `context.colors` / `context.textStyles` / `context.l10n`.
 - **Neue Farbe/Textstil:** erst in `core/theme/color_config.dart` bzw. `core/theme/text_styles.dart`, dann benutzen.
 - **Neues Feature:** Ordner unter `features/`, Repository (+ Mock + Supabase) und Cubit in `configureDependencies()` registrieren, Page in die Shell.
+- **Hauptaktion unten:** Die eine Aktion, für die man auf einen Screen kommt (Wert eintragen, Speichern, Kategorie anlegen), steht als gefüllter Button in `AppActionBar` fest unten. Die Liste darüber trägt Daten und Einstellungen, zweite Aktionen sind `tinted`.
 - **Wiederverwenden vor neu bauen:** erst `core/widgets/` durchsehen, dann vorhandene Widgets um Parameter ergänzen, erst dann ein neues Widget.
 - Beträge, Mengen und Daten nur über `core/extensions/format_x.dart` formatieren (`context.euros`, `context.amount`, `context.change`, …).
 - Rechenlogik (Verbrauch, Kosten, Prognose) gehört in `core/utils/cost_engine.dart` bzw. `features/*/data/`, nicht in Widgets – und bekommt Unit-Tests.
