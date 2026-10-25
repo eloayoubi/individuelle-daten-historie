@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
 import '../../account/cubit/account_cubit.dart';
+import '../../account/view/account_page.dart';
 import '../../plus/view/paywall_page.dart';
 import '../cubit/storage_cubit.dart';
 
@@ -13,10 +14,8 @@ class CloudPausedPage extends StatelessWidget {
   const CloudPausedPage({super.key});
 
   Future<void> _signOut(BuildContext context) async {
-    final l10n = context.l10n;
     final account = context.read<AccountCubit>();
-    final ok = await AppDialog.confirm(context, title: l10n.accountSignOutTitle, message: l10n.accountSignOutBody, confirmLabel: l10n.accountSignOut, destructive: true);
-    if (ok) await account.signOut();
+    if (await AccountPage.confirmSignOut(context)) await account.signOut();
   }
 
   @override

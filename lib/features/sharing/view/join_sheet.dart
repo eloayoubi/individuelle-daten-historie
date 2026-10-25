@@ -31,7 +31,11 @@ class _JoinSheetState extends State<JoinSheet> {
     super.dispose();
   }
 
+  /// Button und Enter auf der Tastatur: nicht doppelt und nicht mit zu kurzem Code.
+  bool get _canJoin => !_busy && _code.text.trim().length >= 6;
+
   Future<void> _join() async {
+    if (!_canJoin) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -41,8 +45,8 @@ class _JoinSheetState extends State<JoinSheet> {
       if (!mounted) return;
       AppToast.show(context, context.l10n.joinDone, icon: CupertinoIcons.person_2_fill);
       Navigator.of(context).pop(id);
-    } on WriteRejected {
-      if (mounted) setState(() => _error = context.l10n.joinInvalid);
+    } on WriteRejected catch (e) {
+      if (mounted) setState(() => _error = e.message == WriteRejected.cloudRequired ? context.l10n.joinOwnerNoCloud : context.l10n.joinInvalid);
     } catch (_) {
       if (mounted) setState(() => _error = context.l10n.errorSave);
     } finally {
@@ -75,7 +79,7 @@ class _JoinSheetState extends State<JoinSheet> {
             onSubmitted: (_) => _join(),
           ),
           if (_error != null) AppText(_error!, style: (t) => t.footnote, color: c.danger),
-          AppButton(label: l10n.joinAction, onPressed: _busy || _code.text.trim().length < 6 ? null : _join),
+          AppButton(label: l10n.joinAction, onPressed: _canJoin ? _join : null),
         ],
       ),
     );

@@ -87,10 +87,26 @@ class CategoryDraft extends Equatable {
 class WriteRejected implements Exception {
   const WriteRejected(this.message);
 
+  /// Geht nur mit Cloud: lokal (Teilen, Einladungen) oder weil der Eigentümer einer geteilten
+  /// Kategorie gerade kein Cloud-Abo hat (Beitreten, Server-Fehler P0064).
+  static const cloudRequired = 'cloud_required';
+
   final String message;
 
   @override
   String toString() => 'WriteRejected: $message';
+}
+
+/// Der Server lässt eine Änderung gerade nicht zu, das kann sich aber ändern (Abo abgelaufen oder
+/// noch nicht verbucht, Rolle geändert). Die Offline-Schicht behält sie – sie ist oft die einzige
+/// Kopie – und sendet die übrigen weiter.
+class WriteHeld implements Exception {
+  const WriteHeld(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'WriteHeld: $message';
 }
 
 /// Stand der Offline-Warteschlange für Einträge.

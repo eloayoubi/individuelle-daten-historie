@@ -798,6 +798,14 @@
   "accountSignOutTitle": "Abmelden?",
   "accountSignOutBody": "Deine Daten bleiben in der Cloud. Auf diesem Gerät wählst du danach neu, wo du speicherst.",
   "accountSignOut": "Abmelden",
+  "accountSignOutPending": "{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet. Er geht verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.} other{Achtung: {count} Einträge sind noch nicht gesendet. Sie gehen verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.}}",
+  "@accountSignOutPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "accountAnonymousTitle": "Nur auf diesem Gerät",
   "accountAnonymousBody": "Deine Daten liegen in einem Konto ohne Anmeldung. Sichere es, damit sie ein neues Handy überstehen und du Kategorien teilen kannst.",
   "accountSecuredTitle": "Konto gesichert",
@@ -895,6 +903,7 @@
   "joinRowHint": "Kategorie eines Partners beitreten",
   "joinDone": "Beigetreten",
   "joinInvalid": "Code unbekannt, abgelaufen oder schon benutzt.",
+  "joinOwnerNoCloud": "Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.",
   "joinBody": "Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.",
   "joinHint": "Code, z. B. K7Q2M9X4TA",
   "joinAction": "Beitreten",
@@ -909,6 +918,14 @@
   "accountDelete": "Konto löschen",
   "accountDeleteTitle": "Konto und alle Daten löschen?",
   "accountDeleteBody": "Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.",
+  "accountDeletePending": "{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet und geht mit dem Konto verloren.} other{Achtung: {count} Einträge sind noch nicht gesendet und gehen mit dem Konto verloren.}}",
+  "@accountDeletePending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "accountDeleteFooter": "Exportiere vorher deine Daten, wenn du sie behalten willst (Einstellungen › Daten exportieren).",
   "accountDeletedToast": "Konto gelöscht",
   "attachmentsTitle": "Belege",

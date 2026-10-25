@@ -1173,6 +1173,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountSignOut => 'Sign out';
 
   @override
+  String accountSignOutPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Note: $count entries haven\'t been sent yet. They will be lost unless you sign in with this account again.',
+      one:
+          'Note: 1 entry hasn\'t been sent yet. It will be lost unless you sign in with this account again.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get accountAnonymousTitle => 'Only on this device';
 
   @override
@@ -1338,6 +1351,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinInvalid => 'Code unknown, expired or already used.';
 
   @override
+  String get joinOwnerNoCloud =>
+      'The person who shared this category has no cloud subscription right now. The code stays valid – try again later.';
+
+  @override
   String get joinBody =>
       'Enter the code from the invite. Afterwards you see the category and, depending on your role, record along.';
 
@@ -1361,6 +1378,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountDeleteBody =>
       'Your account and your cloud categories with all entries and receipts are deleted immediately – also for everyone you share them with. This cannot be undone. Cancel a cloud subscription separately in iOS Settings.';
+
+  @override
+  String accountDeletePending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Note: $count entries haven\'t been sent yet and will be lost with the account.',
+      one:
+          'Note: 1 entry hasn\'t been sent yet and will be lost with the account.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get accountDeleteFooter =>

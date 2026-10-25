@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../../core/utils/ids.dart';
 import '../../../core/utils/json_store.dart';
 import '../../categories/data/categories_repository.dart';
 import '../../categories/data/local_categories_repository.dart';
@@ -7,11 +8,11 @@ import '../../categories/data/local_categories_repository.dart';
 /// Umzug der Daten zwischen Gerät und Cloud.
 ///
 /// **Hoch** ([upload]): jede Kategorie per `create_category` neu anlegen, Tracker und Felder über
-/// ihre Reihenfolge zuordnen, Einträge mit ihren Geräte-Ids senden (`save_entry` ist ein Upsert),
-/// danach „enthalten in“ und Archiv setzen. Ein Journal merkt sich je Konto jede angelegte
-/// Kategorie: Bricht der Umzug ab, legt der nächste Versuch mit demselben Konto nichts doppelt an
-/// (nur ein Absturz genau zwischen Anlegen und Merken kann eine Kategorie doppeln). Erst wenn alles
-/// oben ist, wird das Gerät geleert.
+/// ihre Reihenfolge zuordnen, Einträge unter einer aus Tracker und Geräte-Id abgeleiteten Id senden
+/// (`save_entry` ist ein Upsert), danach „enthalten in“ und Archiv setzen. Ein Journal merkt sich je
+/// Konto jede angelegte Kategorie: Bricht der Umzug ab, legt der nächste Versuch mit demselben Konto
+/// nichts doppelt an (nur ein Absturz genau zwischen Anlegen und Merken kann eine Kategorie doppeln)
+/// und ergänzt, was lokal seitdem dazukam. Erst wenn jeder Eintrag oben ist, wird das Gerät geleert.
 ///
 /// **Runter** ([download]): alle sichtbaren Kategorien als eigene Kopie aufs Gerät (ohne Mitglieder
 /// und Belege); gleiche Ids werden ersetzt, andere lokale Kategorien bleiben.
@@ -46,27 +47,33 @@ class StorageTransfer {
     final trackerIds = <String, String>{};
     final fieldIds = <String, String>{};
     for (final c in categories) {
-      var mapped = created[c.id];
-      if (mapped == null) {
-        mapped = await _create(c);
-        created[c.id] = mapped;
-        await journal.write({'userId': userId(), 'categories': created});
-      }
+      final mapped = await _ensure(c, created[c.id]);
+      created[c.id] = mapped;
+      await journal.write({'userId': userId(), 'categories': created});
       categoryIds[c.id] = mapped['id']! as String;
       trackerIds.addAll((mapped['trackers']! as Map).cast<String, String>());
       fieldIds.addAll((mapped['fields']! as Map).cast<String, String>());
     }
 
-    final writes = <Future<void> Function()>[
-      for (final c in categories)
-        for (final t in c.trackers)
-          for (final e in t.entries)
-            () => remote.saveEntry(
-              trackerIds[t.id]!,
-              // Werte archivierter Felder haben kein Gegenstück mehr und bleiben weg.
-              e.copyWith(values: {for (final MapEntry(:key, :value) in e.values.entries) ?fieldIds[key]: value}),
-            ),
-    ];
+    // Die Cloud-Id leitet sich aus neuem Tracker und Geräte-Id ab: Nach einem Umzug aufs Gerät liegt
+    // die alte Kopie mit den ursprünglichen Ids noch in der Cloud, `save_entry` lehnte sie für den
+    // neuen Tracker ab. Wiederholen trifft dieselben Ids.
+    final expected = <String, Set<String>>{};
+    final writes = <Future<void> Function()>[];
+    for (final c in categories) {
+      for (final t in c.trackers) {
+        final tracker = trackerIds[t.id]!;
+        for (final e in t.entries) {
+          // Werte archivierter Felder haben kein Gegenstück mehr und bleiben weg; ein Eintrag ganz
+          // ohne Werte bleibt auf dem Gerät zurück, statt den Umzug zu blockieren.
+          final values = {for (final MapEntry(:key, :value) in e.values.entries) ?fieldIds[key]: value};
+          if (values.isEmpty) continue;
+          final id = derivedId(tracker, e.id);
+          (expected[categoryIds[c.id]!] ??= {}).add(id);
+          writes.add(() => remote.saveEntry(tracker, e.copyWith(id: id, values: values)));
+        }
+      }
+    }
     for (var i = 0; i < writes.length; i += parallel) {
       await Future.wait([for (final write in writes.skip(i).take(parallel)) write()]);
     }
@@ -78,6 +85,12 @@ class StorageTransfer {
       if (c.isArchived) await remote.setCategoryArchived(categoryIds[c.id]!, archived: true);
     }
 
+    // Das Gerät hat oft die einzige Kopie: erst leeren, wenn jeder Eintrag oben angekommen ist.
+    for (final MapEntry(key: id, value: entries) in expected.entries) {
+      final uploaded = await remote.loadCategory(id);
+      final found = {for (final t in uploaded?.trackers ?? const <Tracker>[]) for (final e in t.entries) e.id};
+      if (!found.containsAll(entries)) throw StateError('transfer_incomplete $id');
+    }
     await local.clear();
     await journal.write(null);
   }
@@ -88,6 +101,26 @@ class StorageTransfer {
       for (final c in categories)
         Category(id: c.id, name: c.name, icon: c.icon, swatch: c.swatch, trackers: c.trackers, templateKey: c.templateKey, archivedAt: c.archivedAt),
     ]);
+  }
+
+  /// Kategorie [c] in der Cloud: aus dem Journal eines abgebrochenen Versuchs, ergänzt um Tracker und
+  /// Felder, die lokal seitdem dazugekommen sind – oder neu, wenn es sie dort nicht (mehr) gibt.
+  Future<Map<String, Object?>> _ensure(Category c, Map<String, Object?>? journaled) async {
+    if (journaled == null) return _create(c);
+    final existing = await remote.loadCategory(journaled['id']! as String);
+    if (existing == null) return _create(c);
+    final trackers = {...(journaled['trackers']! as Map).cast<String, String>()};
+    final fields = {...(journaled['fields']! as Map).cast<String, String>()};
+    for (final (i, t) in c.trackers.indexed) {
+      final match = existing.trackers.where((r) => r.id == trackers[t.id]).firstOrNull;
+      final tracker = match?.id ?? await remote.createTracker(existing.id, t.name, sort: i);
+      trackers[t.id] = tracker;
+      for (final (j, f) in t.fields.indexed) {
+        if (match != null && match.fields.any((r) => r.id == fields[f.id])) continue;
+        fields[f.id] = await remote.createField(tracker, FieldDraft.of(f), sort: j);
+      }
+    }
+    return {'id': existing.id, 'trackers': trackers, 'fields': fields};
   }
 
   /// Legt [c] mit Trackern und Feldern an und ordnet die neuen Ids über die Reihenfolge zu.
