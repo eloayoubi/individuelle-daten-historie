@@ -122,6 +122,10 @@ end $$;
 -- ---------------------------------------------------------------------------------------------
 -- Belege: nur mit Plus, Plus vergibt nur der Server
 -- ---------------------------------------------------------------------------------------------
+-- Demos Cloud-Abo aus dem Seed kurz weg (wie die Edge Function, ohne RLS).
+reset role;
+delete from public.entitlements where user_id = '00000000-0000-4000-8000-000000000001';
+set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000001';
 
 do $$

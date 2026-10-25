@@ -5,6 +5,8 @@
 begin;
 
 insert into auth.users (id, email) values ('00000000-0000-4000-8000-000000000003', 'fremd@kostenkurve.test');
+-- Ohne Demos Cloud-Abo aus dem Seed: Hier bestimmen nur die Käufe den Stand.
+delete from public.entitlements where user_id = '00000000-0000-4000-8000-000000000001';
 
 -- ---------------------------------------------------------------------------------------------
 -- Service-Role, wie die Edge Functions nach der Prüfung der Apple-Signatur

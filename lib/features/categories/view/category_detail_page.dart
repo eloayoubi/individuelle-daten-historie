@@ -8,6 +8,7 @@ import '../../entries/view/entry_form_page.dart';
 import '../../entries/view/tracker_page.dart';
 import '../../entries/view/widgets/tracker_details.dart';
 import '../../sharing/view/share_page.dart';
+import '../../storage/view/cloud_flow.dart';
 import '../cubit/category_detail_cubit.dart';
 import 'tracker_setup_page.dart';
 import 'widgets/category_sheets.dart';
@@ -111,7 +112,13 @@ class _Content extends StatelessWidget {
           onBack: () => Navigator.of(context).pop(),
           actions: [
             AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch), size: Sizes.iconTileLarge),
-            AppIconButton(icon: CupertinoIcons.person_2_fill, semanticLabel: l10n.shareTitle, onPressed: () => SharePage.open(context, category.id)),
+            AppIconButton(
+              icon: CupertinoIcons.person_2_fill,
+              semanticLabel: l10n.shareTitle,
+              onPressed: () async {
+                if (await CloudFlow.require(context, l10n.cloudRequiredShare) && context.mounted) await SharePage.open(context, category.id);
+              },
+            ),
             if (editable) AppIconButton(icon: CupertinoIcons.pencil, semanticLabel: l10n.detailEditCategory, onPressed: () => _edit(context)),
           ],
         ),

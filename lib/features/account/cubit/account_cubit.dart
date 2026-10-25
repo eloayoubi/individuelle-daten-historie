@@ -7,7 +7,8 @@ import '../../auth/data/auth_repository.dart';
 
 part 'account_state.dart';
 
-/// Konto sichern (Apple, E-Mail-Code), anmelden, Namen setzen, abmelden, löschen.
+/// Registrieren und anmelden (Apple, E-Mail-Code), anonymes Testkonto sichern, Namen setzen,
+/// abmelden, löschen.
 /// Liegt über dem `MaterialApp`: Einstellungen und Teilen brauchen denselben Stand.
 class AccountCubit extends Cubit<AccountState> {
   AccountCubit(this._auth) : super(AccountState(account: _auth.account)) {
@@ -35,7 +36,9 @@ class AccountCubit extends Cubit<AccountState> {
 
   Future<void> signInWithApple() => _run(_auth.signInWithApple, success: AccountEventKind.signedIn);
 
-  Future<void> requestEmailCode(String email, {required bool link}) => _run(() => _auth.requestEmailCode(email, link: link), success: AccountEventKind.codeSent);
+  /// [create] legt ein neues Konto an (Registrieren), [link] sichert das anonyme Testkonto.
+  Future<void> requestEmailCode(String email, {required bool link, bool create = false}) =>
+      _run(() => _auth.requestEmailCode(email, link: link, create: create), success: AccountEventKind.codeSent);
 
   Future<void> verifyEmailCode(String email, String code, {required bool link}) =>
       _run(() => _auth.verifyEmailCode(email, code, link: link), success: link ? AccountEventKind.secured : AccountEventKind.signedIn);

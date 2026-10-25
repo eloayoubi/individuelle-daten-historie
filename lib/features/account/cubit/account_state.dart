@@ -1,6 +1,6 @@
 part of 'account_cubit.dart';
 
-enum AccountEventKind { secured, signedIn, codeSent, nameSaved, signedOut, deleted, alreadyUsed, invalidCode, canceled, failed }
+enum AccountEventKind { secured, signedIn, codeSent, nameSaved, signedOut, deleted, alreadyUsed, invalidCode, canceled, rateLimited, network, failed }
 
 /// Einmaliges Ereignis für Toasts und Folgeschritte. Bewusst nicht `const`.
 class AccountEvent {
@@ -10,6 +10,8 @@ class AccountEvent {
     AuthFailureKind.alreadyUsed => AccountEventKind.alreadyUsed,
     AuthFailureKind.invalidCode => AccountEventKind.invalidCode,
     AuthFailureKind.canceled => AccountEventKind.canceled,
+    AuthFailureKind.rateLimited => AccountEventKind.rateLimited,
+    AuthFailureKind.network => AccountEventKind.network,
     _ => AccountEventKind.failed,
   });
 

@@ -1133,7 +1133,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get accountSignOutBody =>
-      'Deine Daten bleiben im Konto. Danach startest du auf diesem Gerät neu ohne Konto.';
+      'Deine Daten bleiben in der Cloud. Auf diesem Gerät wählst du danach neu, wo du speicherst.';
 
   @override
   String get accountSignOut => 'Abmelden';
@@ -1150,7 +1150,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String accountSecuredBody(String login) {
-    return 'Angemeldet mit $login. Deine Daten sind auf jedem Gerät da.';
+    return 'Angemeldet mit $login.';
   }
 
   @override
@@ -1326,7 +1326,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get accountDeleteBody =>
-      'Dein Konto, deine Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Plus-Abo kündigst du separat in den iOS-Einstellungen.';
+      'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.';
 
   @override
   String get accountDeleteFooter =>
@@ -1357,7 +1357,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get attachmentsEmptyPlus =>
-      'Mit Plus hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.';
+      'In der Cloud hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.';
 
   @override
   String get attachmentsOffline => 'Belege sind gerade nicht erreichbar.';
@@ -1528,10 +1528,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingLater => 'Später';
 
   @override
-  String get plusTitle => 'Kostenkurve Plus';
+  String get plusTitle => 'Kostenkurve Cloud';
 
   @override
-  String get plusSubtitle => 'Alle Belege da, wo die Kosten sind.';
+  String get plusSubtitle => 'Deine Daten auf jedem Gerät.';
 
   @override
   String get plusBenefitReceipts => 'Belege am Eintrag';
@@ -1555,15 +1555,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'In geteilten Kategorien sieht dein Partner die Belege – ohne eigenes Abo.';
 
   @override
-  String get plusYearly => 'Jährlich';
-
-  @override
   String get plusMonthly => 'Monatlich';
-
-  @override
-  String plusPerYear(String price) {
-    return '$price/Jahr';
-  }
 
   @override
   String plusPerMonth(String price) {
@@ -1571,20 +1563,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String plusYearlyDetail(String price) {
-    return '$price pro Monat, jährlich abgerechnet';
-  }
-
-  @override
   String get plusMonthlyDetail => 'Monatlich kündbar';
-
-  @override
-  String plusSave(int percent) {
-    return 'Spare $percent %';
-  }
-
-  @override
-  String get plusSubscribe => 'Abo starten';
 
   @override
   String get plusFinePrint =>
@@ -1597,7 +1576,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get plusAppleEula => 'Lizenzvertrag (EULA)';
 
   @override
-  String get plusWelcome => 'Willkommen bei Plus';
+  String get plusWelcome => 'Willkommen in der Cloud';
 
   @override
   String get plusNothingToRestore => 'Kein aktives Abo gefunden.';
@@ -1618,21 +1597,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get plusOnlyIos =>
-      'Plus schließt du derzeit in der iPhone-App ab – es gilt dann auch hier.';
+      'Die Cloud buchst du derzeit in der iPhone-App – das Abo gilt dann auch hier.';
 
   @override
-  String get plusActive => 'Plus ist aktiv.';
+  String get plusActive => 'Cloud ist aktiv.';
 
   @override
   String plusActiveUntil(String date) {
-    return 'Plus ist aktiv – verlängert sich am $date.';
+    return 'Cloud ist aktiv – verlängert sich am $date.';
   }
 
   @override
   String get plusManage => 'Abo verwalten';
 
   @override
-  String get plusBadge => 'Plus';
+  String get plusBadge => 'Cloud';
 
   @override
   String get plusBadgeActive => 'Aktiv';
@@ -1641,7 +1620,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAccountAnonymous => 'Nur auf diesem Gerät – jetzt sichern';
 
   @override
-  String get settingsPlusHint => 'Belege für Rechnungen und Verträge';
+  String get settingsPlusHint => 'Auf allen Geräten, gesichert, teilen';
 
   @override
   String settingsStorage(String used, String total) {
@@ -1747,4 +1726,264 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get trackerFieldsDetailsHint =>
       'Legst du einmal fest und änderst sie nur, wenn sich etwas ändert – z. B. Anbieter oder Vertragsende.';
+
+  @override
+  String get startTitle => 'Wo sollen deine Daten liegen?';
+
+  @override
+  String get startBody =>
+      'Kostenkurve ist kostenlos, solange alles auf diesem Gerät bleibt. Mit einem Konto liegen deine Daten in der Cloud – auf jedem Gerät.';
+
+  @override
+  String get startLocalTitle => 'Auf diesem Gerät';
+
+  @override
+  String get startLocalPrice => 'Kostenlos · ohne Konto';
+
+  @override
+  String get startLocalPointFeatures =>
+      'Alle Funktionen: Verlauf, Prognose, Erinnerungen, Export';
+
+  @override
+  String get startLocalPointPrivate =>
+      'Deine Daten verlassen dieses Gerät nicht';
+
+  @override
+  String get startLocalPointLimits =>
+      'Kein Teilen, keine Belege, keine Sicherung';
+
+  @override
+  String get startLocalAction => 'Kostenlos lokal starten';
+
+  @override
+  String get startCloudTitle => 'In der Cloud';
+
+  @override
+  String startCloudPrice(String price) {
+    return '$price im Monat · mit Konto';
+  }
+
+  @override
+  String get startCloudPointDevices =>
+      'Auf jedem Gerät, auf dem du dich anmeldest';
+
+  @override
+  String get startCloudPointBackup => 'Gesichert, auch wenn das Handy weg ist';
+
+  @override
+  String get startCloudPointShare => 'Mit dem Partner teilen, Belege anhängen';
+
+  @override
+  String get startCloudAction => 'Konto erstellen';
+
+  @override
+  String get startSignIn => 'Ich habe schon ein Konto';
+
+  @override
+  String get startFooter =>
+      'Du kannst jederzeit in den Einstellungen wechseln – deine Daten ziehen mit um.';
+
+  @override
+  String get cloudPriceFallback => '2 €';
+
+  @override
+  String get authRegisterTab => 'Registrieren';
+
+  @override
+  String get authSignInTab => 'Anmelden';
+
+  @override
+  String get authRegisterTitle => 'Konto erstellen';
+
+  @override
+  String get authRegisterBody =>
+      'Mit einem Konto liegen deine Daten in der Cloud und auf jedem Gerät, auf dem du dich anmeldest. Im nächsten Schritt siehst du den Preis – lokal bleibt Kostenkurve kostenlos.';
+
+  @override
+  String get authSignInBody =>
+      'Melde dich an, um deine Cloud-Daten auf diesem Gerät zu öffnen.';
+
+  @override
+  String get authAppleRegister => 'Mit Apple registrieren';
+
+  @override
+  String get authOrEmail => 'oder mit E-Mail';
+
+  @override
+  String get authNoPassword =>
+      'Kein Passwort nötig: Du bekommst einen 6-stelligen Code per E-Mail.';
+
+  @override
+  String authCodeSentSignIn(String email) {
+    return 'Wenn es zu $email ein Konto gibt, ist ein Code unterwegs. Schau auch im Spam-Ordner.';
+  }
+
+  @override
+  String authResendIn(int seconds) {
+    return 'Neuen Code senden ($seconds s)';
+  }
+
+  @override
+  String get authChangeEmail => 'Andere E-Mail';
+
+  @override
+  String get authConsentPrefix => 'Mit dem Registrieren akzeptierst du die';
+
+  @override
+  String get authConsentMiddle => 'und hast die Hinweise zum';
+
+  @override
+  String get authConsentSuffix => 'gelesen.';
+
+  @override
+  String get authRateLimited =>
+      'Zu viele Versuche. Bitte warte ein paar Minuten.';
+
+  @override
+  String get authNetwork =>
+      'Keine Verbindung. Prüfe dein Netz und versuch es noch einmal.';
+
+  @override
+  String get authEmailUsed =>
+      'Zu dieser E-Mail gibt es schon ein Konto. Melde dich dort an.';
+
+  @override
+  String cloudPaywallSubtitle(String price) {
+    return 'Kostenkurve bleibt kostenlos, solange deine Daten auf diesem Gerät liegen. Für die Cloud zahlst du $price im Monat.';
+  }
+
+  @override
+  String get cloudCompareLocal => 'Lokal';
+
+  @override
+  String get cloudCompareFree => 'Kostenlos';
+
+  @override
+  String get cloudCompareCloud => 'Cloud';
+
+  @override
+  String get cloudFeatureAll => 'Alle Funktionen';
+
+  @override
+  String get cloudFeatureDevices => 'Auf allen Geräten';
+
+  @override
+  String get cloudFeatureBackup => 'Gesichert';
+
+  @override
+  String get cloudFeatureShare => 'Mit dem Partner teilen';
+
+  @override
+  String get cloudFeatureReceipts => 'Belege, 5 GB';
+
+  @override
+  String get cloudIncluded => 'enthalten';
+
+  @override
+  String get cloudNotIncluded => 'nicht enthalten';
+
+  @override
+  String cloudSubscribe(String price) {
+    return 'Cloud abonnieren – $price/Monat';
+  }
+
+  @override
+  String get cloudStayLocal => 'Kostenlos lokal nutzen';
+
+  @override
+  String get cloudStayLocalHint =>
+      'Deine Daten bleiben auf diesem Gerät. Die Cloud kannst du später in den Einstellungen buchen.';
+
+  @override
+  String get cloudContinue => 'In die Cloud wechseln';
+
+  @override
+  String get storageUploading => 'Deine Daten ziehen in die Cloud …';
+
+  @override
+  String get storageDownloading => 'Deine Daten kommen aufs Gerät …';
+
+  @override
+  String get storageUploaded => 'Alles in der Cloud';
+
+  @override
+  String get storageDownloaded => 'Alles auf diesem Gerät';
+
+  @override
+  String get storageFailed =>
+      'Umzug unterbrochen – deine Daten sind noch da. Versuch es mit Netz noch einmal.';
+
+  @override
+  String get storageAskUploadTitle => 'Daten vom Gerät mitnehmen?';
+
+  @override
+  String get storageAskUploadBody =>
+      'In deinem Konto liegen schon Daten. Sollen die Kategorien von diesem Gerät dazukommen?';
+
+  @override
+  String get storageAskUploadYes => 'Hinzufügen';
+
+  @override
+  String get storageAskUploadNo => 'Auf dem Gerät lassen';
+
+  @override
+  String get cloudPausedTitle => 'Cloud pausiert';
+
+  @override
+  String get cloudPausedBody =>
+      'Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.';
+
+  @override
+  String get cloudPausedRenew => 'Abo erneuern';
+
+  @override
+  String get cloudPausedMove => 'Kostenlos aufs Gerät holen';
+
+  @override
+  String get settingsStorageTitle => 'Speicherort';
+
+  @override
+  String get settingsStorageLocal => 'Auf diesem Gerät';
+
+  @override
+  String get settingsStorageLocalHint => 'Kostenlos · nur dieses Gerät';
+
+  @override
+  String get settingsStorageCloud => 'In der Cloud';
+
+  @override
+  String get settingsCloudActivate => 'Cloud aktivieren';
+
+  @override
+  String settingsCloudActivateHint(String price) {
+    return 'Auf allen Geräten, gesichert – $price/Monat';
+  }
+
+  @override
+  String get settingsMoveLocal => 'Auf dieses Gerät holen';
+
+  @override
+  String get settingsMoveLocalTitle => 'Daten aufs Gerät holen?';
+
+  @override
+  String get settingsMoveLocalBody =>
+      'Alle Kategorien und Einträge werden auf dieses Gerät kopiert, danach speicherst du lokal und kostenlos. Belege bleiben in der Cloud. Dein Abo kündigst du in den iOS-Einstellungen.';
+
+  @override
+  String get settingsStorageFooterLocal =>
+      'Lokal ist kostenlos. In der Cloud sind deine Daten auf jedem Gerät und gesichert.';
+
+  @override
+  String get settingsStorageFooterCloud =>
+      'Deine Daten liegen in der Cloud (Rechenzentrum in Frankfurt) und als Kopie auf diesem Gerät.';
+
+  @override
+  String get cloudRequiredTitle => 'Dafür brauchst du die Cloud';
+
+  @override
+  String get cloudRequiredShare =>
+      'Zum Teilen müssen deine Daten in der Cloud liegen. Lokal bleiben sie nur auf diesem Gerät.';
+
+  @override
+  String get cloudRequiredAction => 'Cloud ansehen';
 }

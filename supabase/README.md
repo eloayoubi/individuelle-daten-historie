@@ -4,7 +4,7 @@ Postgres mit Row Level Security, RPCs für alles, was über Tabellenrechte hinau
 
 ```
 supabase/
-  config.toml          lokale CLI-Konfiguration (anonyme Anmeldung an, Redirect de.eloayoubi.kostenkurve://login-callback, verify_jwt je Edge Function)
+  config.toml          lokale CLI-Konfiguration (anonyme Anmeldung aus, E-Mail-Code 10 Minuten, Redirect de.eloayoubi.kostenkurve://login-callback, verify_jwt je Edge Function)
   migrations/          Schema, eine Transaktion je Datei, Zeitstempel aufsteigend
   seed.sql             Beispieldaten (Demo, Anna) – nur lokal / in test_local.sh
   functions/health/    Lebenszeichen, ohne Anmeldung
@@ -44,7 +44,7 @@ erDiagram
 | `entries` | ein Eintrag zu einem Datum, optional Abrechnungszeitraum, `meter_change` beim Zählerwechsel. |
 | `trackers.included_in` | Kategorie, in deren Kosten der Tracker schon steckt (z. B. Wasser in den Nebenkosten). Die App zählt ihn dann in keiner Summe. Nie die eigene Kategorie; fällt die Ziel-Kategorie weg, wird der Wert `null`. |
 | `entry_values` | typisierte Werte (`num`, `txt`, `dat`, `flag` – genau eine gesetzt). Ein Trigger prüft, dass Feld und Eintrag zum selben Tracker gehören und die Spalte zum Feldtyp passt. Formeln werden in der App berechnet, nicht gespeichert. |
-| `entitlements` | Abo-Stand (`free`/`plus`). Nur lesbar – schreiben darf nur die Service-Role (Edge Function nach Kaufprüfung). |
+| `entitlements` | Abo-Stand (`free`/`plus`; `plus` = Kostenkurve Cloud). Nur lesbar – schreiben darf nur die Service-Role (Edge Function nach Kaufprüfung). |
 | `attachments` | Belege (JPEG, PNG, HEIC, PDF, ≤ 20 MB) im privaten Bucket `attachments` unter `<category_id>/<entry_id>/<datei>`. Hochladen nur mit Plus; Mitglieder sehen Belege ohne eigenes Abo. |
 | `store_transactions` | App-Store-Abos von Kostenkurve Plus, eine Zeile je Abo (`original_transaction_id`) mit dem neuesten Stand: Produkt, letzte Transaktion, Ablauf, Erstattung, Umgebung, Apples Signaturzeit. Lesbar nur die eigenen; schreiben nur `apply_plus_transaction`. |
 | `apple_tokens` | Refresh-Token von Sign in with Apple je Nutzer, für den Widerruf beim Löschen des Kontos. Nur Service-Role: RLS an, keine Policies, keine Rechte für anon/authenticated. |
@@ -53,14 +53,28 @@ erDiagram
 
 ## RLS in einem Satz
 
-Sichtbar ist, was zu einer Kategorie gehört, in der ich Mitglied bin; schreiben dürfen owner und editor, teilen und löschen nur der owner. Die Hilfsfunktionen `category_role`, `is_category_member`, `can_edit_category`, `is_category_owner`, `tracker_category`, `entry_category` und `has_plus` sind `security definer` mit leerem `search_path`, damit Policies nicht rekursiv werden.
+Sichtbar ist, was zu einer Kategorie gehört, in der ich Mitglied bin; schreiben dürfen owner und editor, solange der Schreibende oder der owner ein Cloud-Abo hat; teilen und löschen nur der owner. Die Hilfsfunktionen `category_role`, `is_category_member`, `can_edit_category`, `is_category_owner`, `tracker_category`, `entry_category`, `has_plus`, `owner_has_plus` und `has_cloud` sind `security definer` mit leerem `search_path`, damit Policies nicht rekursiv werden.
+
+## Kostenkurve Cloud: Schreiben nur mit Abo
+
+Lokal (nur auf dem Gerät) ist die App kostenlos und spricht nicht mit Supabase. Wer in die Cloud will, registriert sich und bucht das Abo (Produkt `…plus.monthly`, 2 € im Monat). Durchgesetzt wird das im Server (Migration `…_cloud_access.sql`), nicht in der App:
+
+| Was | Regel |
+|---|---|
+| `has_cloud(category)` | Aufrufer (`has_plus()`) oder Eigentümer der Kategorie (`owner_has_plus`) hat ein laufendes Abo. Nur für Policies und Funktionen, für `anon`/`authenticated` nicht aufrufbar. |
+| `can_edit_category` | owner oder editor **und** `has_cloud` – gilt damit für alle Schreib-Policies (Kategorien, Tracker, Felder, Einträge, Werte, Belege) und für `save_entry`/`create_category`. |
+| Neue Kategorie | `categories_insert` verlangt das eigene Abo. |
+| Teilen / Beitreten | `create_category_invite` braucht das eigene Abo, `accept_category_invite` das des Eigentümers; sonst Fehler `P0064 cloud_required` (der Code bleibt gültig). |
+| Ohne Abo erlaubt | Lesen, Kategorien löschen, verlassen, Reihenfolge, Name – Export und Umzug aufs Gerät gehen immer (DSGVO Art. 17 und 20). |
+
+Das Abo des Eigentümers reicht für den Haushalt: Mitglieder schreiben in geteilte Kategorien mit, eigene Kategorien in der Cloud brauchen ein eigenes Abo. Test: `tests/cloud_access.sql`.
 
 ## RPCs
 
 | Funktion | Wer | Was |
 |---|---|---|
-| `create_category_invite(p_category, p_role = 'editor')` | owner | neuer Code (`text`) |
-| `accept_category_invite(p_code)` | angemeldet | tritt bei, liefert die Kategorie-Id; Code danach verbraucht |
+| `create_category_invite(p_category, p_role = 'editor')` | owner mit Cloud-Abo | neuer Code (`text`); ohne Abo `P0064` |
+| `accept_category_invite(p_code)` | angemeldet | tritt bei, liefert die Kategorie-Id; Code danach verbraucht. Hat der owner kein Abo: `P0064`, Code bleibt gültig |
 | `has_plus()` | angemeldet | hat der Nutzer gerade Plus? |
 | `create_category(p_name, p_icon, p_swatch, p_template_key, p_trackers)` | angemeldet | legt Kategorie, Tracker und Felder (aus einer Vorlage) in einer Transaktion an. Läuft mit den Rechten des Aufrufers; scheitert ein Feld an einem Check, bleibt nichts halb angelegt. Liefert die Id. |
 | `reorder_categories(p_ids)` | angemeldet | speichert die eigene Reihenfolge (Index in `p_ids`) |
@@ -116,7 +130,7 @@ Produkte: `de.eloayoubi.kostenkurve.plus.monthly` und `de.eloayoubi.kostenkurve.
 
 ## App Store Connect
 
-- Abo-Gruppe „Kostenkurve Plus“ mit den automatisch verlängerbaren Abos `de.eloayoubi.kostenkurve.plus.monthly` und `de.eloayoubi.kostenkurve.plus.yearly`, **beide auf derselben Stufe** (ein Wechsel greift dann zur nächsten Verlängerung).
+- Abo-Gruppe „Kostenkurve Cloud“ mit dem automatisch verlängerbaren Abo `de.eloayoubi.kostenkurve.plus.monthly` (2 € im Monat). Das Jahresabo `…plus.yearly` verkauft die App nicht mehr; der Server erkennt laufende weiter (gleiche Stufe wie das Monatsabo).
 - App-Informationen → App-Store-Server-Benachrichtigungen: **Version 2**, Production- und Sandbox-URL `https://<ref>.supabase.co/functions/v1/app-store-notifications`.
 - **Familienfreigabe aus**: Transaktionen von Familienmitgliedern tragen nicht deren eigene Nutzer-Id als `appAccountToken` und würden mit `wrong_user` abgelehnt.
 - **Abrechnungs-Kulanzzeitraum (Billing Grace Period) aus**: berücksichtigt wird nur das Ablaufdatum.
@@ -131,9 +145,14 @@ App Store Review Guideline 5.1.1(v): Löscht jemand sein Konto, widerruft die Ap
 
 Das `client_secret` für beide Aufrufe baut `functions/_shared/apple_client_secret.ts`: ein ES256-JWT, signiert mit dem `.p8`-Schlüssel (Header `kid` = Key-ID; Claims `iss` = Team-ID, `sub` = Bundle-ID, `aud` = `https://appleid.apple.com`, 5 Minuten gültig). Einrichten: Apple Developer → Certificates, Identifiers & Profiles → Keys → neuer Schlüssel mit „Sign in with Apple“ für die primäre App-ID `de.eloayoubi.kostenkurve`, `.p8` herunterladen (geht nur einmal), dann `APPLE_TEAM_ID`, `APPLE_SIGNIN_KEY_ID` und `APPLE_SIGNIN_KEY` setzen.
 
-## Auth-E-Mails: Code statt Link
+## Auth: Registrieren und Anmelden ohne Passwort
 
-Die App meldet per E-Mail mit einem 6-stelligen Code an (`signInWithOtp` + `verifyOTP`, `otp_length = 6` in config.toml) und sichert anonyme Konten per `updateUser(email)` + Code. Dafür müssen die Vorlagen in Supabase Auth (Dashboard → Authentication → Emails) **`{{ .Token }}`** enthalten: „Magic Link“ (Anmeldung) und „Change Email Address“ (E-Mail verknüpfen), und „Confirm signup“, falls Registrierungen per E-Mail einmal dazukommen. Ohne `{{ .Token }}` steht in der Mail nur ein Link, kein Code.
+Die App registriert und meldet per E-Mail mit einem 6-stelligen Code an (`signInWithOtp` mit `shouldCreateUser: true` bzw. `false`, dann `verifyOTP`) oder mit Apple (`signInWithIdToken`, Nonce). Anonyme Konten gibt es nicht mehr (`enable_anonymous_sign_ins = false`); eines aus der Testphase wird beim Registrieren verknüpft (`updateUser(email)` + Code bzw. `linkIdentityWithIdToken`).
+
+- **Vorlagen** (Dashboard → Authentication → Emails) mit **`{{ .Token }}`**: „Confirm signup“ (Registrieren, `templates/confirmation.html`), „Magic Link“ (Anmelden), „Change Email Address“ (Testkonto sichern). Ohne `{{ .Token }}` steht in der Mail nur ein Link, kein Code.
+- **Grenzen** (config.toml): Code 10 Minuten gültig (`otp_expiry = 600`), neuer Code frühestens nach 60 s (`max_frequency`), höchstens 15 Code-Prüfungen je IP in 5 Minuten (`token_verifications`), Refresh-Token-Rotation an.
+- **Keine Konto-Aufzählung:** Beim Anmelden antwortet die App für unbekannte Adressen genauso wie für bekannte (`otp_disabled` wird nicht angezeigt).
+- **Sitzung auf dem Gerät** im iOS-Schlüsselbund bzw. Android Keystore (`SecureSessionStorage`), nicht in NSUserDefaults.
 
 ## Lokal testen
 

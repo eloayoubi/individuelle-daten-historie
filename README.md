@@ -20,7 +20,7 @@ Produkt, Analyse und Fahrplan: [docs/IMPLEMENTIERUNGSPLAN.md](docs/IMPLEMENTIERU
 | L10n | `flutter gen-l10n`, ARB in `lib/l10n/` (`app_de.arb` = Vorlage), Zugriff über `context.l10n` |
 | Theme | `AppColors` + `AppTextStyles` als `ThemeExtension`, Zugriff über `context.colors` / `context.textStyles`; `AppTheme.light` / `AppTheme.night`, Umschalter über `AppearanceCubit` über dem `MaterialApp` |
 | Schriften | Inter Tight (Überschriften, Zahlen) + Inter (Text, mit `opsz`-Achse) als gebündelte Variable Fonts in `assets/fonts/` (OFL) – kein `google_fonts`, rendert offline |
-| Backend | Supabase (Postgres + RLS + RPC + Edge Functions), anonyme Anmeldung zum Start |
+| Speicher | Lokal auf dem Gerät (kostenlos, ohne Konto) oder Supabase-Cloud (Postgres + RLS + RPC + Edge Functions) mit Konto und Abo „Kostenkurve Cloud“, 2 €/Monat |
 | Tests | `flutter_test`, `bloc_test`, `mocktail` |
 | Lints | `flutter_lints` + `prefer_single_quotes`, `prefer_const_constructors`, `prefer_const_declarations`, `require_trailing_commas`, `always_declare_return_types`, `avoid_print` |
 | Release | Fastlane (`ios/fastlane`), GitHub Actions (`testflight.yml`, `supabase.yml`) |
@@ -30,8 +30,8 @@ Produkt, Analyse und Fahrplan: [docs/IMPLEMENTIERUNGSPLAN.md](docs/IMPLEMENTIERU
 ```
 lib/
   main.dart              DI, dann runApp
-  app/app.dart           MaterialApp, Themes, Locales; darüber Darstellung, Erinnerungen, Konto, Plus;
-                         Einladungslinks öffnen das Beitreten-Sheet; Onboarding vor der Shell
+  app/app.dart           MaterialApp, Themes, Locales; darüber Darstellung, Erinnerungen, Konto, Cloud-Abo,
+                         Speicherort; Einladungslinks öffnen das Beitreten-Sheet; StartGate und Onboarding vor der Shell
   app/launch_splash.dart Startanimation (Lottie) über der App: Die Kachel des nativen Splashs wird zum Icon
   core/
     core.dart            Sammel-Import für Features
@@ -44,7 +44,8 @@ lib/
                          AppSheet, AppToast, PlaceholderPage, AppListGroup/AppListRow, AppIconTile,
                          AppSegmented, AppPressable, GlassSurface, AppTextField, AppSwitch, AppDialog,
                          AppShare (Teilen-Sheet mit iPad-Ursprung)
-    network/             SupabaseApi (rpc, invoke, table, stream, onChanges, upload/download/remove)
+    network/             SupabaseApi (rpc, invoke, table, stream, onChanges, upload/download/remove),
+                         SecureSessionStorage (Sitzung im Schlüsselbund)
     config/              Werte aus --dart-define (SUPABASE_URL, SUPABASE_ANON_KEY)
   features/<feature>/
     cubit/               Cubit + State (part-Datei); einmalige Ereignisse als `event` im State,
@@ -56,20 +57,21 @@ lib/
 
 Features heute:
 
+- `storage`: Speicherort lokal oder Cloud – Start-Bildschirm mit der Wahl, `StartGate` (Start, „Cloud pausiert“, App), `StorageCategoriesRepository` (Weiche), `StorageTransfer` (Umzug hoch und runter, wiederholbar), `StorageCubit`, Umzugs-Overlay.
 - `shell`: Tab-Leiste, `ShellCubit`.
 - `onboarding`: erster Start ohne Kategorien – Willkommen, Vorlagen wählen, Erinnerungen.
 - `home`: Übersicht.
-- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite (je Tracker Verlauf, Wert eintragen und Details wie Anbieter oder Vertragsende), „Felder und Einstellungen“ je Tracker, Feld-Editor; dazu das Repository mit allen Schreibwegen und der Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto).
+- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite (je Tracker Verlauf, Wert eintragen und Details wie Anbieter oder Vertragsende), „Felder und Einstellungen“ je Tracker, Feld-Editor; dazu das Repository mit allen Schreibwegen: lokal `LocalCategoriesRepository` (Datei auf dem Gerät, Logik aus `MemoryCategoriesRepository`), in der Cloud die Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto) vor Supabase.
 - `entries`: Eingabe-Formular aus den Feldern eines Trackers (mit Abrechnungszeitraum für Nachzahlungen), Verlauf je Tracker mit Graph, aktuelle Werte und Einträge („von Anna“ in geteilten Kategorien).
 - `attachments`: Belege (Fotos, PDFs) an Einträgen – Hochladen mit Plus, Ansehen für alle Mitglieder.
 - `reminders`: lokale Benachrichtigungen ans Ablesen und an Stichtage (`flutter_local_notifications`), an- und ausschaltbar in den Einstellungen.
 - `insights`: Auswertung des Jahres: Kosten je Monat und Kategorie, Jahresvergleich, Verbrauch, Prognose mit Spanne und Erklärung, Abschlags-Check, „Was wäre wenn“ mit neuen Preisen.
 - `sharing`: Kategorie teilen (Code, Link, QR), Mitglieder und Rollen, Einladung annehmen, Einladungslinks.
-- `plus`: Kostenkurve Plus – Abo-Seite, StoreKit 2 (`in_app_purchase`), Stand aus `entitlements`.
-- `account`: Konto sichern (Apple, E-Mail-Code), anmelden, Name, abmelden, löschen.
+- `plus`: Kostenkurve Cloud (technisch weiter `plus`) – Paywall „lokal kostenlos, Cloud 2 €/Monat“, StoreKit 2 (`in_app_purchase`), Stand aus `entitlements`.
+- `account`: Konto-Seite (Name, abmelden, löschen; anonymes Testkonto sichern).
 - `legal`: Datenschutz, Nutzungsbedingungen, Impressum aus `assets/legal/` (Markdown, DE/EN).
-- `settings`: Konto und Plus, Darstellung, Erinnerungen, Datenexport (CSV + JSON), Rechtliches; Bewertungsbitte nach dem 3. Eintrag.
-- `auth`: Anmeldung (anonym zum Start, Apple, E-Mail-Code) über `AuthRepository`.
+- `settings`: Speicherort (Cloud aktivieren, anmelden, aufs Gerät holen), Konto und Abo, Darstellung, Erinnerungen, Datenexport (CSV + JSON), Rechtliches; Bewertungsbitte nach dem 3. Eintrag.
+- `auth`: Registrieren und Anmelden (Apple, 6-stelliger E-Mail-Code, kein Passwort) – `AuthPage` und `AuthRepository`.
 
 **Rechnen:** Rechenlogik liegt in `core/utils/`:
 
@@ -79,11 +81,13 @@ Features heute:
 
 Ein Tracker kann seine Kosten einer anderen Kategorie zuordnen (`includedIn`, z. B. Wasser in den Nebenkosten): gezeigt, nie doppelt gezählt.
 
-**Offline:** Mit Supabase liest die App ohne Netz aus dem Cache des letzten Abrufs. Einträge landen zuerst in einer Warteschlange auf dem Gerät und erscheinen sofort. Gesendet wird gleich, beim Zurückkehren in die App und alle 30 Sekunden, solange etwas wartet. Die Id vergibt das Gerät, daher landet ein Eintrag auch bei doppeltem Senden nur einmal (`save_entry` ist ein Upsert). Die Übersicht zeigt, was noch wartet oder abgelehnt wurde. Kategorien, Tracker und Felder ändern geht nur online.
+**Lokal oder Cloud:** Beim ersten Start wählt der Nutzer den Speicherort (Ablauf, Technik und Sicherheit: [IMPLEMENTIERUNGSPLAN.md, Abschnitt 8](docs/IMPLEMENTIERUNGSPLAN.md#8-lokal-oder-cloud-abo)). Lokal liegt alles in `local_data.json` im App-Support-Ordner, ohne Netz und ohne Konto. In der Cloud entscheidet der Server per RLS, ob geschrieben werden darf (Abo des Schreibenden oder des Eigentümers).
+
+**Offline (Cloud):** Mit Supabase liest die App ohne Netz aus dem Cache des letzten Abrufs. Einträge landen zuerst in einer Warteschlange auf dem Gerät und erscheinen sofort. Gesendet wird gleich, beim Zurückkehren in die App und alle 30 Sekunden, solange etwas wartet. Die Id vergibt das Gerät, daher landet ein Eintrag auch bei doppeltem Senden nur einmal (`save_entry` ist ein Upsert). Die Übersicht zeigt, was noch wartet oder abgelehnt wurde. Kategorien, Tracker und Felder ändern geht nur online.
 
 Cubits mit Parameter (z. B. die Kategorie-Id) sind per `registerFactoryParam` registriert und kommen über `lookup<T>(param1: …)`. Nach jeder Änderung meldet `CategoriesRepository.changes` ein Ereignis, darauf laden Übersicht, Kategorien-Tab und Detailseite neu.
 
-**Mock oder Supabase:** Ohne dart-defines läuft die App komplett mit den Mock-Repositories (Beispieldaten aus dem Design, `MockCategoriesRepository`). Mit `SUPABASE_URL` und `SUPABASE_ANON_KEY` registriert `configureDependencies()` die Supabase-Varianten.
+**Mock oder Supabase:** Ohne dart-defines steht `MockCategoriesRepository` (Beispieldaten aus dem Design) für die Cloud, Konto und Abo sind Mocks (E-Mail-Code `123456`, Kauf schaltet sofort frei); lokal ist auch hier die Datei auf dem Gerät. Mit `SUPABASE_URL` und `SUPABASE_ANON_KEY` registriert `configureDependencies()` die Supabase-Varianten.
 
 ## Code-Regeln
 

@@ -42,4 +42,4 @@ flutter test tool/screenshots/store_screenshots_test.dart --update-goldens
 Hier nicht hinterlegt, also in App Store Connect zu setzen: Kategorie (Vorschlag: Finanzen, zweite:
 Dienstprogramme – alternativ hier `primary_category.txt` mit `FINANCE` und `secondary_category.txt` mit
 `UTILITIES` anlegen), Altersfreigabe, Datenschutzangaben („App Privacy“), Preis und das Abo
-„Kostenkurve Plus“.
+„Kostenkurve Cloud“ (Produkt `…plus.monthly`, 2 € im Monat).

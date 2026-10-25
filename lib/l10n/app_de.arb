@@ -440,10 +440,10 @@
   "entryDeleteBody": "Der Eintrag verschwindet aus Verlauf, Kosten und Prognose.",
   "entryDeleted": "Eintrag gelöscht.",
   "trackerHistory": "Verlauf und Einträge",
-  "trackerSince": "Seit {month}",
+  "trackerSince": "seit {date}",
   "@trackerSince": {
     "placeholders": {
-      "month": {
+      "date": {
         "type": "String"
       }
     }
@@ -473,14 +473,6 @@
     }
   },
   "trackerCurrentValues": "Aktuelle Werte",
-  "trackerSince": "seit {date}",
-  "@trackerSince": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
   "trackerEntries": "Einträge",
   "trackerNoEntriesTitle": "Noch keine Einträge",
   "trackerNoEntriesBody": "Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.",
@@ -785,12 +777,12 @@
   "accountSignInTitle": "Mit bestehendem Konto anmelden?",
   "accountSignInBody": "Du wechselst zu deinem Konto. Was du auf diesem Gerät ohne Konto erfasst hast, kommt nicht mit.",
   "accountSignOutTitle": "Abmelden?",
-  "accountSignOutBody": "Deine Daten bleiben im Konto. Danach startest du auf diesem Gerät neu ohne Konto.",
+  "accountSignOutBody": "Deine Daten bleiben in der Cloud. Auf diesem Gerät wählst du danach neu, wo du speicherst.",
   "accountSignOut": "Abmelden",
   "accountAnonymousTitle": "Nur auf diesem Gerät",
   "accountAnonymousBody": "Deine Daten liegen in einem Konto ohne Anmeldung. Sichere es, damit sie ein neues Handy überstehen und du Kategorien teilen kannst.",
   "accountSecuredTitle": "Konto gesichert",
-  "accountSecuredBody": "Angemeldet mit {login}. Deine Daten sind auf jedem Gerät da.",
+  "accountSecuredBody": "Angemeldet mit {login}.",
   "@accountSecuredBody": {
     "placeholders": {
       "login": {
@@ -897,7 +889,7 @@
   },
   "accountDelete": "Konto löschen",
   "accountDeleteTitle": "Konto und alle Daten löschen?",
-  "accountDeleteBody": "Dein Konto, deine Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Plus-Abo kündigst du separat in den iOS-Einstellungen.",
+  "accountDeleteBody": "Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.",
   "accountDeleteFooter": "Exportiere vorher deine Daten, wenn du sie behalten willst (Einstellungen › Daten exportieren).",
   "accountDeletedToast": "Konto gelöscht",
   "attachmentsTitle": "Belege",
@@ -906,7 +898,7 @@
   "attachmentsDeleted": "Beleg gelöscht",
   "attachmentsAfterSave": "Nach dem Speichern kannst du Rechnung, Vertrag oder Zählerfoto anhängen.",
   "attachmentsEmpty": "Noch keine Belege. Häng Rechnung, Vertrag oder ein Foto vom Zähler an.",
-  "attachmentsEmptyPlus": "Mit Plus hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.",
+  "attachmentsEmptyPlus": "In der Cloud hängst du Rechnungen, Verträge und Zählerfotos direkt an den Eintrag.",
   "attachmentsOffline": "Belege sind gerade nicht erreichbar.",
   "attachmentsCamera": "Foto aufnehmen",
   "attachmentsPhotos": "Aus Fotos wählen",
@@ -964,24 +956,15 @@
   "onboardingRemindersBody": "Wir erinnern dich ans Ablesen und an Kündigungsfristen – auf deinem Gerät, ohne Werbung.",
   "onboardingRemindersAllow": "Erinnerungen erlauben",
   "onboardingLater": "Später",
-  "plusTitle": "Kostenkurve Plus",
-  "plusSubtitle": "Alle Belege da, wo die Kosten sind.",
+  "plusTitle": "Kostenkurve Cloud",
+  "plusSubtitle": "Deine Daten auf jedem Gerät.",
   "plusBenefitReceipts": "Belege am Eintrag",
   "plusBenefitReceiptsBody": "Rechnungen, Verträge und Zählerfotos als Foto oder PDF.",
   "plusBenefitStorage": "5 GB Speicher",
   "plusBenefitStorageBody": "Sicher gespeichert und auf jedem Gerät da.",
   "plusBenefitShared": "Für den ganzen Haushalt",
   "plusBenefitSharedBody": "In geteilten Kategorien sieht dein Partner die Belege – ohne eigenes Abo.",
-  "plusYearly": "Jährlich",
   "plusMonthly": "Monatlich",
-  "plusPerYear": "{price}/Jahr",
-  "@plusPerYear": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
   "plusPerMonth": "{price}/Monat",
   "@plusPerMonth": {
     "placeholders": {
@@ -990,36 +973,19 @@
       }
     }
   },
-  "plusYearlyDetail": "{price} pro Monat, jährlich abgerechnet",
-  "@plusYearlyDetail": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
   "plusMonthlyDetail": "Monatlich kündbar",
-  "plusSave": "Spare {percent} %",
-  "@plusSave": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "plusSubscribe": "Abo starten",
   "plusFinePrint": "Verlängert sich automatisch, wenn du nicht mindestens 24 Stunden vor Ablauf kündigst. Abgerechnet über deinen Apple-Account, kündbar in dessen Einstellungen.",
   "plusRestore": "Käufe wiederherstellen",
   "plusAppleEula": "Lizenzvertrag (EULA)",
-  "plusWelcome": "Willkommen bei Plus",
+  "plusWelcome": "Willkommen in der Cloud",
   "plusNothingToRestore": "Kein aktives Abo gefunden.",
   "plusPending": "Kauf wartet auf Freigabe.",
   "plusFailed": "Kauf ging nicht – bitte später noch mal.",
   "plusOtherAccount": "Dieses Abo gehört zu einem anderen Kostenkurve-Konto. Melde dich dort an (Einstellungen › Konto).",
   "plusUnavailable": "Abos sind gerade nicht erreichbar. Prüfe deine Verbindung und versuch es später noch mal.",
-  "plusOnlyIos": "Plus schließt du derzeit in der iPhone-App ab – es gilt dann auch hier.",
-  "plusActive": "Plus ist aktiv.",
-  "plusActiveUntil": "Plus ist aktiv – verlängert sich am {date}.",
+  "plusOnlyIos": "Die Cloud buchst du derzeit in der iPhone-App – das Abo gilt dann auch hier.",
+  "plusActive": "Cloud ist aktiv.",
+  "plusActiveUntil": "Cloud ist aktiv – verlängert sich am {date}.",
   "@plusActiveUntil": {
     "placeholders": {
       "date": {
@@ -1028,10 +994,10 @@
     }
   },
   "plusManage": "Abo verwalten",
-  "plusBadge": "Plus",
+  "plusBadge": "Cloud",
   "plusBadgeActive": "Aktiv",
   "settingsAccountAnonymous": "Nur auf diesem Gerät – jetzt sichern",
-  "settingsPlusHint": "Belege für Rechnungen und Verträge",
+  "settingsPlusHint": "Auf allen Geräten, gesichert, teilen",
   "settingsStorage": "{used} von {total} belegt",
   "@settingsStorage": {
     "placeholders": {
@@ -1104,5 +1070,123 @@
   "trackerName": "Name",
   "trackerFieldsHistory": "Werte mit Verlauf",
   "trackerFieldsHistoryHint": "Trägst du mit Datum ein – daraus entstehen Verlauf, Kosten und Prognose.",
-  "trackerFieldsDetailsHint": "Legst du einmal fest und änderst sie nur, wenn sich etwas ändert – z. B. Anbieter oder Vertragsende."
+  "trackerFieldsDetailsHint": "Legst du einmal fest und änderst sie nur, wenn sich etwas ändert – z. B. Anbieter oder Vertragsende.",
+  "startTitle": "Wo sollen deine Daten liegen?",
+  "startBody": "Kostenkurve ist kostenlos, solange alles auf diesem Gerät bleibt. Mit einem Konto liegen deine Daten in der Cloud – auf jedem Gerät.",
+  "startLocalTitle": "Auf diesem Gerät",
+  "startLocalPrice": "Kostenlos · ohne Konto",
+  "startLocalPointFeatures": "Alle Funktionen: Verlauf, Prognose, Erinnerungen, Export",
+  "startLocalPointPrivate": "Deine Daten verlassen dieses Gerät nicht",
+  "startLocalPointLimits": "Kein Teilen, keine Belege, keine Sicherung",
+  "startLocalAction": "Kostenlos lokal starten",
+  "startCloudTitle": "In der Cloud",
+  "startCloudPrice": "{price} im Monat · mit Konto",
+  "@startCloudPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "startCloudPointDevices": "Auf jedem Gerät, auf dem du dich anmeldest",
+  "startCloudPointBackup": "Gesichert, auch wenn das Handy weg ist",
+  "startCloudPointShare": "Mit dem Partner teilen, Belege anhängen",
+  "startCloudAction": "Konto erstellen",
+  "startSignIn": "Ich habe schon ein Konto",
+  "startFooter": "Du kannst jederzeit in den Einstellungen wechseln – deine Daten ziehen mit um.",
+  "cloudPriceFallback": "2 €",
+  "authRegisterTab": "Registrieren",
+  "authSignInTab": "Anmelden",
+  "authRegisterTitle": "Konto erstellen",
+  "authRegisterBody": "Mit einem Konto liegen deine Daten in der Cloud und auf jedem Gerät, auf dem du dich anmeldest. Im nächsten Schritt siehst du den Preis – lokal bleibt Kostenkurve kostenlos.",
+  "authSignInBody": "Melde dich an, um deine Cloud-Daten auf diesem Gerät zu öffnen.",
+  "authAppleRegister": "Mit Apple registrieren",
+  "authOrEmail": "oder mit E-Mail",
+  "authNoPassword": "Kein Passwort nötig: Du bekommst einen 6-stelligen Code per E-Mail.",
+  "authCodeSentSignIn": "Wenn es zu {email} ein Konto gibt, ist ein Code unterwegs. Schau auch im Spam-Ordner.",
+  "@authCodeSentSignIn": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authResendIn": "Neuen Code senden ({seconds} s)",
+  "@authResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "authChangeEmail": "Andere E-Mail",
+  "authConsentPrefix": "Mit dem Registrieren akzeptierst du die",
+  "authConsentMiddle": "und hast die Hinweise zum",
+  "authConsentSuffix": "gelesen.",
+  "authRateLimited": "Zu viele Versuche. Bitte warte ein paar Minuten.",
+  "authNetwork": "Keine Verbindung. Prüfe dein Netz und versuch es noch einmal.",
+  "authEmailUsed": "Zu dieser E-Mail gibt es schon ein Konto. Melde dich dort an.",
+  "cloudPaywallSubtitle": "Kostenkurve bleibt kostenlos, solange deine Daten auf diesem Gerät liegen. Für die Cloud zahlst du {price} im Monat.",
+  "@cloudPaywallSubtitle": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudCompareLocal": "Lokal",
+  "cloudCompareFree": "Kostenlos",
+  "cloudCompareCloud": "Cloud",
+  "cloudFeatureAll": "Alle Funktionen",
+  "cloudFeatureDevices": "Auf allen Geräten",
+  "cloudFeatureBackup": "Gesichert",
+  "cloudFeatureShare": "Mit dem Partner teilen",
+  "cloudFeatureReceipts": "Belege, 5 GB",
+  "cloudIncluded": "enthalten",
+  "cloudNotIncluded": "nicht enthalten",
+  "cloudSubscribe": "Cloud abonnieren – {price}/Monat",
+  "@cloudSubscribe": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudStayLocal": "Kostenlos lokal nutzen",
+  "cloudStayLocalHint": "Deine Daten bleiben auf diesem Gerät. Die Cloud kannst du später in den Einstellungen buchen.",
+  "cloudContinue": "In die Cloud wechseln",
+  "storageUploading": "Deine Daten ziehen in die Cloud …",
+  "storageDownloading": "Deine Daten kommen aufs Gerät …",
+  "storageUploaded": "Alles in der Cloud",
+  "storageDownloaded": "Alles auf diesem Gerät",
+  "storageFailed": "Umzug unterbrochen – deine Daten sind noch da. Versuch es mit Netz noch einmal.",
+  "storageAskUploadTitle": "Daten vom Gerät mitnehmen?",
+  "storageAskUploadBody": "In deinem Konto liegen schon Daten. Sollen die Kategorien von diesem Gerät dazukommen?",
+  "storageAskUploadYes": "Hinzufügen",
+  "storageAskUploadNo": "Auf dem Gerät lassen",
+  "cloudPausedTitle": "Cloud pausiert",
+  "cloudPausedBody": "Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.",
+  "cloudPausedRenew": "Abo erneuern",
+  "cloudPausedMove": "Kostenlos aufs Gerät holen",
+  "settingsStorageTitle": "Speicherort",
+  "settingsStorageLocal": "Auf diesem Gerät",
+  "settingsStorageLocalHint": "Kostenlos · nur dieses Gerät",
+  "settingsStorageCloud": "In der Cloud",
+  "settingsCloudActivate": "Cloud aktivieren",
+  "settingsCloudActivateHint": "Auf allen Geräten, gesichert – {price}/Monat",
+  "@settingsCloudActivateHint": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsMoveLocal": "Auf dieses Gerät holen",
+  "settingsMoveLocalTitle": "Daten aufs Gerät holen?",
+  "settingsMoveLocalBody": "Alle Kategorien und Einträge werden auf dieses Gerät kopiert, danach speicherst du lokal und kostenlos. Belege bleiben in der Cloud. Dein Abo kündigst du in den iOS-Einstellungen.",
+  "settingsStorageFooterLocal": "Lokal ist kostenlos. In der Cloud sind deine Daten auf jedem Gerät und gesichert.",
+  "settingsStorageFooterCloud": "Deine Daten liegen in der Cloud (Rechenzentrum in Frankfurt) und als Kopie auf diesem Gerät.",
+  "cloudRequiredTitle": "Dafür brauchst du die Cloud",
+  "cloudRequiredShare": "Zum Teilen müssen deine Daten in der Cloud liegen. Lokal bleiben sie nur auf diesem Gerät.",
+  "cloudRequiredAction": "Cloud ansehen"
 }

@@ -3,10 +3,18 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
+import '../utils/json_store.dart';
+import 'secure_session_storage.dart';
 
-/// Initialisiert Supabase und stellt eine gespeicherte Sitzung wieder her.
+/// Initialisiert Supabase und stellt eine gespeicherte Sitzung aus dem Schlüsselbund wieder her.
 abstract final class SupabaseBootstrap {
-  static Future<void> init() => Supabase.initialize(url: AppConfig.supabaseUrl, publishableKey: AppConfig.supabaseAnonKey);
+  static Future<void> init() => Supabase.initialize(
+    url: AppConfig.supabaseUrl,
+    publishableKey: AppConfig.supabaseAnonKey,
+    authOptions: FlutterAuthClientOptions(
+      localStorage: SecureSessionStorage(key: SecureSessionStorage.keyFor(AppConfig.supabaseUrl), installMarker: FileJsonStore('install')),
+    ),
+  );
 
   static SupabaseClient get client => Supabase.instance.client;
 }

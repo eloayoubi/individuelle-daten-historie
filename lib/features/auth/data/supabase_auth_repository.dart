@@ -9,25 +9,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth_repository.dart';
 
-/// Supabase Auth: anonym starten, mit Apple (ID-Token + Nonce) oder E-Mail-Code sichern.
+/// Supabase Auth: Registrieren und Anmelden mit Apple (ID-Token + Nonce) oder E-Mail-Code, ohne
+/// Passwort. Ein anonymes Konto aus der Testphase wird verknüpft (`linkIdentityWithIdToken`,
+/// `updateUser(email)`): Die Nutzer-Id bleibt, alle Daten bleiben.
 ///
-/// Sichern heißt verknüpfen (`linkIdentityWithIdToken`, `updateUser(email)`): Die Nutzer-Id bleibt,
-/// alle Daten bleiben. Im Dashboard nötig: „Anonymous Sign-Ins“, Apple-Provider (Bundle-ID als
-/// Client-ID) und in der Mail-Vorlage „Change Email Address“ bzw. „Magic Link“ der Code `{{ .Token }}`.
+/// Im Dashboard nötig: Apple-Provider (Bundle-ID als Client-ID) und in den Mail-Vorlagen „Confirm
+/// signup“, „Magic Link“ und „Change Email Address“ der Code `{{ .Token }}`. Codes, Tokens und
+/// Adressen werden nie geloggt.
 class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository(this._client);
 
   final SupabaseClient _client;
-  Future<void>? _pending;
   String _displayName = '';
 
   GoTrueClient get _auth => _client.auth;
 
   @override
-  Future<void> ensureSignedIn() {
-    if (_auth.currentSession != null) return Future.value();
-    // Mehrere Repositories fragen gleichzeitig: nur eine Anmeldung starten.
-    return _pending ??= _auth.signInAnonymously().then((_) {}).whenComplete(() => _pending = null);
+  Future<void> ensureSignedIn() async {
+    if (_auth.currentSession == null) throw const AuthFailure(AuthFailureKind.notSignedIn);
   }
 
   @override
@@ -51,7 +50,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AccountInfo> loadAccount() async {
-    await ensureSignedIn();
+    if (userId == null) return account;
     final row = await _client.from('profiles').select('display_name').eq('id', userId!).maybeSingle();
     _displayName = (row?['display_name'] as String?) ?? '';
     return account;
@@ -87,39 +86,56 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> requestEmailCode(String email, {required bool link}) => _guard(() async {
+  Future<void> requestEmailCode(String email, {required bool link, bool create = false}) => _guard(() async {
+    final address = email.trim();
+    if (!AuthInput.isEmail(address)) throw const AuthFailure(AuthFailureKind.unknown);
     if (link) {
-      await _auth.updateUser(UserAttributes(email: email.trim()));
+      await _auth.updateUser(UserAttributes(email: address));
+    } else if (create) {
+      await _auth.signInWithOtp(email: address, shouldCreateUser: true);
     } else {
-      await _auth.signInWithOtp(email: email.trim(), shouldCreateUser: false);
+      try {
+        await _auth.signInWithOtp(email: address, shouldCreateUser: false);
+      } on AuthException catch (e) {
+        // Unbekannte Adresse: genauso antworten wie bei einer bekannten (keine Konto-Aufzählung).
+        // Der Code-Schritt erscheint, ein Code kommt nie an.
+        if (e.code != 'otp_disabled' && e.code != 'user_not_found') rethrow;
+      }
     }
   });
 
   @override
   Future<void> verifyEmailCode(String email, String code, {required bool link}) => _guard(() async {
-    await _auth.verifyOTP(email: email.trim(), token: code.trim(), type: link ? OtpType.emailChange : OtpType.email);
+    final token = code.trim();
+    if (!AuthInput.isCode(token)) throw const AuthFailure(AuthFailureKind.invalidCode);
+    await _auth.verifyOTP(email: email.trim(), token: token, type: link ? OtpType.emailChange : OtpType.email);
     await loadAccount();
   });
 
   @override
   Future<void> setDisplayName(String name) => _guard(() async {
+    await ensureSignedIn();
     await _client.from('profiles').update({'display_name': name.trim()}).eq('id', userId!);
     _displayName = name.trim();
   });
 
   @override
   Future<void> signOut() => _guard(() async {
-    await _auth.signOut();
+    try {
+      await _auth.signOut();
+    } on AuthException {
+      // Ohne Netz: wenigstens auf dem Gerät abmelden.
+      await _auth.signOut(scope: SignOutScope.local);
+    }
     _displayName = '';
-    await ensureSignedIn();
   });
 
   @override
   Future<void> deleteAccount() => _guard(() async {
+    await ensureSignedIn();
     await _client.functions.invoke('delete-account');
     await _auth.signOut(scope: SignOutScope.local);
     _displayName = '';
-    await ensureSignedIn();
   });
 
   /// Apple-ID-Token mit Nonce (SHA-256 an Apple, Klartext an Supabase), Autorisierungscode und
@@ -152,6 +168,8 @@ class SupabaseAuthRepository implements AuthRepository {
         'identity_already_exists' || 'email_exists' || 'user_already_exists' => AuthFailureKind.alreadyUsed,
         'otp_expired' || 'invalid_credentials' => AuthFailureKind.invalidCode,
         'otp_disabled' || 'provider_disabled' || 'email_provider_disabled' => AuthFailureKind.unavailable,
+        'over_email_send_rate_limit' || 'over_request_rate_limit' => AuthFailureKind.rateLimited,
+        _ when e.statusCode == '429' => AuthFailureKind.rateLimited,
         _ when e.statusCode == '403' => AuthFailureKind.invalidCode,
         _ => AuthFailureKind.unknown,
       });

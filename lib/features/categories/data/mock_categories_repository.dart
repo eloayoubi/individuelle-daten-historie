@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'categories_repository.dart';
+import 'memory_categories_repository.dart';
 
 /// Beispieldaten aus dem Design: ein Haushalt mit Verläufen von Januar 2024 bis Oktober 2026.
 /// Miete und Auto sind mit „Anna“ geteilt; die Wasserkosten stecken in den Nebenkosten (gezeigt,
@@ -8,113 +7,14 @@ import 'categories_repository.dart';
 /// Abschläge für den Abschlags-Check, das Auto eine Formel für den Verbrauch je 100 km.
 ///
 /// Änderungen bleiben im Speicher, bis die App neu startet – genug, um alle Abläufe ohne Backend
-/// zu bedienen.
-class MockCategoriesRepository implements CategoriesRepository {
-  MockCategoriesRepository({List<Category>? seed}) : _items = [...(seed ?? categories)];
+/// zu bedienen. Im Mock-Modus steht er für die Cloud; Teilen nimmt den Code [demoInvite] an.
+class MockCategoriesRepository extends MemoryCategoriesRepository {
+  MockCategoriesRepository({List<Category>? seed}) : super(seed: seed ?? categories, ids: _mockIds());
 
-  final List<Category> _items;
-  final _changes = StreamController<void>.broadcast();
-  var _seq = 0;
-
-  @override
-  Stream<void> get changes => _changes.stream;
-
-  @override
-  Future<List<Category>> loadCategories() async => List.unmodifiable(_items);
-
-  @override
-  Future<Category?> loadCategory(String id) async => _items.where((c) => c.id == id).firstOrNull;
-
-  @override
-  Future<String> createCategory(CategoryDraft draft) async {
-    final category = Category(
-      id: _id('c'),
-      name: draft.name,
-      icon: draft.icon,
-      swatch: draft.swatch,
-      templateKey: draft.templateKey,
-      trackers: [
-        for (final t in draft.trackers) Tracker(id: _id('t'), name: t.name, fields: [for (final f in t.fields) f.withId(_id('f'))]),
-      ],
-    );
-    // Neue Kategorien ans Ende der aktiven, vor die archivierten.
-    final firstArchived = _items.indexWhere((c) => c.isArchived);
-    _items.insert(firstArchived < 0 ? _items.length : firstArchived, category);
-    _changed();
-    return category.id;
+  static String Function(String) _mockIds() {
+    var seq = 0;
+    return (kind) => 'mock-$kind-${seq++}';
   }
-
-  @override
-  Future<void> updateCategory(String id, {required String name, required CategoryIcon icon, required CategorySwatch swatch}) async =>
-      _updateCategory(id, (c) => c.copyWith(name: name, icon: icon, swatch: swatch));
-
-  @override
-  Future<void> setCategoryArchived(String id, {required bool archived}) async {
-    final category = _items.firstWhere((c) => c.id == id);
-    _items
-      ..remove(category)
-      ..add(category.copyWith(archivedAt: () => archived ? DateTime.now().toUtc() : null));
-    _changed();
-  }
-
-  @override
-  Future<void> reorderCategories(List<String> ids) async {
-    final byId = {for (final c in _items) c.id: c};
-    final ordered = [for (final id in ids) ?byId[id]];
-    _items
-      ..removeWhere(ordered.contains)
-      ..insertAll(0, ordered);
-    _changed();
-  }
-
-  @override
-  Future<String> createTracker(String categoryId, String name, {required int sort}) async {
-    final tracker = Tracker(id: _id('t'), name: name);
-    _updateCategory(categoryId, (c) => c.copyWith(trackers: [...c.trackers, tracker]));
-    return tracker.id;
-  }
-
-  @override
-  Future<void> renameTracker(String id, String name) async => _updateTracker(id, (t) => t.copyWith(name: name));
-
-  @override
-  Future<void> setTrackerIncludedIn(String id, String? categoryId) async => _updateTracker(id, (t) => t.copyWith(includedIn: () => categoryId));
-
-  @override
-  Future<void> archiveTracker(String id) async {
-    for (final c in [..._items]) {
-      if (c.trackers.any((t) => t.id == id)) _updateCategory(c.id, (c) => c.copyWith(trackers: [...c.trackers.where((t) => t.id != id)]));
-    }
-  }
-
-  @override
-  Future<String> createField(String trackerId, FieldDraft draft, {required int sort}) async {
-    final field = draft.withId(_id('f'));
-    _updateTracker(trackerId, (t) => t.copyWith(fields: [...t.fields, field]));
-    return field.id;
-  }
-
-  @override
-  Future<void> updateField(String id, FieldDraft draft) async => _updateFields((f) => f.id == id ? draft.withId(id) : f);
-
-  @override
-  Future<void> archiveField(String id) async {
-    for (final c in [..._items]) {
-      for (final t in c.trackers) {
-        if (t.fields.any((f) => f.id == id)) _updateTracker(t.id, (t) => t.copyWith(fields: [...t.fields.where((f) => f.id != id)]));
-      }
-    }
-  }
-
-  @override
-  Future<void> saveEntry(String trackerId, Entry entry) async => _updateTracker(
-    trackerId,
-    (t) => t.copyWith(entries: [...t.entries.where((e) => e.id != entry.id), entry]..sort((a, b) => a.date.compareTo(b.date))),
-  );
-
-  @override
-  Future<void> deleteEntry(String trackerId, String entryId) async =>
-      _updateTracker(trackerId, (t) => t.copyWith(entries: [...t.entries.where((e) => e.id != entryId)]));
 
   /// Ein Code, den der Mock-Modus annimmt: legt eine von Anna geteilte Kategorie an.
   static const demoInvite = 'K7Q2M9X4TA';
@@ -125,10 +25,10 @@ class MockCategoriesRepository implements CategoriesRepository {
   @override
   Future<String> acceptInvite(String code) async {
     if (code.trim().toUpperCase() != demoInvite) throw const WriteRejected('invalid_invite');
-    final existing = _items.where((c) => c.id == 'c-ferien').firstOrNull;
+    final existing = items.where((c) => c.id == 'c-ferien').firstOrNull;
     if (existing != null) return existing.id;
     const owner = CategoryMember(userId: '00000000-0000-4000-8000-000000000002', name: 'Anna', role: MemberRole.owner);
-    _items.add(
+    items.add(
       Category(
         id: 'c-ferien',
         name: 'Ferienwohnung',
@@ -146,80 +46,37 @@ class MockCategoriesRepository implements CategoriesRepository {
         ],
       ),
     );
-    _changed();
+    changed();
     return 'c-ferien';
   }
 
   @override
-  Future<void> setMemberRole(String categoryId, String userId, MemberRole role) async => _updateCategory(
+  Future<void> setMemberRole(String categoryId, String userId, MemberRole role) async => updateCategoryWith(
     categoryId,
-    (c) => Category(
-      id: c.id,
-      name: c.name,
-      icon: c.icon,
-      swatch: c.swatch,
-      trackers: c.trackers,
-      myRole: c.myRole,
-      templateKey: c.templateKey,
-      archivedAt: c.archivedAt,
-      sharedWith: [for (final m in c.sharedWith) m.userId == userId ? CategoryMember(userId: m.userId, name: m.name, role: role) : m],
-    ),
+    (c) => _withMembers(c, [for (final m in c.sharedWith) m.userId == userId ? CategoryMember(userId: m.userId, name: m.name, role: role) : m]),
   );
 
   @override
-  Future<void> removeMember(String categoryId, String userId) async => _updateCategory(
-    categoryId,
-    (c) => Category(
-      id: c.id,
-      name: c.name,
-      icon: c.icon,
-      swatch: c.swatch,
-      trackers: c.trackers,
-      myRole: c.myRole,
-      templateKey: c.templateKey,
-      archivedAt: c.archivedAt,
-      sharedWith: [...c.sharedWith.where((m) => m.userId != userId)],
-    ),
-  );
+  Future<void> removeMember(String categoryId, String userId) async =>
+      updateCategoryWith(categoryId, (c) => _withMembers(c, [...c.sharedWith.where((m) => m.userId != userId)]));
 
   @override
   Future<void> leaveCategory(String categoryId) async {
-    _items.removeWhere((c) => c.id == categoryId);
-    _changed();
+    items.removeWhere((c) => c.id == categoryId);
+    changed();
   }
 
-  @override
-  SyncState get syncState => const SyncState();
-
-  @override
-  Future<void> sync() async {}
-
-  @override
-  void acknowledgeRejected() {}
-
-  String _id(String kind) => 'mock-$kind-${_seq++}';
-
-  void _changed() => _changes.add(null);
-
-  void _updateCategory(String id, Category Function(Category) update) {
-    final i = _items.indexWhere((c) => c.id == id);
-    if (i < 0) throw StateError('Kategorie $id fehlt');
-    _items[i] = update(_items[i]);
-    _changed();
-  }
-
-  void _updateTracker(String id, Tracker Function(Tracker) update) {
-    final category = _items.firstWhere((c) => c.trackers.any((t) => t.id == id), orElse: () => throw StateError('Tracker $id fehlt'));
-    _updateCategory(category.id, (c) => c.copyWith(trackers: [for (final t in c.trackers) t.id == id ? update(t) : t]));
-  }
-
-  void _updateFields(FieldDefinition Function(FieldDefinition) update) {
-    for (var i = 0; i < _items.length; i++) {
-      final c = _items[i];
-      _items[i] = c.copyWith(trackers: [for (final t in c.trackers) t.copyWith(fields: [for (final f in t.fields) update(f)])]);
-    }
-    _changed();
-  }
+  static Category _withMembers(Category c, List<CategoryMember> members) => Category(
+    id: c.id,
+    name: c.name,
+    icon: c.icon,
+    swatch: c.swatch,
+    trackers: c.trackers,
+    myRole: c.myRole,
+    templateKey: c.templateKey,
+    archivedAt: c.archivedAt,
+    sharedWith: members,
+  );
 
   static const anna = CategoryMember(userId: '00000000-0000-4000-8000-000000000002', name: 'Anna', role: MemberRole.editor);
 

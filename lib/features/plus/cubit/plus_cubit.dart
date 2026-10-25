@@ -8,8 +8,8 @@ import '../data/plus_store.dart';
 
 part 'plus_state.dart';
 
-/// Kostenkurve Plus: Stand, Preise, Kaufen, Wiederherstellen. Liegt über dem `MaterialApp`, weil
-/// Belege, Paywall und Einstellungen denselben Stand brauchen.
+/// Kostenkurve Cloud (technisch `plus`): Stand, Preis, Kaufen, Wiederherstellen. Liegt über dem
+/// `MaterialApp`, weil Start, Paywall, Belege und Einstellungen denselben Stand brauchen.
 class PlusCubit extends Cubit<PlusState> {
   PlusCubit(this._repository, this._store) : super(PlusState(supported: _store.supported)) {
     _subscription = _store.updates.listen(_onUpdate);
@@ -25,9 +25,9 @@ class PlusCubit extends Cubit<PlusState> {
   Future<void> load() async {
     try {
       final status = await _repository.status();
-      if (!isClosed) emit(state.copyWith(status: status, loaded: true));
+      if (!isClosed) emit(state.copyWith(status: status, loaded: true, checked: true));
     } catch (_) {
-      if (!isClosed) emit(state.copyWith(loaded: true));
+      if (!isClosed) emit(state.copyWith(loaded: true, checked: false));
     }
     try {
       final prices = await _store.prices();
@@ -59,7 +59,7 @@ class PlusCubit extends Cubit<PlusState> {
       var kind = await first;
       final status = await _repository.status();
       if (status.active) kind = PlusStoreUpdateKind.unlocked;
-      if (!isClosed) emit(state.copyWith(busy: false, status: status, event: PlusEvent(kind)));
+      if (!isClosed) emit(state.copyWith(busy: false, status: status, checked: true, event: PlusEvent(kind)));
     } catch (_) {
       if (!isClosed) emit(state.copyWith(busy: false, event: PlusEvent(PlusStoreUpdateKind.failed)));
     } finally {

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/core.dart';
 import '../../attachments/view/entry_attachments.dart';
 import '../../settings/data/review_prompter.dart';
+import '../../storage/cubit/storage_cubit.dart';
 import '../cubit/entry_form_cubit.dart';
 
 /// Eintrag erfassen oder ändern – das Formular entsteht aus den Feldern des Trackers.
@@ -171,12 +172,14 @@ class _FormViewState extends State<_FormView> {
                 padding: Spacing.screen,
                 child: AppTextField(controller: _note, hint: l10n.entryNoteHint, maxLength: EntryFormState.maxNote, onChanged: cubit.setNote),
               ),
-              EntryAttachments(
-                categoryId: widget.args.category.id,
-                entryId: s.entryId,
-                isNew: s.isNew,
-                canEdit: widget.args.category.canEdit,
-              ),
+              // Belege liegen in der Cloud; lokal gibt es sie nicht.
+              if (context.select((StorageCubit storage) => storage.state.isCloud))
+                EntryAttachments(
+                  categoryId: widget.args.category.id,
+                  entryId: s.entryId,
+                  isNew: s.isNew,
+                  canEdit: widget.args.category.canEdit,
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, 0),
                 child: AppButton(label: l10n.entrySave, onPressed: s.canSave ? cubit.save : null),

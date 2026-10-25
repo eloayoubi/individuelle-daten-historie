@@ -11,13 +11,22 @@ void main() {
     store = MockPlusStore(repo);
   });
 
-  test('lädt Stand und Preise, Jahresabo spart gegenüber zwölf Monaten', () async {
+  test('lädt Stand und Monatspreis, vom Server bestätigt', () async {
     final cubit = PlusCubit(repo, store);
     await cubit.load();
     expect(cubit.state.loaded, isTrue);
+    expect(cubit.state.checked, isTrue);
     expect(cubit.state.active, isFalse);
-    expect(cubit.state.prices.keys, containsAll(PlusStore.products));
-    expect(cubit.state.yearlySaving, closeTo(1 - 19.99 / (2.99 * 12), 1e-9));
+    expect(cubit.state.prices.keys, PlusStore.products);
+    expect(cubit.state.monthly?.raw, 2);
+    await cubit.close();
+  });
+
+  test('Server nicht erreichbar: geladen, aber nicht bestätigt', () async {
+    final cubit = PlusCubit(_OfflinePlusRepository(), store);
+    await cubit.load();
+    expect(cubit.state.loaded, isTrue);
+    expect(cubit.state.checked, isFalse);
     await cubit.close();
   });
 
@@ -26,7 +35,7 @@ void main() {
     await cubit.load();
     final events = <PlusStoreUpdateKind>[];
     final sub = cubit.stream.where((s) => s.event != null).listen((s) => events.add(s.event!.kind));
-    await cubit.buy(PlusStore.yearly);
+    await cubit.buy(PlusStore.monthly);
     await pumpEventQueue();
     expect(cubit.state.active, isTrue);
     expect(cubit.state.busy, isFalse);
@@ -52,7 +61,7 @@ void main() {
     await cubit.load();
     expect(cubit.state.supported, isFalse);
     expect(cubit.state.prices, isEmpty);
-    expect(cubit.state.yearlySaving, isNull);
+    expect(cubit.state.monthly, isNull);
     await cubit.buy(PlusStore.monthly);
     expect(cubit.state.event?.kind, PlusStoreUpdateKind.failed);
     await cubit.close();
@@ -62,4 +71,12 @@ void main() {
     expect(const PlusRejected('wrong_user').otherAccount, isTrue);
     expect(const PlusRejected('wrong_app').otherAccount, isFalse);
   });
+}
+
+class _OfflinePlusRepository implements PlusRepository {
+  @override
+  Future<PlusStatus> status() async => throw StateError('offline');
+
+  @override
+  Future<PlusStatus> redeem(String jws) async => throw StateError('offline');
 }

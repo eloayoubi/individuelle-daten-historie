@@ -1,8 +1,8 @@
 -- Beispieldaten für die lokale Entwicklung (`supabase db reset`) und `scripts/test_local.sh`.
 -- Läuft nie gegen Produktion (`db push` spielt keinen Seed ein).
 --
--- Demo besitzt Strom, Miete & Nebenkosten und Auto. Miete ist mit Anna als editor geteilt,
--- Auto als viewer. Die Ids passen zur App (MockAuthRepository.demoUserId).
+-- Demo besitzt Strom, Miete & Nebenkosten und Auto und hat Kostenkurve Cloud. Miete ist mit Anna als
+-- editor geteilt, Auto als viewer. Die Ids passen zur App (MockAuthRepository.demoUserId).
 
 insert into auth.users (id, email) values
   ('00000000-0000-4000-8000-000000000001', 'demo@kostenkurve.test'),
@@ -11,6 +11,9 @@ insert into auth.users (id, email) values
 -- Profile legt der Trigger an, hier nur die Namen.
 update public.profiles set display_name = 'Demo' where id = '00000000-0000-4000-8000-000000000001';
 update public.profiles set display_name = 'Anna' where id = '00000000-0000-4000-8000-000000000002';
+
+-- Demo hat Kostenkurve Cloud (Promo), Anna nicht: Sie schreibt in Demos geteilte Kategorien mit Demos Abo.
+insert into public.entitlements (user_id, tier, source) values ('00000000-0000-4000-8000-000000000001', 'plus', 'promo');
 
 insert into public.categories (id, owner_id, name, icon, swatch, template_key, sort) values
   ('10000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000001', 'Strom', 'bolt', 'orange', 'strom', 0),
