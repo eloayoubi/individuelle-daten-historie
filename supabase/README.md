@@ -147,11 +147,11 @@ Das `client_secret` für beide Aufrufe baut `functions/_shared/apple_client_secr
 
 ## Auth: Registrieren und Anmelden ohne Passwort
 
-Die App registriert und meldet per E-Mail mit einem 6-stelligen Code an (`signInWithOtp` mit `shouldCreateUser: true` bzw. `false`, dann `verifyOTP`) oder mit Apple (`signInWithIdToken`, Nonce). Anonyme Konten gibt es nicht mehr (`enable_anonymous_sign_ins = false`); eines aus der Testphase wird beim Registrieren verknüpft (`updateUser(email)` + Code bzw. `linkIdentityWithIdToken`).
+Die App registriert und meldet per E-Mail mit einem 8-stelligen Code an (`signInWithOtp` mit `shouldCreateUser: true` bzw. `false`, dann `verifyOTP`) oder mit Apple (`signInWithIdToken`, Nonce). Anonyme Konten gibt es nicht mehr (`enable_anonymous_sign_ins = false`); eines aus der Testphase wird beim Registrieren verknüpft (`updateUser(email)` + Code bzw. `linkIdentityWithIdToken`).
 
-- **Vorlagen** (Dashboard → Authentication → Emails) mit **`{{ .Token }}`**: „Confirm signup“ (Registrieren, `templates/confirmation.html`), „Magic Link“ (Anmelden), „Change Email Address“ (Testkonto sichern). Ohne `{{ .Token }}` steht in der Mail nur ein Link, kein Code.
-- **Grenzen** (config.toml): Code 10 Minuten gültig (`otp_expiry = 600`), neuer Code frühestens nach 60 s (`max_frequency`), höchstens 15 Code-Prüfungen je IP in 5 Minuten (`token_verifications`), Refresh-Token-Rotation an.
-- **Keine Konto-Aufzählung:** Beim Anmelden antwortet die App für unbekannte Adressen genauso wie für bekannte (`otp_disabled` wird nicht angezeigt).
+- **Vorlagen** (Dashboard → Authentication → Emails) mit **`{{ .Token }}`**: „Confirm signup“ (Registrieren, solange „Confirm email“ an ist – Standard im Dashboard; `templates/confirmation.html`), „Magic Link“ (Anmelden; bei ausgeschalteter Bestätigung auch fürs Registrieren), „Change Email Address“ (Testkonto sichern). Ohne `{{ .Token }}` steht in der Mail nur ein Link, kein Code.
+- **Grenzen** (config.toml): 8 Ziffern (`otp_length = 8`, die App nimmt 6 bis 10 an), 10 Minuten gültig (`otp_expiry = 600`), neuer Code frühestens nach 60 s (`max_frequency`), höchstens 15 Code-Prüfungen je IP in 5 Minuten (`token_verifications`), Refresh-Token-Rotation an.
+- **Keine Konto-Aufzählung in der App:** Beim Anmelden antwortet die App für unbekannte Adressen genauso wie für bekannte (`otp_disabled` wird nicht angezeigt). Wer `/auth/v1/otp` direkt aufruft, sieht den Unterschied weiterhin (Restrisiko; ganz weg nur mit einem gemeinsamen „Weiter mit E-Mail“, das immer anlegt).
 - **Sitzung auf dem Gerät** im iOS-Schlüsselbund bzw. Android Keystore (`SecureSessionStorage`), nicht in NSUserDefaults.
 
 ## Lokal testen

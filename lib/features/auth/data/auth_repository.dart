@@ -39,9 +39,12 @@ class AccountInfo extends Equatable {
 abstract final class AuthInput {
   /// Längste erlaubte Adresse (RFC 5321).
   static const maxEmailLength = 254;
-  static const codeLength = 6;
+
+  /// Der Server verschickt 8 Ziffern (`otp_length`); 6 bis 10 werden angenommen, damit die App auch
+  /// mit einer anderen Einstellung im Projekt funktioniert.
+  static const maxCodeLength = 10;
   static final _email = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-  static final _code = RegExp(r'^\d{6}$');
+  static final _code = RegExp(r'^\d{6,10}$');
 
   static bool isEmail(String value) => value.length <= maxEmailLength && _email.hasMatch(value);
 

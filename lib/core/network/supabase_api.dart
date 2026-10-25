@@ -12,7 +12,7 @@ abstract final class SupabaseBootstrap {
     url: AppConfig.supabaseUrl,
     publishableKey: AppConfig.supabaseAnonKey,
     authOptions: FlutterAuthClientOptions(
-      localStorage: SecureSessionStorage(key: SecureSessionStorage.keyFor(AppConfig.supabaseUrl), installMarker: FileJsonStore('install')),
+      localStorage: SecureSessionStorage(key: SecureSessionStorage.keyFor(AppConfig.supabaseUrl), installMarker: FileJsonStore('install', strict: true)),
     ),
   );
 

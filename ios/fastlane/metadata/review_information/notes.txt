@@ -1,4 +1,4 @@
-No login and no demo account are needed. On first launch Kostenkurve asks where to store data: "Start locally for free" (no account, data stays on the device, every feature except sharing and attachments) or "Create account" for the cloud (Sign in with Apple or a 6-digit email code, no password), followed by the subscription screen.
+No login and no demo account are needed. On first launch Kostenkurve asks where to store data: "Start locally for free" (no account, data stays on the device, every feature except sharing and attachments) or "Create account" for the cloud (Sign in with Apple or an 8-digit email code, no password), followed by the subscription screen.
 
 Suggested path (labels in English when the device language is English; German is the primary language):
 1. On first launch a short welcome lets you pick templates (Electricity, Heating and Water are preselected) → "Create 3 categories" → reminders "Allow" or "Later". Later on, more categories via the Categories tab → "+".

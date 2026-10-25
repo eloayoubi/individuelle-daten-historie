@@ -26,7 +26,9 @@ class SecureSessionStorage extends LocalStorage {
 
   @override
   Future<void> initialize() async {
-    if (await installMarker.read() == null) {
+    // Nicht lesbar heißt nicht neu installiert: lieber angemeldet bleiben als grundlos abmelden.
+    final installed = await installMarker.read().then((marker) => marker != null, onError: (Object _) => true);
+    if (!installed) {
       await _delete();
       await installMarker.write({'installed': true}).catchError((Object _) {});
     }

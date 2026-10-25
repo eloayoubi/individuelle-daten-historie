@@ -8,8 +8,9 @@
 --   Trackern, Feldern, Einträgen, Werten und Belegen – und save_entry/create_category, die mit den
 --   Rechten des Aufrufers laufen – nur mit Cloud.
 -- - Neue Kategorien und Einladungen brauchen das eigene Abo, Beitreten das des Eigentümers.
--- - Lesen, Kategorien löschen, Verlassen, Reihenfolge und Name bleiben ohne Abo möglich: Export und
---   Umzug aufs Gerät gehen immer (DSGVO Art. 17 und 20).
+-- - Lesen, Kategorien und Beleg-Dateien löschen, Verlassen, die eigene Reihenfolge und der Anzeigename
+--   bleiben ohne Abo möglich: Export, Löschen und Umzug aufs Gerät gehen immer (DSGVO Art. 17 und 20).
+--   Umbenennen, Archivieren und alle anderen Änderungen brauchen das Abo.
 --
 -- Fehler: P0064 cloud_required.
 
@@ -38,6 +39,16 @@ create or replace function public.can_edit_category(p_category uuid) returns boo
 language sql stable security definer set search_path = '' as $$
   select coalesce(public.category_role(p_category) in ('owner', 'editor'), false) and public.has_cloud(p_category)
 $$;
+
+-- Beleg-Dateien löschen auch ohne Abo (owner und editor wie bisher): Die Zeile in attachments darf
+-- jeder Hochladende bzw. owner ohne Abo löschen, die Datei soll nicht verwaist liegen bleiben.
+drop policy attachments_files_delete on storage.objects;
+create policy attachments_files_delete on storage.objects for delete to authenticated using (
+  bucket_id = 'attachments' and coalesce(public.category_role(public.path_category(name)) in ('owner', 'editor'), false)
+);
+
+-- Nur für Trigger und Funktionen: verrät sonst, wie viele Kategorien ein beliebiger Nutzer hat.
+revoke execute on function public.next_category_sort(uuid) from public, anon, authenticated;
 
 -- Neue Kategorien (auch über create_category) nur mit eigenem Abo.
 drop policy categories_insert on public.categories;

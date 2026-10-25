@@ -1102,7 +1102,7 @@
   "authSignInBody": "Melde dich an, um deine Cloud-Daten auf diesem Gerät zu öffnen.",
   "authAppleRegister": "Mit Apple registrieren",
   "authOrEmail": "oder mit E-Mail",
-  "authNoPassword": "Kein Passwort nötig: Du bekommst einen 6-stelligen Code per E-Mail.",
+  "authNoPassword": "Kein Passwort nötig: Du bekommst einen Code per E-Mail.",
   "authCodeSentSignIn": "Wenn es zu {email} ein Konto gibt, ist ein Code unterwegs. Schau auch im Spam-Ordner.",
   "@authCodeSentSignIn": {
     "placeholders": {

@@ -505,7 +505,7 @@
   "authSignInBody": "Sign in to open your cloud data on this device.",
   "authAppleRegister": "Sign up with Apple",
   "authOrEmail": "or with email",
-  "authNoPassword": "No password needed: we’ll email you a 6-digit code.",
+  "authNoPassword": "No password needed: we’ll email you a code.",
   "authCodeSentSignIn": "If there’s an account for {email}, a code is on its way. Check your spam folder too.",
   "authResendIn": "Send new code ({seconds}s)",
   "authChangeEmail": "Different email",

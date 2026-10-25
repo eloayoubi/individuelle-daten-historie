@@ -3089,7 +3089,7 @@ abstract class AppLocalizations {
   /// No description provided for @authNoPassword.
   ///
   /// In de, this message translates to:
-  /// **'Kein Passwort nötig: Du bekommst einen 6-stelligen Code per E-Mail.'**
+  /// **'Kein Passwort nötig: Du bekommst einen Code per E-Mail.'**
   String get authNoPassword;
 
   /// No description provided for @authCodeSentSignIn.

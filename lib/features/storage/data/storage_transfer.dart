@@ -8,14 +8,15 @@ import '../../categories/data/local_categories_repository.dart';
 ///
 /// **Hoch** ([upload]): jede Kategorie per `create_category` neu anlegen, Tracker und Felder über
 /// ihre Reihenfolge zuordnen, Einträge mit ihren Geräte-Ids senden (`save_entry` ist ein Upsert),
-/// danach „enthalten in“ und Archiv setzen. Ein Journal merkt sich jede angelegte Kategorie: Bricht
-/// der Umzug ab, legt der nächste Versuch nichts doppelt an. Erst wenn alles oben ist, wird das
-/// Gerät geleert.
+/// danach „enthalten in“ und Archiv setzen. Ein Journal merkt sich je Konto jede angelegte
+/// Kategorie: Bricht der Umzug ab, legt der nächste Versuch mit demselben Konto nichts doppelt an
+/// (nur ein Absturz genau zwischen Anlegen und Merken kann eine Kategorie doppeln). Erst wenn alles
+/// oben ist, wird das Gerät geleert.
 ///
 /// **Runter** ([download]): alle sichtbaren Kategorien als eigene Kopie aufs Gerät (ohne Mitglieder
 /// und Belege); gleiche Ids werden ersetzt, andere lokale Kategorien bleiben.
 class StorageTransfer {
-  StorageTransfer({required this.local, required this.remote, required this.cloud, required this.journal});
+  StorageTransfer({required this.local, required this.remote, required this.cloud, required this.journal, required this.userId});
 
   final LocalCategoriesRepository local;
 
@@ -24,8 +25,12 @@ class StorageTransfer {
 
   /// Cloud mit Offline-Schicht: liest auch ohne Netz aus dem Cache und kennt wartende Einträge.
   final CategoriesRepository cloud;
-  /// Welche lokalen Kategorien schon in der Cloud angelegt sind (für einen abgebrochenen Umzug).
+  /// Welche lokalen Kategorien schon in der Cloud angelegt sind (für einen abgebrochenen Umzug):
+  /// `{"userId": "…", "categories": {"<lokal>": {"id", "trackers", "fields"}}}`.
   final JsonStore journal;
+
+  /// Angemeldetes Konto; das Journal eines anderen Kontos gilt nicht.
+  final String? Function() userId;
 
   /// Gleichzeitig gesendete Einträge.
   static const parallel = 6;
@@ -45,7 +50,7 @@ class StorageTransfer {
       if (mapped == null) {
         mapped = await _create(c);
         created[c.id] = mapped;
-        await journal.write(created);
+        await journal.write({'userId': userId(), 'categories': created});
       }
       categoryIds[c.id] = mapped['id']! as String;
       trackerIds.addAll((mapped['trackers']! as Map).cast<String, String>());
@@ -115,10 +120,12 @@ class StorageTransfer {
 
   Future<Map<String, Map<String, Object?>>> _readJournal() async {
     final json = await journal.read().catchError((Object _) => null);
-    if (json is! Map) return {};
-    return {
-      for (final MapEntry(:key, :value) in json.entries)
-        if (key is String && value is Map) key: value.cast<String, Object?>(),
-    };
+    if (json case {'userId': final String owner, 'categories': final Map created} when owner == userId()) {
+      return {
+        for (final MapEntry(:key, :value) in created.entries)
+          if (key is String && value is Map) key: value.cast<String, Object?>(),
+      };
+    }
+    return {};
   }
 }

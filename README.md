@@ -71,7 +71,7 @@ Features heute:
 - `account`: Konto-Seite (Name, abmelden, löschen; anonymes Testkonto sichern).
 - `legal`: Datenschutz, Nutzungsbedingungen, Impressum aus `assets/legal/` (Markdown, DE/EN).
 - `settings`: Speicherort (Cloud aktivieren, anmelden, aufs Gerät holen), Konto und Abo, Darstellung, Erinnerungen, Datenexport (CSV + JSON), Rechtliches; Bewertungsbitte nach dem 3. Eintrag.
-- `auth`: Registrieren und Anmelden (Apple, 6-stelliger E-Mail-Code, kein Passwort) – `AuthPage` und `AuthRepository`.
+- `auth`: Registrieren und Anmelden (Apple, 8-stelliger E-Mail-Code, kein Passwort) – `AuthPage` und `AuthRepository`.
 
 **Rechnen:** Rechenlogik liegt in `core/utils/`:
 

@@ -1799,8 +1799,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authOrEmail => 'or with email';
 
   @override
-  String get authNoPassword =>
-      'No password needed: we’ll email you a 6-digit code.';
+  String get authNoPassword => 'No password needed: we’ll email you a code.';
 
   @override
   String authCodeSentSignIn(String email) {

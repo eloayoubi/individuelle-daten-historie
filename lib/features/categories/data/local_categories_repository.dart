@@ -36,8 +36,8 @@ class LocalCategoriesRepository extends MemoryCategoriesRepository {
         ..clear()
         ..addAll(categories);
     }
-    // Nicht lesbar: Der Fehler geht an den Aufrufer, der nächste Zugriff versucht es erneut – nie
-    // leer überschreiben.
+    // Nicht lesbar (strikter Speicher wirft, kaputtes Format auch): Der Fehler geht an den Aufrufer,
+    // der nächste Zugriff versucht es erneut – geschrieben wird erst nach erfolgreichem Lesen.
     _loaded = true;
   }
 

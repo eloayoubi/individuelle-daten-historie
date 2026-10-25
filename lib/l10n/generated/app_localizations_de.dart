@@ -1811,7 +1811,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authNoPassword =>
-      'Kein Passwort nötig: Du bekommst einen 6-stelligen Code per E-Mail.';
+      'Kein Passwort nötig: Du bekommst einen Code per E-Mail.';
 
   @override
   String authCodeSentSignIn(String email) {

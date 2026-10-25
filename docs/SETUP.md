@@ -19,7 +19,7 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
    - anonyme Anmeldung **aus** (lokal braucht kein Konto, die Cloud ein registriertes)
    - manuelles Verknüpfen: nötig, damit anonyme Konten aus der Testphase beim Registrieren ihre Daten behalten
    - Apple als Anbieter mit Client-ID `de.eloayoubi.kostenkurve`
-   - E-Mail-Code mit 6 Ziffern, 10 Minuten gültig, neuer Code frühestens nach 60 s; alle drei Vorlagen aus `supabase/templates/` mit `{{ .Token }}`
+   - E-Mail-Code mit 8 Ziffern (die App nimmt 6 bis 10 an), 10 Minuten gültig, neuer Code frühestens nach 60 s; alle drei Vorlagen aus `supabase/templates/` mit `{{ .Token }}`
    - Redirect `de.eloayoubi.kostenkurve://login-callback`
    ```sh
    supabase config push

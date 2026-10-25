@@ -1,7 +1,7 @@
 -- Kostenkurve Cloud: Schreiben nur mit Abo (eigenes oder das des Eigentümers der Kategorie); Lesen,
 -- Löschen und Verlassen auch ohne. Eigene Transaktion, rollt am Ende zurück.
 -- Nutzer: Demo (…001, owner, Cloud-Abo aus dem Seed), Anna (…002, ohne Abo, editor bei Miete),
--- Ohne (…005, ohne Abo, mit einer Kategorie aus der Testphase).
+-- Ohne (…005, ohne Abo, mit einer Kategorie aus der Testphase). Speicher für Belege wie in smoke.sql.
 
 begin;
 
@@ -13,6 +13,11 @@ insert into public.trackers (id, category_id, name) values
   ('20000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000005', 'Zähler');
 insert into public.fields (id, tracker_id, name, kind, role, unit, sort) values
   ('30000000-0000-4000-8000-000000000105', '20000000-0000-4000-8000-000000000005', 'Zählerstand', 'number', 'meter_reading', 'kWh', 0);
+
+grant usage on schema storage to authenticated;
+grant select, insert, delete on storage.objects to authenticated;
+insert into storage.objects (bucket_id, name) values
+  ('attachments', '10000000-0000-4000-8000-000000000001/' || gen_random_uuid() || '/zaehler.jpg');
 
 set local role authenticated;
 
@@ -54,6 +59,11 @@ begin
   begin
     perform public.has_cloud('10000000-0000-4000-8000-000000000001');
     raise exception 'has_cloud direkt aufrufbar';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.next_category_sort('00000000-0000-4000-8000-000000000001');
+    raise exception 'next_category_sort direkt aufrufbar';
   exception when insufficient_privilege then null;
   end;
 
@@ -114,6 +124,10 @@ begin
     raise exception 'Eintrag nach Abo-Ende angelegt';
   exception when insufficient_privilege then null;
   end;
+
+  -- Beleg-Dateien löschen geht auch ohne Abo.
+  delete from storage.objects where bucket_id = 'attachments';
+  assert (select count(*) from storage.objects where bucket_id = 'attachments') = 0, 'Beleg-Datei ohne Abo gelöscht';
 end $$;
 
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000000005';

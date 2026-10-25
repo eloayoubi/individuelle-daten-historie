@@ -17,7 +17,7 @@ import '../data/auth_repository.dart';
 
 enum AuthMode { register, signIn }
 
-/// Registrieren und Anmelden für die Cloud – mit Apple oder einem 6-stelligen Code per E-Mail,
+/// Registrieren und Anmelden für die Cloud – mit Apple oder einem Code per E-Mail,
 /// ohne Passwort. Nach dem Registrieren kommt die Paywall; wer sich mit laufendem Abo anmeldet, ist
 /// sofort in der Cloud.
 ///
@@ -229,7 +229,7 @@ class _AuthPageState extends State<AuthPage> {
                           hint: l10n.accountCodeHint,
                           keyboardType: TextInputType.number,
                           textInputAction: TextInputAction.done,
-                          maxLength: AuthInput.codeLength,
+                          maxLength: AuthInput.maxCodeLength,
                           autocorrect: false,
                           autofocus: true,
                           autofillHints: const [AutofillHints.oneTimeCode],

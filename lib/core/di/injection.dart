@@ -64,7 +64,7 @@ Future<void> configureDependencies() async {
   await mode.load();
   getIt
     ..registerSingleton<StorageModeStore>(mode)
-    ..registerLazySingleton<LocalCategoriesRepository>(() => LocalCategoriesRepository(FileJsonStore('local_data')));
+    ..registerLazySingleton<LocalCategoriesRepository>(() => LocalCategoriesRepository(FileJsonStore('local_data', strict: true)));
   if (AppConfig.hasSupabase) {
     await SupabaseBootstrap.init();
     getIt
@@ -90,6 +90,7 @@ Future<void> configureDependencies() async {
           remote: lookup<SupabaseCategoriesRepository>(),
           cloud: lookup<OfflineCategoriesRepository>(),
           journal: FileJsonStore('transfer_journal'),
+          userId: () => lookup<AuthRepository>().userId,
         ),
       )
       ..registerLazySingleton<AppearanceStore>(FileAppearanceStore.new)
@@ -113,6 +114,7 @@ Future<void> configureDependencies() async {
           remote: lookup<MockCategoriesRepository>(),
           cloud: lookup<MockCategoriesRepository>(),
           journal: MemoryJsonStore(),
+          userId: () => lookup<AuthRepository>().userId,
         ),
       )
       ..registerLazySingleton<AppearanceStore>(MemoryAppearanceStore.new)
@@ -131,7 +133,7 @@ Future<void> configureDependencies() async {
       () => StoreReviewPrompter(FileJsonStore('review'), available: InAppReview.instance.isAvailable, request: InAppReview.instance.requestReview),
     )
     ..registerFactory<AccountCubit>(() => AccountCubit(lookup<AuthRepository>()))
-    ..registerFactory<StorageCubit>(() => StorageCubit(lookup<StorageModeStore>(), lookup<StorageTransfer>(), lookup<AuthRepository>()))
+    ..registerFactory<StorageCubit>(() => StorageCubit(lookup<StorageModeStore>(), lookup<StorageTransfer>(), lookup<AuthRepository>(), lookup<PlusRepository>()))
     ..registerFactory<PlusCubit>(() => PlusCubit(lookup<PlusRepository>(), lookup<PlusStore>()))
     ..registerFactory<OnboardingCubit>(() => OnboardingCubit(lookup<CategoriesRepository>(), FileJsonStore('onboarding')))
     ..registerFactory<ShellCubit>(ShellCubit.new)

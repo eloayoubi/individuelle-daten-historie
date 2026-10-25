@@ -5,6 +5,7 @@ import 'package:kostenkurve/features/auth/data/mock_auth_repository.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/local_categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
+import 'package:kostenkurve/features/plus/data/plus_repository.dart';
 import 'package:kostenkurve/features/storage/cubit/storage_cubit.dart';
 import 'package:kostenkurve/features/storage/data/storage_categories_repository.dart';
 import 'package:kostenkurve/features/storage/data/storage_mode.dart';
@@ -61,6 +62,17 @@ class _FlakyCloud extends MockCategoriesRepository {
   }
 }
 
+/// Datei da, aber nicht lesbar (strikter Speicher).
+class _UnreadableStore implements JsonStore {
+  var writes = 0;
+
+  @override
+  Future<Object?> read() async => throw const FormatException('kaputt');
+
+  @override
+  Future<void> write(Object? json) async => writes++;
+}
+
 void main() {
   group('LocalCategoriesRepository', () {
     test('speichert in der Datei und lädt beim nächsten Start', () async {
@@ -89,6 +101,14 @@ void main() {
       await expectLater(repo.loadCategories(), throwsA(anything));
       expect(await store.read(), isNotNull);
       expect(((await store.read())! as Map)['categories'], isNotEmpty);
+    });
+
+    test('Datei nicht lesbar: Fehler, und Ändern überschreibt nichts', () async {
+      final store = _UnreadableStore();
+      final repo = LocalCategoriesRepository(store);
+      await expectLater(repo.loadCategories(), throwsA(anything));
+      await expectLater(repo.createCategory(const CategoryDraft(name: 'Neu', icon: CategoryIcon.star, swatch: CategorySwatch.gray)), throwsA(anything));
+      expect(store.writes, 0);
     });
 
     test('Teilen gibt es lokal nicht', () async {
@@ -133,7 +153,7 @@ void main() {
       await _fill(local);
       final cloud = MockCategoriesRepository(seed: const []);
       final journal = MemoryJsonStore();
-      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: journal);
+      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: journal, userId: () => 'konto-a');
 
       await transfer.upload();
 
@@ -155,7 +175,7 @@ void main() {
       final local = LocalCategoriesRepository(MemoryJsonStore());
       await _fill(local);
       final cloud = _FlakyCloud();
-      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore());
+      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore(), userId: () => 'konto-a');
 
       await expectLater(transfer.upload(), throwsA(anything));
       expect(await local.loadCategories(), hasLength(2), reason: 'Gerät bleibt bis zum Erfolg voll');
@@ -167,11 +187,23 @@ void main() {
       expect((await cloud.loadCategories()).first.trackers.first.entries, hasLength(2));
     });
 
+    test('Journal eines anderen Kontos gilt nicht', () async {
+      final local = LocalCategoriesRepository(MemoryJsonStore());
+      await _fill(local);
+      final cloud = _FlakyCloud();
+      var user = 'konto-a';
+      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore(), userId: () => user);
+      await expectLater(transfer.upload(), throwsA(anything));
+      user = 'konto-b';
+      await transfer.upload();
+      expect(cloud.created, 4, reason: 'Konto b legt selbst an, statt die Ids von Konto a zu nehmen');
+    });
+
     test('runter: Cloud-Kategorien als eigene, andere Gerätedaten bleiben', () async {
       final local = LocalCategoriesRepository(MemoryJsonStore());
       await local.createCategory(const CategoryDraft(name: 'Nur hier', icon: CategoryIcon.star, swatch: CategorySwatch.gray));
       final cloud = MockCategoriesRepository();
-      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore());
+      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore(), userId: () => 'konto-a');
 
       await transfer.download();
 
@@ -194,11 +226,11 @@ void main() {
       mode = StorageModeStore(MemoryJsonStore());
       local = LocalCategoriesRepository(MemoryJsonStore());
       cloud = MockCategoriesRepository(seed: const []);
-      transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore());
+      transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore(), userId: () => 'konto-a');
     });
 
     test('lokal ohne Konto: sofort, ohne Netz', () async {
-      final cubit = StorageCubit(mode, transfer, MockAuthRepository());
+      final cubit = StorageCubit(mode, transfer, MockAuthRepository(), MockPlusRepository());
       expect(await cubit.chooseLocal(), StorageEventKind.local);
       expect(cubit.state.mode, StorageMode.local);
       expect(cubit.state.busy, isFalse);
@@ -207,7 +239,7 @@ void main() {
 
     test('Cloud aktivieren: Gerätedaten ziehen um', () async {
       await _fill(local);
-      final cubit = StorageCubit(mode, transfer, MockAuthRepository());
+      final cubit = StorageCubit(mode, transfer, MockAuthRepository(), MockPlusRepository());
       expect(await cubit.activateCloud(), StorageEventKind.uploaded);
       expect(mode.mode, StorageMode.cloud);
       expect(await cloud.loadCategories(), hasLength(2));
@@ -218,7 +250,7 @@ void main() {
     test('Konto hat schon Daten: erst fragen, „auf dem Gerät lassen“ lädt nichts hoch', () async {
       await _fill(local);
       await cloud.createCategory(const CategoryDraft(name: 'Schon da', icon: CategoryIcon.star, swatch: CategorySwatch.gray));
-      final cubit = StorageCubit(mode, transfer, MockAuthRepository());
+      final cubit = StorageCubit(mode, transfer, MockAuthRepository(), MockPlusRepository());
       expect(await cubit.activateCloud(), StorageEventKind.askUpload);
       expect(mode.mode, isNull);
       expect(await cubit.activateCloud(upload: false), StorageEventKind.cloud);
@@ -232,7 +264,7 @@ void main() {
       final auth = MockAuthRepository();
       await auth.signInWithApple();
       await mode.set(StorageMode.cloud);
-      final cubit = StorageCubit(mode, transfer, auth);
+      final cubit = StorageCubit(mode, transfer, auth, MockPlusRepository());
       await auth.signOut();
       await Future<void>.delayed(Duration.zero);
       expect(mode.mode, isNull);
@@ -242,7 +274,7 @@ void main() {
 
     test('Cloud ohne Sitzung beim Start: Start-Bildschirm', () async {
       await mode.set(StorageMode.cloud);
-      final cubit = StorageCubit(mode, transfer, MockAuthRepository());
+      final cubit = StorageCubit(mode, transfer, MockAuthRepository(), MockPlusRepository());
       await cubit.load();
       expect(mode.mode, isNull);
       await cubit.close();
@@ -253,7 +285,7 @@ void main() {
       await auth.signInWithApple();
       await cloud.createCategory(const CategoryDraft(name: 'Strom', icon: CategoryIcon.bolt, swatch: CategorySwatch.orange));
       await mode.set(StorageMode.cloud);
-      final cubit = StorageCubit(mode, transfer, auth);
+      final cubit = StorageCubit(mode, transfer, auth, MockPlusRepository());
       expect(await cubit.moveToLocal(), StorageEventKind.downloaded);
       expect(mode.mode, StorageMode.local);
       expect((await local.loadCategories()).map((c) => c.name), ['Strom']);
@@ -264,17 +296,27 @@ void main() {
     test('anonymes Testkonto wählt lokal: Daten aufs Gerät, Konto weg', () async {
       final auth = MockAuthRepository(initial: MockAuthRepository.anonymous);
       await cloud.createCategory(const CategoryDraft(name: 'Aus der Testphase', icon: CategoryIcon.star, swatch: CategorySwatch.gray));
-      final cubit = StorageCubit(mode, transfer, auth);
+      final cubit = StorageCubit(mode, transfer, auth, MockPlusRepository());
       expect(await cubit.chooseLocal(), StorageEventKind.local);
       expect((await local.loadCategories()).map((c) => c.name), ['Aus der Testphase']);
       expect(auth.account, const AccountInfo(userId: null));
       await cubit.close();
     });
 
+    test('anonymes Testkonto mit laufendem Abo bleibt bestehen', () async {
+      final auth = MockAuthRepository(initial: MockAuthRepository.anonymous);
+      final plus = MockPlusRepository();
+      await plus.redeem('jws');
+      final cubit = StorageCubit(mode, transfer, auth, plus);
+      expect(await cubit.chooseLocal(), StorageEventKind.local);
+      expect(auth.account.isSignedIn, isTrue);
+      await cubit.close();
+    });
+
     test('Umzug scheitert: Ereignis failed, Speicherort bleibt', () async {
       await _fill(local);
       final flaky = _FlakyCloud();
-      final cubit = StorageCubit(mode, StorageTransfer(local: local, remote: flaky, cloud: flaky, journal: MemoryJsonStore()), MockAuthRepository());
+      final cubit = StorageCubit(mode, StorageTransfer(local: local, remote: flaky, cloud: flaky, journal: MemoryJsonStore(), userId: () => 'konto-a'), MockAuthRepository(), MockPlusRepository());
       expect(await cubit.activateCloud(), StorageEventKind.failed);
       expect(mode.mode, isNull);
       expect(cubit.state.event?.kind, StorageEventKind.failed);

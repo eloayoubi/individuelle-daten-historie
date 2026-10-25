@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../auth/data/auth_repository.dart';
+import '../../plus/data/plus_repository.dart';
 import '../data/storage_mode.dart';
 import '../data/storage_transfer.dart';
 
@@ -14,7 +15,7 @@ part 'storage_state.dart';
 /// brauchen. Die Methoden liefern ihr Ergebnis zusätzlich zum Ereignis, damit der Aufrufer
 /// nachfragen kann ([StorageEventKind.askUpload]).
 class StorageCubit extends Cubit<StorageState> {
-  StorageCubit(this._mode, this._transfer, this._auth) : super(StorageState(mode: _mode.mode)) {
+  StorageCubit(this._mode, this._transfer, this._auth, this._plus) : super(StorageState(mode: _mode.mode)) {
     _modes = _mode.changes.listen((mode) {
       if (!isClosed) emit(state.copyWith(mode: () => mode));
     });
@@ -27,6 +28,7 @@ class StorageCubit extends Cubit<StorageState> {
   final StorageModeStore _mode;
   final StorageTransfer _transfer;
   final AuthRepository _auth;
+  final PlusRepository _plus;
   late final StreamSubscription<StorageMode?> _modes;
   late final StreamSubscription<AccountInfo> _accounts;
 
@@ -35,17 +37,23 @@ class StorageCubit extends Cubit<StorageState> {
   /// (das hat beim Wechsel nach „Lokal“ ohne Netz nicht geklappt).
   Future<void> load() async {
     if (_mode.mode == StorageMode.cloud && _auth.userId == null) return _mode.set(null);
-    if (_mode.mode == StorageMode.local && _auth.userId != null && _auth.account.isAnonymous) {
-      await _auth.deleteAccount().catchError((Object _) {});
-    }
+    if (_mode.mode == StorageMode.local && _auth.userId != null && _auth.account.isAnonymous) await _deleteAnonymous();
+  }
+
+  /// Ein anonymes Konto aus der Testphase ist nach dem Wechsel aufs Gerät unerreichbar: löschen –
+  /// außer es hat (oder hätte, ohne Antwort vom Server) ein laufendes Abo; das bliebe sonst bei Apple
+  /// bezahlt, ohne Konto.
+  Future<void> _deleteAnonymous() async {
+    final subscribed = await _plus.status().then((status) => status.active, onError: (Object _) => true);
+    if (!subscribed) await _auth.deleteAccount().catchError((Object _) {});
   }
 
   /// „Kostenlos lokal nutzen“. Ist ein Konto angemeldet (Testphase oder gerade registriert), kommen
-  /// seine Cloud-Daten mit aufs Gerät; ein anonymes Konto wäre danach unerreichbar und wird gelöscht.
+  /// seine Cloud-Daten mit aufs Gerät; ein anonymes Konto wird danach gelöscht ([_deleteAnonymous]).
   Future<StorageEventKind> chooseLocal() => _run(StorageTransferKind.download, () async {
     if (_auth.userId != null) {
       await _transfer.download();
-      if (_auth.account.isAnonymous) await _auth.deleteAccount().catchError((Object _) {});
+      if (_auth.account.isAnonymous) await _deleteAnonymous();
     }
     await _mode.set(StorageMode.local);
     return StorageEventKind.local;
