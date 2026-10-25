@@ -213,6 +213,12 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   @override
   void acknowledgeRejected() {}
 
+  @override
+  bool isWaiting(String entryId) => false;
+
+  @override
+  Future<void> discardHeld() async {}
+
   /// Fehler, bei denen erneutes Senden nicht hilft: Datenfehler (22), Integrität (23), Rechte (42),
   /// eigene `raise exception` (P0). Netzwerk- und Serverfehler bleiben vorübergehend.
   static final _permanent = RegExp(r'^(22|23|42|P0)');

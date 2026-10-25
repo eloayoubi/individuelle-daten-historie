@@ -901,6 +901,39 @@ class AppLocalizationsDe extends AppLocalizations {
       'Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.';
 
   @override
+  String homeSyncHeld(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge werden zurückgehalten',
+      one: '1 Eintrag wird zurückgehalten',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncHeldHint =>
+      'Keine Schreibrechte mehr oder das Cloud-Abo der Kategorie ist beendet. Er wird erneut gesendet, sobald es wieder geht.';
+
+  @override
+  String get homeSyncDiscard => 'Verwerfen';
+
+  @override
+  String homeSyncDiscardTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count zurückgehaltene Einträge verwerfen?',
+      one: 'Zurückgehaltenen Eintrag verwerfen?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncDiscardBody =>
+      'Sie verschwinden von diesem Gerät und kommen nicht mehr in die Cloud.';
+
+  @override
   String get remindersEnable => 'Erinnerungen aktivieren';
 
   @override

@@ -78,8 +78,9 @@ class EntryFormState extends Equatable {
       final hasMeterEntry = tracker.entries.any((e) => e.values.containsKey(meter.id));
       return !hasMeterEntry || tracker.readsFromBills ? EntryFormMode.bill : EntryFormMode.reading;
     }
+    // Aus dem Preisverlauf: immer die Preise bearbeiten, auch wenn der Eintrag noch einen Stand trägt.
+    if (contract || tracker.isPriceChange(entry)) return EntryFormMode.contract;
     if (tracker.isBill(entry)) return EntryFormMode.bill;
-    if (tracker.isPriceChange(entry)) return EntryFormMode.contract;
     return EntryFormMode.reading;
   }
 

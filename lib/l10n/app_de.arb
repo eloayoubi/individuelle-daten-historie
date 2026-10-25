@@ -516,6 +516,25 @@
     }
   },
   "homeSyncRejectedHint": "Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.",
+  "homeSyncHeld": "{count, plural, =1{1 Eintrag wird zurückgehalten} other{{count} Einträge werden zurückgehalten}}",
+  "@homeSyncHeld": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSyncHeldHint": "Keine Schreibrechte mehr oder das Cloud-Abo der Kategorie ist beendet. Er wird erneut gesendet, sobald es wieder geht.",
+  "homeSyncDiscard": "Verwerfen",
+  "homeSyncDiscardTitle": "{count, plural, =1{Zurückgehaltenen Eintrag verwerfen?} other{{count} zurückgehaltene Einträge verwerfen?}}",
+  "@homeSyncDiscardTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSyncDiscardBody": "Sie verschwinden von diesem Gerät und kommen nicht mehr in die Cloud.",
   "remindersEnable": "Erinnerungen aktivieren",
   "remindersEnableHint": "Ans Ablesen und an Fristen erinnern lassen",
   "settingsReminders": "Erinnerungen",

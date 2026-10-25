@@ -88,7 +88,7 @@ class _PriceHistoryView extends StatelessWidget {
                             title: l10n.priceHistoryFrom(context.shortDate(e.date)),
                             subtitle: e.date.isAfter(today) ? l10n.priceHistoryPlanned : null,
                             trailing: AppText(context.fieldValue(field, e.values[field.id]!), style: (t) => t.numberM),
-                            onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e) : null,
+                            onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e, contract: true) : null,
                           ),
                       ],
                     ),

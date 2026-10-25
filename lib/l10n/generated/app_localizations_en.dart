@@ -894,6 +894,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Missing rights or an invalid value. Tap to dismiss.';
 
   @override
+  String homeSyncHeld(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries are on hold',
+      one: '1 entry is on hold',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncHeldHint =>
+      'No write access anymore or the category\'s cloud subscription has ended. It will be sent again as soon as possible.';
+
+  @override
+  String get homeSyncDiscard => 'Discard';
+
+  @override
+  String homeSyncDiscardTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Discard $count entries on hold?',
+      one: 'Discard entry on hold?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncDiscardBody =>
+      'They will be removed from this device and won\'t reach the cloud.';
+
+  @override
   String get remindersEnable => 'Turn on reminders';
 
   @override

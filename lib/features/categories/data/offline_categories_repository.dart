@@ -113,7 +113,13 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Stream<void> get changes => _changes.stream;
 
   @override
-  SyncState get syncState => SyncState(pending: _pending.length, rejected: _rejected);
+  SyncState get syncState {
+    final held = _pending.where((p) => _heldIds.contains(p.entryId)).length;
+    return SyncState(pending: _pending.length - held, rejected: _rejected, held: held);
+  }
+
+  /// Einträge, die der Server beim letzten Senden zurückgehalten hat ([WriteHeld]).
+  var _heldIds = <String>{};
 
   @override
   Future<List<Category>> loadCategories() async {
@@ -187,6 +193,19 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   void acknowledgeRejected() {
     if (_rejected == 0) return;
     _rejected = 0;
+    _changes.add(null);
+  }
+
+  @override
+  bool isWaiting(String entryId) => _pending.any((p) => p.entryId == entryId);
+
+  @override
+  Future<void> discardHeld() async {
+    await _restore();
+    if (_heldIds.isEmpty) return;
+    _pending = [..._pending.where((p) => !_heldIds.contains(p.entryId))];
+    _heldIds = {};
+    await _persistQueue();
     _changes.add(null);
   }
 
@@ -311,8 +330,11 @@ class OfflineCategoriesRepository implements CategoriesRepository {
       sent = true;
       await _persistQueue();
     }
+    final heldIds = {for (final w in held) w.entryId};
+    final heldChanged = heldIds.length != _heldIds.length || !heldIds.containsAll(_heldIds);
+    _heldIds = heldIds;
     _scheduleRetry();
-    if (sent) _changes.add(null);
+    if (sent || heldChanged) _changes.add(null);
   }
 
   /// Ein Abruf beginnt: Was ab jetzt gesendet wird, fehlt womöglich in seiner Antwort.

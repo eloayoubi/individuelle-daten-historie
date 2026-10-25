@@ -111,16 +111,20 @@ class WriteHeld implements Exception {
 
 /// Stand der Offline-Warteschlange für Einträge.
 class SyncState extends Equatable {
-  const SyncState({this.pending = 0, this.rejected = 0});
+  const SyncState({this.pending = 0, this.rejected = 0, this.held = 0});
 
   /// Noch nicht beim Server (offline erfasst oder gerade unterwegs).
   final int pending;
+
+  /// Vom Server gerade nicht angenommen (keine Schreibrechte mehr, Cloud-Abo des Eigentümers
+  /// beendet): bleiben liegen, bis es wieder geht oder der Nutzer sie verwirft.
+  final int held;
 
   /// Vom Server abgelehnt und verworfen, seit der Nutzer zuletzt bestätigt hat.
   final int rejected;
 
   @override
-  List<Object?> get props => [pending, rejected];
+  List<Object?> get props => [pending, rejected, held];
 }
 
 /// Kategorien mit ihren Trackern, Feldern und Einträgen – eigene und mit mir geteilte.
@@ -178,6 +182,12 @@ abstract interface class CategoriesRepository {
 
   /// Abgelehnte Einträge zur Kenntnis genommen.
   void acknowledgeRejected();
+
+  /// Wartet dieser Eintrag noch darauf, zum Server zu kommen (auch zurückgehalten)?
+  bool isWaiting(String entryId);
+
+  /// Zurückgehaltene Einträge ([SyncState.held]) aufgeben – sie verschwinden von diesem Gerät.
+  Future<void> discardHeld();
 
   // Teilen (nur online)
 

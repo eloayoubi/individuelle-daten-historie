@@ -88,7 +88,7 @@ class _Content extends StatelessWidget {
     final entries = state.entries;
     String format(double v) => history?.metric == HistoryMetric.consumption ? context.amount(v, history!.unit) : context.euros(v);
     void open(Entry e) => EntryFormPage.open(context, category: category, tracker: tracker, entry: e);
-    final now = DateTime.now().year;
+    final now = (state.today ?? DateTime.now()).year;
     // Hauptaktion unten: Wert eintragen – oder, ohne Felder, erst die Felder festlegen.
     final action = !category.canEdit
         ? null

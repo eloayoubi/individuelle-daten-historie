@@ -1598,6 +1598,36 @@ abstract class AppLocalizations {
   /// **'Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.'**
   String get homeSyncRejectedHint;
 
+  /// No description provided for @homeSyncHeld.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Eintrag wird zurückgehalten} other{{count} Einträge werden zurückgehalten}}'**
+  String homeSyncHeld(int count);
+
+  /// No description provided for @homeSyncHeldHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Schreibrechte mehr oder das Cloud-Abo der Kategorie ist beendet. Er wird erneut gesendet, sobald es wieder geht.'**
+  String get homeSyncHeldHint;
+
+  /// No description provided for @homeSyncDiscard.
+  ///
+  /// In de, this message translates to:
+  /// **'Verwerfen'**
+  String get homeSyncDiscard;
+
+  /// No description provided for @homeSyncDiscardTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{Zurückgehaltenen Eintrag verwerfen?} other{{count} zurückgehaltene Einträge verwerfen?}}'**
+  String homeSyncDiscardTitle(int count);
+
+  /// No description provided for @homeSyncDiscardBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Sie verschwinden von diesem Gerät und kommen nicht mehr in die Cloud.'**
+  String get homeSyncDiscardBody;
+
   /// No description provided for @remindersEnable.
   ///
   /// In de, this message translates to:

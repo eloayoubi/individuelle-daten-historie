@@ -65,7 +65,8 @@ class StorageTransfer {
         final tracker = trackerIds[t.id]!;
         for (final e in t.entries) {
           // Werte archivierter Felder haben kein Gegenstück mehr und bleiben weg; ein Eintrag ganz
-          // ohne Werte bleibt auf dem Gerät zurück, statt den Umzug zu blockieren.
+          // ohne Werte (nur noch Datum und Notiz) wird ausgelassen, statt den Umzug zu blockieren –
+          // er geht dabei verloren, hatte aber nichts mehr, was die App zeigt oder rechnet.
           final values = {for (final MapEntry(:key, :value) in e.values.entries) ?fieldIds[key]: value};
           if (values.isEmpty) continue;
           final id = derivedId(tracker, e.id);

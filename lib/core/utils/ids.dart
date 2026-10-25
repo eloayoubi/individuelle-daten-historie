@@ -14,7 +14,8 @@ String newId() {
   return _format(bytes);
 }
 
-/// Feste UUID (Version 5, SHA-1) aus [namespace] und [name]: gleiche Eingaben ergeben immer dieselbe
+/// Feste UUID im Format von Version 5 (SHA-1 über „namespace/name“, kein RFC-Namensraum) aus
+/// [namespace] und [name]: gleiche Eingaben ergeben immer dieselbe
 /// Id. Der Umzug in die Cloud leitet so die Id jedes Eintrags aus neuem Tracker und alter Id ab –
 /// ein wiederholter Versuch trifft dieselben Einträge, und eine alte Cloud-Kopie mit den
 /// ursprünglichen Ids stört nicht.

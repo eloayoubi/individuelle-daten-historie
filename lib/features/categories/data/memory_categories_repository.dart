@@ -189,6 +189,12 @@ class MemoryCategoriesRepository implements CategoriesRepository {
   @override
   void acknowledgeRejected() {}
 
+  @override
+  bool isWaiting(String entryId) => false;
+
+  @override
+  Future<void> discardHeld() async {}
+
   @protected
   void updateCategoryWith(String id, Category Function(Category) update) {
     final i = items.indexWhere((c) => c.id == id);

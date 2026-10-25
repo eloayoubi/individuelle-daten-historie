@@ -94,6 +94,12 @@ class StorageCategoriesRepository implements CategoriesRepository {
   void acknowledgeRejected() => _active.acknowledgeRejected();
 
   @override
+  bool isWaiting(String entryId) => _active.isWaiting(entryId);
+
+  @override
+  Future<void> discardHeld() => _active.discardHeld();
+
+  @override
   Future<String> createInvite(String categoryId, MemberRole role) => _active.createInvite(categoryId, role);
 
   @override

@@ -27,6 +27,10 @@ class PaywallPage extends StatefulWidget {
   /// später bestätigt wird („Kaufen anfragen“, Bankfreigabe).
   static int openCount = 0;
 
+  /// In dieser Sitzung wurde ein Kauf begonnen, der noch auf Freigabe wartet. Nur dann wechselt der
+  /// StartGate nach der Bestätigung in die Cloud – nicht bei einer Verlängerung im Hintergrund.
+  static bool awaitingApproval = false;
+
   const PaywallPage({super.key});
 
   static Route<void> route() => CupertinoPageRoute<void>(fullscreenDialog: true, builder: (_) => const PaywallPage());
@@ -57,6 +61,7 @@ class _PaywallPageState extends State<PaywallPage> {
     const warn = CupertinoIcons.exclamationmark_circle_fill;
     switch (state.event!.kind) {
       case PlusStoreUpdateKind.unlocked:
+        PaywallPage.awaitingApproval = false;
         AppToast.show(context, l10n.plusWelcome, icon: CupertinoIcons.cloud_fill);
         // Lokal oder noch nicht gewählt: Daten ziehen jetzt um, der StartGate schließt die Seite.
         if (context.read<StorageCubit>().state.mode != StorageMode.cloud) {
@@ -67,6 +72,7 @@ class _PaywallPageState extends State<PaywallPage> {
       case PlusStoreUpdateKind.expired:
         AppToast.show(context, l10n.plusNothingToRestore, icon: warn);
       case PlusStoreUpdateKind.pending:
+        PaywallPage.awaitingApproval = true;
         AppToast.show(context, l10n.plusPending, icon: CupertinoIcons.clock_fill);
       case PlusStoreUpdateKind.failed:
         AppToast.show(context, l10n.plusFailed, icon: warn);

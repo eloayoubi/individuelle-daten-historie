@@ -308,4 +308,21 @@ void main() {
       expect(form(contract: true).state.latestDate, isNull);
     });
   });
+
+  test('aus dem Preisverlauf: gemischter Eintrag öffnet im Vertragsmodus, der Stand bleibt', () {
+    final mixed = Entry(id: 'm', date: DateTime.utc(2026, 1, 1), values: {meter.id: 1000, 'f-strom-ap': 0.3});
+    final t = strom.trackers.single.copyWith(entries: [mixed]);
+    final cubit = form(tracker: t, entry: mixed, contract: true)..setText('f-strom-ap', '0,31');
+    expect(cubit.state.mode, EntryFormMode.contract);
+    expect(cubit.state.toEntry().values, {meter.id: 1000, 'f-strom-ap': 0.31});
+  });
+
+  test('Löschen im Vertragsmodus entfernt nur die Preise eines gemischten Eintrags', () async {
+    final mixed = Entry(id: 'm-del', date: DateTime.utc(2026, 1, 1), values: {meter.id: 1000, 'f-strom-ap': 0.3});
+    await repo.saveEntry('t-strom', mixed);
+    final t = (await repo.loadCategory('c-strom'))!.trackers.single;
+    await form(tracker: t, entry: mixed, contract: true).delete();
+    final after = (await repo.loadCategory('c-strom'))!.trackers.single.entries.firstWhere((e) => e.id == 'm-del');
+    expect(after.values, {meter.id: 1000});
+  });
 }

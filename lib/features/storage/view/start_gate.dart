@@ -49,10 +49,13 @@ class StartGate extends StatelessWidget {
           listenWhen: (previous, current) => previous.mode != current.mode,
           listener: (context, _) => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
-        // Kauf, der erst nach dem Schließen der Paywall bestätigt wurde: jetzt in die Cloud wechseln.
+        // Kauf, der in dieser Sitzung begonnen und erst nach dem Schließen der Paywall bestätigt wurde
+        // („Kaufen anfragen“): jetzt in die Cloud wechseln. Verlängerungen im Hintergrund lösen nichts aus.
         BlocListener<PlusCubit, PlusState>(
-          listenWhen: (previous, current) => current.event != previous.event && current.event?.kind == PlusStoreUpdateKind.unlocked && PaywallPage.openCount == 0,
+          listenWhen: (previous, current) =>
+              current.event != previous.event && current.event?.kind == PlusStoreUpdateKind.unlocked && PaywallPage.openCount == 0 && PaywallPage.awaitingApproval,
           listener: (context, _) {
+            PaywallPage.awaitingApproval = false;
             if (context.read<StorageCubit>().state.mode != StorageMode.cloud) CloudFlow.activate(context);
           },
         ),

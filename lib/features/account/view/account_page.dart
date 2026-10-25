@@ -16,7 +16,8 @@ class AccountPage extends StatefulWidget {
   /// Abmelden bestätigen; warnt, wenn noch Einträge auf dem Gerät auf das Senden warten.
   static Future<bool> confirmSignOut(BuildContext context) {
     final l10n = context.l10n;
-    final pending = lookup<CategoriesRepository>().syncState.pending;
+    final sync = lookup<CategoriesRepository>().syncState;
+    final pending = sync.pending + sync.held;
     return AppDialog.confirm(
       context,
       title: l10n.accountSignOutTitle,
@@ -108,7 +109,8 @@ class _AccountPageState extends State<AccountPage> {
   Future<void> _delete(BuildContext context) async {
     final l10n = context.l10n;
     final cubit = context.read<AccountCubit>();
-    final pending = lookup<CategoriesRepository>().syncState.pending;
+    final sync = lookup<CategoriesRepository>().syncState;
+    final pending = sync.pending + sync.held;
     final message = pending > 0 ? '${l10n.accountDeleteBody}\n\n${l10n.accountDeletePending(pending)}' : l10n.accountDeleteBody;
     final ok = await AppDialog.confirm(context, title: l10n.accountDeleteTitle, message: message, confirmLabel: l10n.accountDelete, destructive: true);
     if (ok) await cubit.deleteAccount();
