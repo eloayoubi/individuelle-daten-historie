@@ -423,6 +423,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fieldArchive => 'Feld entfernen';
 
   @override
+  String get fieldKeepsBills =>
+      'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.';
+
+  @override
   String fieldArchiveTitle(String name) {
     return '„$name“ entfernen?';
   }

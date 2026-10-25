@@ -108,4 +108,24 @@ void main() {
       expect: () => [isA<InsightsState>().having((s) => s.insights?.comparisons.map((c) => c.category.id), 'ids', isNot(contains('c-strom')))],
     );
   });
+
+  test('Jahre mit Daten: eine Rechnung zählt ab dem Beginn ihres Zeitraums', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+    const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
+    final category = Category(
+      id: 'c',
+      name: 'Strom',
+      icon: CategoryIcon.bolt,
+      swatch: CategorySwatch.orange,
+      trackers: [
+        Tracker(
+          id: 't',
+          name: 'Zähler',
+          fields: const [meter, price],
+          entries: [Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 3000}, periodStart: DateTime.utc(2025, 10), periodEnd: DateTime.utc(2026, 9, 30))],
+        ),
+      ],
+    );
+    expect(Insights.yearsOf([category], DateTime.utc(2026, 10, 22)), [2025, 2026]);
+  });
 }

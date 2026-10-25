@@ -111,6 +111,7 @@
   "fieldChoiceRemove": "Remove {choice}",
   "fieldChoicesEmpty": "Add at least one option.",
   "fieldArchive": "Remove field",
+  "fieldKeepsBills": "Your bills need this unit price – it stays a price per unit and can't be archived.",
   "fieldArchiveTitle": "Remove “{name}”?",
   "fieldArchiveBody": "Saved values are kept, but the field no longer appears.",
   "fieldSaved": "Field saved.",

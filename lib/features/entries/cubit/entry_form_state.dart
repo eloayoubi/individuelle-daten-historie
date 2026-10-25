@@ -52,7 +52,7 @@ class EntryFormState extends Equatable {
       tracker: tracker,
       entryId: entry?.id ?? newId(),
       isNew: entry == null,
-      date: CostEngine.day(entry?.date ?? now),
+      date: CostEngine.day(entry?.date ?? (mode == EntryFormMode.contract ? _firstContractDay(tracker, now) : now)),
       decimalSeparator: args.decimalSeparator,
       mode: mode,
       note: entry?.note ?? '',
@@ -79,6 +79,19 @@ class EntryFormState extends Equatable {
     if (tracker.isBill(entry)) return EntryFormMode.bill;
     if (tracker.isPriceChange(entry)) return EntryFormMode.contract;
     return EntryFormMode.reading;
+  }
+
+  /// Der erste Vertrag gilt ab dem ersten bekannten Verbrauch, damit Grundpreis und Abschlag auch
+  /// für schon eingetragene Rechnungen und Stände zählen. Gibt es schon Preise: ab heute.
+  static DateTime _firstContractDay(Tracker tracker, DateTime now) {
+    final rates = {for (final f in tracker.rateFields) f.id};
+    if (tracker.entries.any((e) => e.values.keys.any(rates.contains))) return now;
+    var first = now;
+    for (final e in tracker.entries) {
+      final start = tracker.isBill(e) ? e.periodStart! : (tracker.isReading(e) ? e.date : null);
+      if (start != null && start.isBefore(first)) first = start;
+    }
+    return first;
   }
 
   /// Vorbelegung einer neuen Rechnung: ab dem Tag nach der letzten Rechnung, ohne Rechnung die

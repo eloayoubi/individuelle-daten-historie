@@ -764,6 +764,12 @@ abstract class AppLocalizations {
   /// **'Feld entfernen'**
   String get fieldArchive;
 
+  /// No description provided for @fieldKeepsBills.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.'**
+  String get fieldKeepsBills;
+
   /// No description provided for @fieldArchiveTitle.
   ///
   /// In de, this message translates to:

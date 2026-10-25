@@ -420,6 +420,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldArchive => 'Remove field';
 
   @override
+  String get fieldKeepsBills =>
+      'Your bills need this unit price – it stays a price per unit and can\'t be archived.';
+
+  @override
   String fieldArchiveTitle(String name) {
     return 'Remove “$name”?';
   }

@@ -274,6 +274,7 @@
   },
   "fieldChoicesEmpty": "Mindestens einen Wert hinzufügen.",
   "fieldArchive": "Feld entfernen",
+  "fieldKeepsBills": "Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.",
   "fieldArchiveTitle": "„{name}“ entfernen?",
   "@fieldArchiveTitle": {
     "placeholders": {

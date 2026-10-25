@@ -186,7 +186,9 @@ class Insights extends Equatable {
     for (final c in categories) {
       for (final t in c.trackers) {
         for (final e in t.entries) {
-          if (e.date.year < first) first = e.date.year;
+          // Eine Abrechnung oder Rechnung zählt ab dem Beginn ihres Zeitraums.
+          final start = e.hasPeriod ? e.periodStart! : e.date;
+          if (start.year < first) first = start.year;
         }
       }
     }

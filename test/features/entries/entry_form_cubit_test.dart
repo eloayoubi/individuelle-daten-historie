@@ -264,4 +264,12 @@ void main() {
       expect(entries.map((e) => e.id), isNot(contains(strom.trackers.single.entries.last.id)));
     },
   );
+
+  test('erster Vertrag gilt ab dem ersten bekannten Verbrauch, spätere ab heute', () {
+    final empty = strom.trackers.single.copyWith(entries: []);
+    final withBill = empty.copyWith(entries: [bill(DateTime.utc(2025, 10), DateTime.utc(2026, 9, 30), 3000)]);
+    expect(form(tracker: withBill, contract: true).state.date, DateTime.utc(2025, 10));
+    expect(form(tracker: empty, contract: true).state.date, DateTime.utc(2026, 10, 22));
+    expect(form(contract: true).state.date, DateTime.utc(2026, 10, 22));
+  });
 }
