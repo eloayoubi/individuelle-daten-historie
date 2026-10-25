@@ -770,6 +770,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get entryNeedsPrice => 'Enter at least one price.';
 
   @override
+  String get entryNeedsReading => 'Enter the meter reading.';
+
+  @override
   String get contractSave => 'Save prices';
 
   @override

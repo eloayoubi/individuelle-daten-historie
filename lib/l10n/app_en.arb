@@ -219,6 +219,7 @@
   "entryNoteHintContract": "Optional, e.g. price increase letter",
   "entryNeedsConsumption": "Enter the consumption from your bill.",
   "entryNeedsPrice": "Enter at least one price.",
+  "entryNeedsReading": "Enter the meter reading.",
   "contractSave": "Save prices",
   "entryNoFields": "This tracker has no fields to enter yet. Add them under “Edit”.",
   "entrySave": "Save entry",

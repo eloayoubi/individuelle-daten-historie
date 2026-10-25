@@ -433,6 +433,7 @@
   "entryNoteHintContract": "Optional, z. B. Preiserhöhung laut Schreiben",
   "entryNeedsConsumption": "Trag den Verbrauch laut Rechnung ein.",
   "entryNeedsPrice": "Trag mindestens einen Preis ein.",
+  "entryNeedsReading": "Trag den Zählerstand ein.",
   "contractSave": "Preise speichern",
   "entryNoFields": "Dieser Tracker hat noch keine Felder zum Eintragen. Lege sie unter „Bearbeiten“ an.",
   "entrySave": "Eintrag speichern",

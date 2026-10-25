@@ -776,6 +776,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get entryNeedsPrice => 'Trag mindestens einen Preis ein.';
 
   @override
+  String get entryNeedsReading => 'Trag den Zählerstand ein.';
+
+  @override
   String get contractSave => 'Preise speichern';
 
   @override

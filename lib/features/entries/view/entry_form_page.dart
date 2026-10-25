@@ -128,6 +128,7 @@ class _FormViewState extends State<_FormView> {
     return switch (s.mode) {
       EntryFormMode.bill => l10n.entryNeedsConsumption,
       EntryFormMode.contract => l10n.entryNeedsPrice,
+      EntryFormMode.reading => l10n.entryNeedsReading,
       _ => l10n.entryNeedsValue,
     };
   }

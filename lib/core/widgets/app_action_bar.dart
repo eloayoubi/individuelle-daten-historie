@@ -4,11 +4,12 @@ import '../extensions/context_extensions.dart';
 import '../theme/dimensions.dart';
 import 'app_text.dart';
 
-/// Seite mit Hauptaktion unten: [content] scrollt unter einer festen Leiste mit [action] (meist ein
+/// Seite mit Hauptaktion unten: [content] darüber, darunter eine feste Leiste mit [action] (meist ein
 /// gefüllter `AppButton`) – die Aktion ist immer in Daumenreichweite und geht nicht in der Liste unter.
 /// [hint] steht klein über dem Button (z. B. warum er noch gesperrt ist). Ohne [action] nur [content].
 ///
-/// [content] muss unten [AppActionBar.inset] Platz lassen, damit nichts unter der Leiste verschwindet.
+/// Die Leiste liegt unter dem Inhalt, nicht darüber: Bei offener Tastatur rückt sie mit nach oben,
+/// und ein Textfeld scrollt nie unter sie. Ein weicher Verlauf lässt den Inhalt zur Leiste hin auslaufen.
 class AppActionBar extends StatelessWidget {
   const AppActionBar({super.key, required this.content, this.action, this.hint});
 
@@ -16,8 +17,11 @@ class AppActionBar extends StatelessWidget {
   final Widget? action;
   final String? hint;
 
-  /// Abstand, den eine Liste unter [AppActionBar] unten frei lassen muss.
-  static double inset(BuildContext context) => Sizes.buttonHeight + Spacing.xxl * 2 + MediaQuery.paddingOf(context).bottom;
+  /// Abstand, den eine Liste unter [AppActionBar] unten frei lassen sollte (Platz für den Verlauf).
+  static double inset(BuildContext context) => Spacing.xxl;
+
+  /// Höhe des Verlaufs über der Leiste.
+  static const _fade = Spacing.xxl;
 
   @override
   Widget build(BuildContext context) {
@@ -25,34 +29,44 @@ class AppActionBar extends StatelessWidget {
     if (action == null) return content;
     final c = context.colors;
     final bottom = MediaQuery.paddingOf(context).bottom;
-    return Stack(
+    return Column(
       children: [
-        Positioned.fill(child: content),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: DecoratedBox(
-            // Weicher Übergang: Inhalt läuft unter der Leiste aus, statt hart abgeschnitten zu werden.
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [c.background.withValues(alpha: 0), c.background, c.background],
-                stops: const [0, 0.35, 1],
+        Expanded(
+          child: Stack(
+            children: [
+              Positioned.fill(child: content),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: _fade,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [c.background.withValues(alpha: 0), c.background],
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, bottom > 0 ? bottom : Spacing.l),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: Spacing.s,
-                children: [
-                  if (hint case final String text) AppText(text, style: (t) => t.footnote, color: c.textSecondary, align: TextAlign.center),
-                  action,
-                ],
-              ),
+            ],
+          ),
+        ),
+        ColoredBox(
+          color: c.background,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(Spacing.l, Spacing.xs, Spacing.l, bottom > 0 ? bottom : Spacing.l),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Spacing.s,
+              children: [
+                if (hint case final String text) AppText(text, style: (t) => t.footnote, color: c.textSecondary, align: TextAlign.center),
+                action,
+              ],
             ),
           ),
         ),

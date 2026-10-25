@@ -1412,6 +1412,12 @@ abstract class AppLocalizations {
   /// **'Trag mindestens einen Preis ein.'**
   String get entryNeedsPrice;
 
+  /// No description provided for @entryNeedsReading.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag den Zählerstand ein.'**
+  String get entryNeedsReading;
+
   /// No description provided for @contractSave.
   ///
   /// In de, this message translates to:
