@@ -44,8 +44,9 @@ class PendingDelete extends PendingWrite {
 ///   jedem Abruf, beim Zurückkehren in die App ([sync]) und alle [retryEvery], solange etwas
 ///   wartet. Ein Eintrag hat seine Id schon vom Gerät – mehrfaches Senden ändert nichts
 ///   (`save_entry` ist ein Upsert).
-/// - **Abgelehnt** ([WriteRejected]) wird verworfen und in [syncState] gezählt; bei anderen
-///   Fehlern (kein Netz) bleibt die Änderung liegen.
+/// - **Abgelehnt** ([WriteRejected]) wird verworfen und in [syncState] gezählt. **Gerade nicht
+///   erlaubt** ([WriteHeld], z. B. Abo abgelaufen) bleibt liegen, die übrigen gehen weiter raus.
+///   Bei anderen Fehlern (kein Netz) hält die Warteschlange an und versucht es später erneut.
 /// - Kategorien, Tracker und Felder ändern geht nur online (direkt an [_remote]).
 /// - Cache und Warteschlange gehören dem angemeldeten Konto; nach einem Wechsel werden sie verworfen.
 ///   Nach dem Abmelden verschwindet der Cache vom Gerät; noch nicht gesendete Einträge bleiben und
@@ -100,6 +101,10 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Future<void>? _syncing;
   Timer? _retry;
 
+  /// Laufende Abrufe beim Server und was währenddessen gesendet wurde ([_endFetch]).
+  var _fetches = 0;
+  final _sentDuringFetch = <PendingWrite>[];
+
   /// Gerade gespeicherte Einträge, deren erster Sendeversuch noch läuft. Solange zeigen alle
   /// Ansichten den Stand auf dem Gerät, statt aufs Netz zu warten.
   var _sendingNew = 0;
@@ -116,12 +121,15 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     _forgetOtherAccount();
     if (_sendingNew > 0 && _cached != null) return _overlay(_cached!);
     await sync();
+    final mark = _beginFetch();
     try {
-      _cached = await _remote.loadCategories();
+      _cached = _endFetch(mark, await _remote.loadCategories());
       _owner = _userId();
       _quietly(_persistCache());
     } catch (_) {
       if (_cached == null) rethrow;
+    } finally {
+      _fetchDone();
     }
     return _overlay(_cached!);
   }
@@ -151,14 +159,18 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     if (_sendingNew > 0) {
       if (_cached?.where((c) => c.id == id).firstOrNull case final cached?) return _overlay([cached]).single;
     }
+    final mark = _beginFetch();
     try {
-      final fresh = await _remote.loadCategory(id);
+      final loaded = await _remote.loadCategory(id);
+      final fresh = loaded == null ? null : _endFetch(mark, [loaded]).single;
       if (fresh != null && _cached != null) _cached = [for (final c in _cached!) c.id == id ? fresh : c];
       return fresh == null ? null : _overlay([fresh]).single;
     } catch (_) {
       final cached = _cached?.where((c) => c.id == id).firstOrNull;
       if (cached == null) rethrow;
       return _overlay([cached]).single;
+    } finally {
+      _fetchDone();
     }
   }
 
@@ -269,8 +281,11 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Future<void> _flush() async {
     await _restore();
     var sent = false;
-    while (_pending.isNotEmpty) {
-      final write = _pending.first;
+    // Gerade nicht erlaubt: bleibt liegen, die übrigen gehen trotzdem raus.
+    final held = Set<PendingWrite>.identity();
+    while (true) {
+      final write = _pending.where((p) => !held.contains(p)).firstOrNull;
+      if (write == null) break;
       try {
         switch (write) {
           case PendingSave(:final trackerId, :final entry):
@@ -283,6 +298,10 @@ class OfflineCategoriesRepository implements CategoriesRepository {
           _cached = _applyAll(cached, [write]);
           _quietly(_persistCache());
         }
+        if (_fetches > 0) _sentDuringFetch.add(write);
+      } on WriteHeld {
+        held.add(write);
+        continue;
       } on WriteRejected {
         _rejected++;
       } catch (_) {
@@ -294,6 +313,20 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     }
     _scheduleRetry();
     if (sent) _changes.add(null);
+  }
+
+  /// Ein Abruf beginnt: Was ab jetzt gesendet wird, fehlt womöglich in seiner Antwort.
+  int _beginFetch() {
+    _fetches++;
+    return _sentDuringFetch.length;
+  }
+
+  /// Wendet auf [fresh] an, was seit [mark] gesendet wurde, damit eine ältere Antwort den gerade
+  /// gesendeten Eintrag nicht wieder aus dem Cache wirft.
+  List<Category> _endFetch(int mark, List<Category> fresh) => _applyAll(fresh, _sentDuringFetch.sublist(mark));
+
+  void _fetchDone() {
+    if (--_fetches == 0) _sentDuringFetch.clear();
   }
 
   Future<void> _persistQueue() => _queueStore.write({'userId': _owner ?? _userId(), 'writes': [for (final p in _pending) p.toJson()]}).catchError((Object _) {});

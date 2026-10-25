@@ -93,6 +93,18 @@ class WriteRejected implements Exception {
   String toString() => 'WriteRejected: $message';
 }
 
+/// Der Server lässt eine Änderung gerade nicht zu, das kann sich aber ändern (Abo abgelaufen oder
+/// noch nicht verbucht, Rolle geändert). Die Offline-Schicht behält sie – sie ist oft die einzige
+/// Kopie – und sendet die übrigen weiter.
+class WriteHeld implements Exception {
+  const WriteHeld(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'WriteHeld: $message';
+}
+
 /// Stand der Offline-Warteschlange für Einträge.
 class SyncState extends Equatable {
   const SyncState({this.pending = 0, this.rejected = 0});

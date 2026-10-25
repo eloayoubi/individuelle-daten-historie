@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/network/supabase_api.dart';
@@ -195,16 +196,25 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
 
   /// Fehlende Schreibrechte (42501) und fehlendes Cloud-Abo (P0064) können vorübergehend sein: Das
   /// Abo ist abgelaufen oder noch nicht verbucht. Einträge in der Warteschlange sind dann oft die
-  /// einzige Kopie – sie bleiben liegen, bis das Abo wieder läuft oder alles aufs Gerät umzieht.
+  /// einzige Kopie – sie bleiben liegen ([WriteHeld]), bis das Abo wieder läuft oder alles aufs Gerät
+  /// umzieht; die übrigen gehen weiter raus.
   static const _maybeTemporary = {'42501', 'P0064'};
+
+  /// Was die Offline-Schicht aus einem Fehler beim Schreiben eines Eintrags macht: [WriteRejected]
+  /// (verwerfen), [WriteHeld] (behalten, Rest senden) oder `null` (vorübergehend, später erneut).
+  @visibleForTesting
+  static Exception? entryWriteError(PostgrestException e) {
+    final code = e.code ?? '';
+    if (_maybeTemporary.contains(code)) return WriteHeld(e.message);
+    if (_permanent.hasMatch(code)) return WriteRejected(e.message);
+    return null;
+  }
 
   static Future<void> _rejectable(Future<void> Function() write) async {
     try {
       await write();
     } on PostgrestException catch (e) {
-      final code = e.code ?? '';
-      if (_permanent.hasMatch(code) && !_maybeTemporary.contains(code)) throw WriteRejected(e.message);
-      rethrow;
+      throw entryWriteError(e) ?? e;
     }
   }
 
