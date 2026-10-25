@@ -164,6 +164,32 @@ void main() {
       expect(entry.values['f-schnitt'], inInclusiveRange(34.5, 40.5));
     });
 
+    test('summe und schnitt über verbrauch und tage', () {
+      const t = Tracker(
+        id: 't',
+        name: 'Auto',
+        fields: [
+          FieldDefinition(id: 'km', name: 'Kilometerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'km'),
+          FieldDefinition(id: 'f1', name: 'Monat', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'summe(verbrauch; 30)'),
+          FieldDefinition(id: 'f2', name: 'Abstand', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'schnitt(tage; 30)'),
+          FieldDefinition(id: 'f3', name: 'Month', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'sum(consumption; 30)'),
+        ],
+      );
+      final applied = Formulas.apply(
+        t.copyWith(
+          entries: [
+            Entry(id: 'a', date: DateTime.utc(2026, 1, 1), values: const {'km': 1000}),
+            Entry(id: 'b', date: DateTime.utc(2026, 1, 11), values: const {'km': 1500}),
+            Entry(id: 'c', date: DateTime.utc(2026, 1, 21), values: const {'km': 1800}),
+          ],
+        ),
+      );
+      final last = applied.entries.firstWhere((e) => e.id == 'c');
+      expect(last.values['f1'], 800);
+      expect(last.values['f2'], 10);
+      expect(last.values['f3'], 800);
+    });
+
     test('Vorschau rechnet mit dem neuesten passenden Eintrag', () {
       expect(Formulas.preview(Formula.parse('liter * 2'), golf), isNotNull);
       expect(Formulas.preview(Formula.parse('liter * 2'), const Tracker(id: 't', name: 'leer')), isNull);

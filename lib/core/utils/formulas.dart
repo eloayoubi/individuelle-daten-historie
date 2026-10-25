@@ -24,6 +24,10 @@ class FormulaCheck {
 /// - `tage`: Tage seit dem vorigen Eintrag (bei Zählern: seit dem vorigen Stand).
 /// - `monate`: `tage` / 30,44.
 ///
+/// `summe(name; tage)` und `schnitt(name; tage)` nehmen die Werte der Einträge in den Tagen bis zum
+/// Eintrag – bei Feldern die eingetragenen, bei `verbrauch`, `tage` und `monate` die je Eintrag
+/// gerechneten.
+///
 /// Formeln rechnen nicht mit anderen Formeln (keine Ketten, keine Kreise).
 abstract final class Formulas {
   static const consumption = 'verbrauch';
@@ -81,7 +85,7 @@ abstract final class Formulas {
     final variables = variablesByEntry(tracker);
     final sorted = tracker.records..sort((a, b) => b.date.compareTo(a.date));
     for (final e in sorted) {
-      if (formula.evaluate(variables[e.id]!, window: _window(tracker, e)) case final double v) return v;
+      if (formula.evaluate(variables[e.id]!, window: _window(tracker, e, variables)) case final double v) return v;
     }
     return null;
   }
@@ -122,7 +126,7 @@ abstract final class Formulas {
               values: {
                 ...e.values,
                 for (final MapEntry(key: field, value: formula) in parsed.entries)
-                  if (formula.evaluate(variables[e.id]!, window: _window(tracker, e)) case final double v) field.id: v,
+                  if (formula.evaluate(variables[e.id]!, window: _window(tracker, e, variables)) case final double v) field.id: v,
               },
             ),
       ],
@@ -131,7 +135,10 @@ abstract final class Formulas {
 
   /// Formel-Namen mit ihren Werten für jeden Eintrag (Eintrags-Id → Name → Wert).
   /// Ergebnis mit dem neuesten Eintrag, mit Zeiträumen (`summe`/`schnitt`).
-  static double? evaluateAt(Formula formula, Tracker tracker, Entry entry) => formula.evaluate(variablesByEntry(tracker)[entry.id] ?? const {}, window: _window(tracker, entry));
+  static double? evaluateAt(Formula formula, Tracker tracker, Entry entry) {
+    final variables = variablesByEntry(tracker);
+    return formula.evaluate(variables[entry.id] ?? const {}, window: _window(tracker, entry, variables));
+  }
 
   static Map<String, Map<String, double>> variablesByEntry(Tracker tracker) {
     final keys = Formulas.keys(tracker);
@@ -189,18 +196,21 @@ abstract final class Formulas {
     return result;
   }
 
-  /// `summe(feld; tage)` / `schnitt(feld; tage)`: Werte des Felds in den [days] Tagen bis zum Eintrag.
-  static FormulaWindow _window(Tracker tracker, Entry at) {
+  /// `summe(feld; tage)` / `schnitt(feld; tage)`: Werte des Felds in den [days] Tagen bis zum Eintrag;
+  /// bei `verbrauch`, `tage` und `monate` deren Wert je Eintrag aus [variables].
+  static FormulaWindow _window(Tracker tracker, Entry at, Map<String, Map<String, double>> variables) {
     final keys = Formulas.keys(tracker);
     final byKey = {for (final f in tracker.fields) keys[f.id]!: f};
     return (name, days, average) {
       final field = byKey[name];
-      if (field == null) return null;
+      final builtIn = builtIns.contains(name);
+      if (field == null && !builtIn) return null;
+      Object? valueOf(Entry e) => field == null ? (variables[e.id] ?? const {})[name] : e.values[field.id];
       final from = at.date.subtract(Duration(days: days.round()));
       final values = [
         for (final e in tracker.entries)
           if (e.date.isAfter(from) && !e.date.isAfter(at.date))
-            if (e.values[field.id] case final num v) v.toDouble(),
+            if (valueOf(e) case final num v) v.toDouble(),
       ];
       if (values.isEmpty) return average ? null : 0;
       final sum = values.fold(0.0, (a, b) => a + b);
