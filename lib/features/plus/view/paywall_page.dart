@@ -23,6 +23,10 @@ import '../data/plus_store.dart';
 /// Pflichtangaben nach App-Store-Regel 3.1.2: Preis und Laufzeit, Verlängerung und Kündigung,
 /// Nutzungsbedingungen, Datenschutz, Apples EULA, „Käufe wiederherstellen“.
 class PaywallPage extends StatefulWidget {
+  /// Wie viele Paywalls offen sind. Ist keine offen, übernimmt der StartGate einen Kauf, der erst
+  /// später bestätigt wird („Kaufen anfragen“, Bankfreigabe).
+  static int openCount = 0;
+
   const PaywallPage({super.key});
 
   static Route<void> route() => CupertinoPageRoute<void>(fullscreenDialog: true, builder: (_) => const PaywallPage());
@@ -35,8 +39,15 @@ class PaywallPage extends StatefulWidget {
 
 class _PaywallPageState extends State<PaywallPage> {
   @override
+  void dispose() {
+    PaywallPage.openCount--;
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
+    PaywallPage.openCount++;
     final plus = context.read<PlusCubit>();
     if (plus.state.prices.isEmpty || !plus.state.checked) plus.load();
   }

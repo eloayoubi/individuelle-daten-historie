@@ -181,16 +181,24 @@ class _StorageGroup extends StatelessWidget {
   }
 }
 
-class _Usage extends StatelessWidget {
+class _Usage extends StatefulWidget {
   const _Usage();
+
+  @override
+  State<_Usage> createState() => _UsageState();
+}
+
+/// Belegt einmal laden, nicht bei jedem Neuaufbau (sonst flackert kurz „0 B“).
+class _UsageState extends State<_Usage> {
+  late final Future<int> _usage = lookup<AttachmentsRepository>().usage();
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return FutureBuilder(
-      future: lookup<AttachmentsRepository>().usage(),
+      future: _usage,
       builder: (context, snap) => AppText(
-        context.l10n.settingsStorage(context.fileSize(snap.data ?? 0), context.fileSize(AttachmentsRepository.quotaBytes)),
+        snap.hasData ? context.l10n.settingsStorage(context.fileSize(snap.data!), context.fileSize(AttachmentsRepository.quotaBytes)) : ' ',
         style: (t) => t.footnote,
         color: c.textSecondary,
       ),

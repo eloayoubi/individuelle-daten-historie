@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/core.dart';
 import '../../categories/data/categories_repository.dart';
@@ -176,8 +177,9 @@ class _EnableReminders extends StatelessWidget {
                     leading: AppIconTile(icon: CupertinoIcons.bell_fill, color: context.colors.accent),
                     title: l10n.remindersEnable,
                     subtitle: state.denied ? l10n.settingsRemindersDenied : l10n.remindersEnableHint,
-                    chevron: false,
-                    onTap: () => context.read<RemindersCubit>().setEnabled(true),
+                    // Abgelehnt: iOS fragt nicht noch einmal – dann direkt in die Systemeinstellungen der App.
+                    chevron: state.denied,
+                    onTap: () => state.denied ? launchUrl(Uri.parse('app-settings:')) : context.read<RemindersCubit>().setEnabled(true),
                   ),
                 ],
               ),
