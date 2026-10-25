@@ -95,4 +95,20 @@ void main() {
       expect: () => [isA<TrackerState>().having((s) => s.entries.first.id, 'neu', 'neu')],
     );
   });
+
+  group('Rechnungen', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+    const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
+    final bill = Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30));
+
+    test('eine Rechnung reicht für Verbrauch und Kosten', () {
+      expect(TrackerHistory.metricsFor(Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: [bill])), [HistoryMetric.cost, HistoryMetric.consumption]);
+    });
+
+    test('Versorgungszähler: aktuelle Werte ohne Preise, Zählerstand ohne Rechnungen', () {
+      expect(TrackerHistory.currentValuesOf(tracker('c-strom'), now).where((v) => v.field.isRate), isEmpty);
+      final onlyBill = Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: [bill, Entry(id: 'p', date: DateTime.utc(2026), values: const {'ap': 0.3})]);
+      expect(TrackerHistory.currentValuesOf(onlyBill, now), isEmpty);
+    });
+  });
 }

@@ -189,4 +189,40 @@ void main() {
       expect(CostEngine(noInstalment, today: d(2026, 10, 22)).costInYear(2026), closeTo(engine.costInYear(2026), 1e-6));
     });
   });
+
+  group('Rechnungen', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+    const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
+
+    test('Rechnung: verbrauch ist der Rechnungswert, tage die Länge des Zeitraums', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [
+          Entry(id: 'p', date: DateTime.utc(2026), values: const {'ap': 0.30}),
+          Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30)),
+        ],
+      );
+      final vars = Formulas.variablesByEntry(t)['b']!;
+      expect(vars['verbrauch'], 508);
+      expect(vars['tage'], 183);
+    });
+
+    test('Stand nach Rechnung rechnet gegen den vorigen Stand', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [
+          Entry(id: 'r1', date: DateTime.utc(2026), values: const {'stand': 1000}),
+          Entry(id: 'b', date: DateTime.utc(2026, 2, 28), values: const {'stand': 50}, periodStart: DateTime.utc(2026, 2), periodEnd: DateTime.utc(2026, 2, 28)),
+          Entry(id: 'r2', date: DateTime.utc(2026, 3), values: const {'stand': 1300}),
+        ],
+      );
+      final vars = Formulas.variablesByEntry(t)['r2']!;
+      expect(vars['verbrauch'], 300);
+      expect(vars['tage'], 59);
+    });
+  });
 }

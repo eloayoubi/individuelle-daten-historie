@@ -76,11 +76,11 @@ class TrackerHistory extends Equatable {
 
   /// Welche Kennzahlen der Tracker hergibt – Kosten zuerst.
   static List<HistoryMetric> metricsFor(Tracker tracker) {
-    final meter = tracker.firstWithRole(FieldRole.meterReading);
-    final readings = meter == null ? 0 : tracker.entries.where((e) => e.values.containsKey(meter.id)).length;
+    // Verbrauch ist bekannt ab zwei Zählerständen oder einer Rechnung.
+    final usage = tracker.entries.where(tracker.isReading).length >= 2 || tracker.entries.any(tracker.isBill);
     final costs = tracker.fields.any((f) => f.role == FieldRole.recurringCost || f.role == FieldRole.oneOffCost) ||
-        (readings >= 2 && tracker.fields.any((f) => f.role == FieldRole.unitPrice));
-    return [if (costs) HistoryMetric.cost, if (readings >= 2) HistoryMetric.consumption];
+        (usage && tracker.fields.any((f) => f.role == FieldRole.unitPrice));
+    return [if (costs) HistoryMetric.cost, if (usage) HistoryMetric.consumption];
   }
 
   /// Kennzahl des laufenden Jahres bis heute – Kosten, ohne Kosten der Verbrauch; `null` ohne beides.
@@ -129,12 +129,16 @@ class TrackerHistory extends Equatable {
   /// Letzter Wert je Feld mit Verlauf bis heute (Details stehen für sich); bei Preisen und Beträgen
   /// auch eine schon eingetragene Änderung. Formel-Felder zeigen ihren letzten Wert, wenn [tracker]
   /// schon durch `Formulas.apply` lief.
+  ///
+  /// Bei Versorgungszählern fehlen Preise und Beträge (die zeigt der Vertrag), und der Zählerstand
+  /// kommt nur aus Ständen, nicht aus Rechnungen.
   static List<CurrentValue> currentValuesOf(Tracker tracker, DateTime today) {
     final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
+    final readings = [for (final e in sorted) if (!tracker.isBill(e)) e];
     return [
       for (final field in tracker.fields)
-        if (!field.isDetail)
-          if (_current(sorted, field, today) case final CurrentValue value) value,
+        if (!field.isDetail && !(tracker.isUtilityMeter && field.isRate))
+          if (_current(field.role == FieldRole.meterReading ? readings : sorted, field, today) case final CurrentValue value) value,
     ];
   }
 

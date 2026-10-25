@@ -76,4 +76,26 @@ void main() {
     expect(empty.forecast, 0);
     expect(empty.costChange, isNull);
   });
+
+  test('keine Ablese-Erinnerung, wenn der Verbrauch aus Rechnungen kommt', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+    const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
+    final category = Category(
+      id: 'c',
+      name: 'Strom',
+      icon: CategoryIcon.bolt,
+      swatch: CategorySwatch.orange,
+      trackers: [
+        Tracker(
+          id: 't',
+          name: 'Zähler',
+          fields: const [meter, price],
+          entries: [Entry(id: 'b', date: DateTime.utc(2026, 8, 23), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 2, 23), periodEnd: DateTime.utc(2026, 8, 23))],
+        ),
+      ],
+    );
+    final r = HomeOverview.build([category], today).reminders;
+    expect(r.where((x) => x.kind == ReminderKind.readMeter), isEmpty);
+    expect(HomeOverview.build([category], today).categories.single.usage, greaterThan(0));
+  });
 }
