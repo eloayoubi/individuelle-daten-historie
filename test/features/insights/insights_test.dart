@@ -65,6 +65,33 @@ void main() {
       expect(i.instalments.map((c) => c.tracker.id), containsAll(['t-strom', 't-gas']));
     });
 
+    test('Abschlags-Check ab Juli: Monate ab dem ersten Abschlag, aktueller Abschlag', () {
+      const abschlag = FieldDefinition(id: 'ab', name: 'Abschlag', kind: FieldKind.currency, role: FieldRole.instalment);
+      const grund = FieldDefinition(id: 'gp', name: 'Grundpreis', kind: FieldKind.currency, role: FieldRole.recurringCost);
+      final strom = Category(
+        id: 'c',
+        name: 'Strom',
+        icon: CategoryIcon.bolt,
+        swatch: CategorySwatch.orange,
+        trackers: [
+          Tracker(
+            id: 't',
+            name: 'Strom',
+            fields: const [abschlag, grund],
+            entries: [
+              Entry(id: 'a', date: DateTime.utc(2026, 7, 1), values: const {'ab': 100, 'gp': 90}),
+              Entry(id: 'b', date: DateTime.utc(2026, 10, 1), values: const {'ab': 120}),
+            ],
+          ),
+        ],
+      );
+      final check = Insights.build([strom], now, 2026).instalments.single;
+      expect(check.paid, closeTo(3 * 100 + 3 * 120, 1e-6));
+      expect(check.cost, closeTo(6 * 90, 1e-6));
+      expect(check.monthly, 120);
+      expect(check.suggestedMonthly, 90);
+    });
+
     test('früheres Jahr: ganze Jahre, keine Prognose', () {
       final last = Insights.build(categories, now, 2025);
       expect(last.forecast, isNull);

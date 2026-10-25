@@ -131,6 +131,12 @@ class CostEngine {
 
   bool get hasInstalment => _instalments.isNotEmpty;
 
+  /// Tag des ersten Abschlags, `null` ohne Abschlag.
+  DateTime? get instalmentSince => _instalments.isEmpty ? null : _instalments.map((s) => s.$1.first.$1).reduce((a, b) => a.isBefore(b) ? a : b);
+
+  /// Abschlag je Monat, der an [d] gilt.
+  double instalmentOn(DateTime d) => _instalments.fold(0.0, (sum, s) => sum + _valueAt(s.$1, day(d)) / s.$2);
+
   /// Verhältnis Verbrauch letzte 365 Tage zu den 365 davor, `null` ohne zwei volle Jahre.
   double? get trend => _trend;
 
