@@ -41,6 +41,7 @@ class FieldEditorCubit extends Cubit<FieldEditorState> {
   }
 
   void setRole(FieldRole role) {
+    if (state.lockedRole != null && role != state.lockedRole) return;
     if (state.kind.roles.contains(role)) emit(state.copyWith(role: role));
   }
 

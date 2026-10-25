@@ -36,6 +36,9 @@ class HomeCubit extends Cubit<HomeState> {
   /// Hinweis auf abgelehnte Einträge ausblenden.
   void acknowledgeRejected() => _categories.acknowledgeRejected();
 
+  /// Zurückgehaltene Einträge aufgeben (nach Rückfrage in der Ansicht).
+  Future<void> discardHeld() => _categories.discardHeld();
+
   @override
   Future<void> close() async {
     await _subscription.cancel();

@@ -602,6 +602,12 @@ abstract class AppLocalizations {
   /// **'Diese Kategorie gibt es nicht mehr.'**
   String get detailMissing;
 
+  /// No description provided for @trackerMissing.
+  ///
+  /// In de, this message translates to:
+  /// **'Diesen Tracker gibt es nicht mehr.'**
+  String get trackerMissing;
+
   /// No description provided for @detailTrackerAdded.
   ///
   /// In de, this message translates to:
@@ -769,6 +775,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.'**
   String get fieldKeepsBills;
+
+  /// No description provided for @fieldKeepsMeter.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Zählerstand hat schon Werte – er bleibt ein Zählerstand, sonst würden alle Stände umgedeutet.'**
+  String get fieldKeepsMeter;
+
+  /// No description provided for @trackerNoEntriesViewer.
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald jemand einen Wert einträgt, erscheint er hier.'**
+  String get trackerNoEntriesViewer;
 
   /// No description provided for @fieldArchiveTitle.
   ///
@@ -1364,6 +1382,48 @@ abstract class AppLocalizations {
   /// **'Trag mindestens einen Wert ein.'**
   String get entryNeedsValue;
 
+  /// No description provided for @wordAnd.
+  ///
+  /// In de, this message translates to:
+  /// **'und'**
+  String get wordAnd;
+
+  /// No description provided for @entryNoteHintBill.
+  ///
+  /// In de, this message translates to:
+  /// **'Optional, z. B. Rechnungsnummer'**
+  String get entryNoteHintBill;
+
+  /// No description provided for @entryNoteHintContract.
+  ///
+  /// In de, this message translates to:
+  /// **'Optional, z. B. Preiserhöhung laut Schreiben'**
+  String get entryNoteHintContract;
+
+  /// No description provided for @entryNeedsConsumption.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag den Verbrauch laut Rechnung ein.'**
+  String get entryNeedsConsumption;
+
+  /// No description provided for @entryNeedsPrice.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag mindestens einen Preis ein.'**
+  String get entryNeedsPrice;
+
+  /// No description provided for @entryNeedsReading.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag den Zählerstand ein.'**
+  String get entryNeedsReading;
+
+  /// No description provided for @contractSave.
+  ///
+  /// In de, this message translates to:
+  /// **'Preise speichern'**
+  String get contractSave;
+
   /// No description provided for @entryNoFields.
   ///
   /// In de, this message translates to:
@@ -1478,6 +1538,12 @@ abstract class AppLocalizations {
   /// **'Einträge'**
   String get trackerEntries;
 
+  /// No description provided for @trackerAllEntries.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle {count}'**
+  String trackerAllEntries(int count);
+
   /// No description provided for @trackerNoEntriesTitle.
   ///
   /// In de, this message translates to:
@@ -1495,6 +1561,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Wert eintragen'**
   String get trackerAddEntry;
+
+  /// No description provided for @trackerAddEntryFor.
+  ///
+  /// In de, this message translates to:
+  /// **'Wert eintragen für …'**
+  String get trackerAddEntryFor;
 
   /// No description provided for @trackerMeterChanged.
   ///
@@ -1525,6 +1597,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.'**
   String get homeSyncRejectedHint;
+
+  /// No description provided for @homeSyncHeld.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Eintrag wird zurückgehalten} other{{count} Einträge werden zurückgehalten}}'**
+  String homeSyncHeld(int count);
+
+  /// No description provided for @homeSyncHeldHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Schreibrechte mehr oder das Cloud-Abo der Kategorie ist beendet. Er wird erneut gesendet, sobald es wieder geht.'**
+  String get homeSyncHeldHint;
+
+  /// No description provided for @homeSyncDiscard.
+  ///
+  /// In de, this message translates to:
+  /// **'Verwerfen'**
+  String get homeSyncDiscard;
+
+  /// No description provided for @homeSyncDiscardTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{Zurückgehaltenen Eintrag verwerfen?} other{{count} zurückgehaltene Einträge verwerfen?}}'**
+  String homeSyncDiscardTitle(int count);
+
+  /// No description provided for @homeSyncDiscardBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Sie verschwinden von diesem Gerät und kommen nicht mehr in die Cloud.'**
+  String get homeSyncDiscardBody;
 
   /// No description provided for @remindersEnable.
   ///
@@ -1697,7 +1799,7 @@ abstract class AppLocalizations {
   /// No description provided for @insightsInstalmentDetail.
   ///
   /// In de, this message translates to:
-  /// **'Ø {paid} pro Monat · Kosten {year} ≈ {cost}'**
+  /// **'Abschlag {paid} pro Monat · Kosten {year} ≈ {cost}'**
   String insightsInstalmentDetail(String paid, String year, String cost);
 
   /// No description provided for @insightsCredit.
@@ -1939,6 +2041,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Abmelden'**
   String get accountSignOut;
+
+  /// No description provided for @accountSignOutPending.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet. Er geht verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.} other{Achtung: {count} Einträge sind noch nicht gesendet. Sie gehen verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.}}'**
+  String accountSignOutPending(int count);
 
   /// No description provided for @accountAnonymousTitle.
   ///
@@ -2234,6 +2342,12 @@ abstract class AppLocalizations {
   /// **'Code unbekannt, abgelaufen oder schon benutzt.'**
   String get joinInvalid;
 
+  /// No description provided for @joinOwnerNoCloud.
+  ///
+  /// In de, this message translates to:
+  /// **'Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.'**
+  String get joinOwnerNoCloud;
+
   /// No description provided for @joinBody.
   ///
   /// In de, this message translates to:
@@ -2275,6 +2389,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.'**
   String get accountDeleteBody;
+
+  /// No description provided for @accountDeletePending.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet und geht mit dem Konto verloren.} other{Achtung: {count} Einträge sind noch nicht gesendet und gehen mit dem Konto verloren.}}'**
+  String accountDeletePending(int count);
 
   /// No description provided for @accountDeleteFooter.
   ///
@@ -2513,8 +2633,8 @@ abstract class AppLocalizations {
   /// No description provided for @contractDeleteBody.
   ///
   /// In de, this message translates to:
-  /// **'{prices} verschwinden aus Vertrag, Kosten und Prognose.'**
-  String contractDeleteBody(String prices);
+  /// **'{count, plural, =1{{prices} verschwindet} other{{prices} verschwinden}} aus Vertrag, Kosten und Prognose.'**
+  String contractDeleteBody(int count, String prices);
 
   /// No description provided for @contractTitle.
   ///
@@ -2533,6 +2653,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Ohne Arbeitspreis rechnet die App noch keine Kosten.'**
   String get contractMissingPrice;
+
+  /// No description provided for @contractMissingTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Preise'**
+  String get contractMissingTitle;
+
+  /// No description provided for @contractMissingBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Trag Arbeitspreis, Grundpreis und Abschlag aus deinem Vertrag ein – dann rechnet die App deine Kosten und prüft den Abschlag.'**
+  String get contractMissingBody;
+
+  /// No description provided for @contractEnterPrices.
+  ///
+  /// In de, this message translates to:
+  /// **'Preise eintragen'**
+  String get contractEnterPrices;
 
   /// No description provided for @priceHistoryFrom.
   ///
@@ -3407,7 +3545,7 @@ abstract class AppLocalizations {
   /// No description provided for @cloudPausedBody.
   ///
   /// In de, this message translates to:
-  /// **'Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.'**
+  /// **'Dein Cloud-Abo ist beendet. Deine Daten sind sicher gespeichert – mit Abo kannst du sie wieder ansehen und ändern. Oder du holst alles kostenlos auf dieses Gerät.'**
   String get cloudPausedBody;
 
   /// No description provided for @cloudPausedRenew.

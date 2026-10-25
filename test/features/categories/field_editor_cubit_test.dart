@@ -29,7 +29,7 @@ void main() {
     });
 
     test('mit gespeicherten Werten nur Typen derselben Wertspalte', () {
-      const field = FieldDefinition(id: 'f', name: 'Stand', kind: FieldKind.number, role: FieldRole.meterReading);
+      const field = FieldDefinition(id: 'f', name: 'Füllstand', kind: FieldKind.number, role: FieldRole.snapshot);
       final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't', field: field, hasValues: true));
       expect(cubit.state.canPick(FieldKind.currency), isTrue);
       expect(cubit.state.canPick(FieldKind.text), isFalse);
@@ -173,7 +173,8 @@ void main() {
       expect(cubit.state.keepsBills, isTrue);
       expect(cubit.state.canArchive, isFalse);
       cubit.setRole(FieldRole.recurringCost);
-      expect(cubit.state.canSave, isFalse);
+      expect(cubit.state.role, FieldRole.unitPrice);
+      expect(cubit.state.canPick(FieldKind.number), isFalse);
       await cubit.archive();
       expect(cubit.state.event, isNull);
     });
@@ -184,6 +185,29 @@ void main() {
       expect(cubit.state.canArchive, isTrue);
       cubit.setRole(FieldRole.recurringCost);
       expect(cubit.state.canSave, isTrue);
+    });
+  });
+
+  group('Zählerstand mit Werten', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+
+    test('bleibt Zählerstand: kein Währungs-Typ, keine andere Rolle', () {
+      const t = Tracker(id: 't', name: 'Strom', fields: [meter]);
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't', tracker: t, field: meter, hasValues: true));
+      expect(cubit.state.keepsMeter, isTrue);
+      expect(cubit.state.canPick(FieldKind.currency), isFalse);
+      cubit
+        ..setKind(FieldKind.currency)
+        ..setRole(FieldRole.snapshot);
+      expect(cubit.state.kind, FieldKind.number);
+      expect(cubit.state.role, FieldRole.meterReading);
+    });
+
+    test('ohne Werte frei änderbar', () {
+      const t = Tracker(id: 't', name: 'Strom', fields: [meter]);
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't', tracker: t, field: meter))..setRole(FieldRole.snapshot);
+      expect(cubit.state.keepsMeter, isFalse);
+      expect(cubit.state.role, FieldRole.snapshot);
     });
   });
 }

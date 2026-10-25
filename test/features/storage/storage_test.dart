@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/utils/ids.dart';
 import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/features/auth/data/auth_repository.dart';
 import 'package:kostenkurve/features/auth/data/mock_auth_repository.dart';
@@ -58,6 +59,28 @@ class _FlakyCloud extends MockCategoriesRepository {
       failNext = false;
       throw Exception('offline');
     }
+    return super.saveEntry(trackerId, entry);
+  }
+}
+
+/// Prüft Einträge wie `save_entry`: mindestens ein Wert, nur Felder des Trackers, und eine Id, die
+/// schon in einem anderen Tracker liegt, ist abgelehnt.
+class _StrictCloud extends MockCategoriesRepository {
+  _StrictCloud() : super(seed: const []);
+
+  var failNext = false;
+
+  @override
+  Future<void> saveEntry(String trackerId, Entry entry) async {
+    if (failNext) {
+      failNext = false;
+      throw Exception('offline');
+    }
+    final trackers = [for (final c in await loadCategories()) ...c.trackers];
+    final tracker = trackers.firstWhere((t) => t.id == trackerId);
+    if (entry.values.isEmpty) throw const WriteRejected('Ein Eintrag braucht mindestens einen Wert');
+    if (entry.values.keys.any((f) => !tracker.fields.any((d) => d.id == f))) throw const WriteRejected('Feld gehört nicht zum Tracker');
+    if (trackers.any((t) => t.id != trackerId && t.entries.any((e) => e.id == entry.id))) throw const WriteRejected('Der Eintrag gehört zu einem anderen Tracker');
     return super.saveEntry(trackerId, entry);
   }
 }
@@ -162,7 +185,7 @@ void main() {
       final strom = categories.first;
       final zaehler = strom.trackers.first;
       expect(zaehler.fields.map((f) => f.name), ['Zählerstand', 'Arbeitspreis']);
-      expect(zaehler.entries.map((e) => e.id), ['e1', 'e2'], reason: 'Einträge behalten ihre Geräte-Id');
+      expect(zaehler.entries.map((e) => e.id), [derivedId(zaehler.id, 'e1'), derivedId(zaehler.id, 'e2')], reason: 'Ids aus Tracker und Geräte-Id');
       expect(zaehler.entries.first.values, {zaehler.fields[0].id: 1000, zaehler.fields[1].id: 0.32});
       expect(strom.trackers[1].includedIn, categories.last.id);
       expect(categories.last.isArchived, isTrue);
@@ -197,6 +220,77 @@ void main() {
       user = 'konto-b';
       await transfer.upload();
       expect(cloud.created, 4, reason: 'Konto b legt selbst an, statt die Ids von Konto a zu nehmen');
+    });
+
+    test('erst runter, dann wieder hoch: Einträge landen trotz alter Kopie in der Cloud', () async {
+      final cloud = _StrictCloud();
+      await _fill(cloud);
+      final local = LocalCategoriesRepository(MemoryJsonStore());
+      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore(), userId: () => 'konto-a');
+      await transfer.download();
+
+      cloud.failNext = true;
+      await expectLater(transfer.upload(), throwsA(anything));
+      await transfer.upload();
+
+      final categories = await cloud.loadCategories();
+      expect(categories, hasLength(4), reason: 'Die alte Kopie bleibt, die hochgeladene kommt dazu');
+      for (final strom in categories.where((c) => c.name == 'Strom')) {
+        expect(strom.trackers.first.entries, hasLength(2), reason: 'Wiederholen legt nichts doppelt an');
+      }
+      expect(await local.loadCategories(), isEmpty);
+    });
+
+    test('nach Abbruch lokal ergänzt: neue Tracker und Felder ziehen mit um', () async {
+      final local = LocalCategoriesRepository(MemoryJsonStore());
+      final ids = await _fill(local);
+      final cloud = _StrictCloud()..failNext = true;
+      final transfer = StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore(), userId: () => 'konto-a');
+      await expectLater(transfer.upload(), throwsA(anything));
+
+      final extra = await local.createField(ids.zaehler, const FieldDraft(name: 'Grundpreis', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€'), sort: 2);
+      await local.saveEntry(ids.zaehler, Entry(id: 'e3', date: DateTime.utc(2026, 3, 1), values: {ids.stand: 1400, extra: 12.5}));
+      final gas = await local.createTracker(ids.strom, 'Gas', sort: 2);
+      final gasStand = await local.createField(gas, _meter, sort: 0);
+      await local.saveEntry(gas, Entry(id: 'g1', date: DateTime.utc(2026, 3, 1), values: {gasStand: 300}));
+
+      await transfer.upload();
+
+      final strom = (await cloud.loadCategories()).firstWhere((c) => c.name == 'Strom');
+      final zaehler = strom.trackers.first;
+      expect(zaehler.fields.map((f) => f.name), ['Zählerstand', 'Arbeitspreis', 'Grundpreis']);
+      expect(zaehler.entries.last.values, {zaehler.fields[0].id: 1400, zaehler.fields[2].id: 12.5});
+      expect(strom.trackers.map((t) => t.name), ['Hauptzähler', 'Wasser', 'Gas']);
+      expect(strom.trackers.last.entries.single.values, {strom.trackers.last.fields.single.id: 300});
+      expect(await local.loadCategories(), isEmpty);
+    });
+
+    test('Journal zeigt auf eine Kategorie, die es in der Cloud nicht mehr gibt: neu anlegen', () async {
+      final local = LocalCategoriesRepository(MemoryJsonStore());
+      await _fill(local);
+      final journal = MemoryJsonStore();
+      final gone = _StrictCloud()..failNext = true;
+      await expectLater(StorageTransfer(local: local, remote: gone, cloud: gone, journal: journal, userId: () => 'konto-a').upload(), throwsA(anything));
+
+      final cloud = _StrictCloud();
+      await StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: journal, userId: () => 'konto-a').upload();
+      expect((await cloud.loadCategories()).map((c) => c.name), ['Strom', 'Miete']);
+      expect((await cloud.loadCategories()).first.trackers.first.entries, hasLength(2));
+    });
+
+    test('Einträge nur mit Werten archivierter Felder bleiben weg, statt den Umzug zu blockieren', () async {
+      final local = LocalCategoriesRepository(MemoryJsonStore());
+      final ids = await _fill(local);
+      final preis = (await local.loadCategory(ids.strom))!.trackers.first.fields[1].id;
+      await local.saveEntry(ids.zaehler, Entry(id: 'e3', date: DateTime.utc(2026, 3, 1), values: {preis: 0.35}));
+      await local.archiveField(preis);
+      final cloud = _StrictCloud();
+
+      await StorageTransfer(local: local, remote: cloud, cloud: cloud, journal: MemoryJsonStore(), userId: () => 'konto-a').upload();
+
+      final zaehler = (await cloud.loadCategories()).first.trackers.first;
+      expect(zaehler.entries, hasLength(2));
+      expect(await local.loadCategories(), isEmpty);
     });
 
     test('runter: Cloud-Kategorien als eigene, andere Gerätedaten bleiben', () async {

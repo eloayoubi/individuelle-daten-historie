@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../entries/view/tracker_page.dart';
 import '../cubit/category_detail_cubit.dart';
 import '../cubit/field_editor_cubit.dart';
 import 'field_editor_page.dart';
@@ -19,6 +20,7 @@ class TrackerSetupPage extends StatelessWidget {
 
   static Future<void> open(BuildContext context, {required String categoryId, required String trackerId}) => Navigator.of(context).push(
     CupertinoPageRoute<void>(
+      settings: const RouteSettings(name: TrackerPage.routeName),
       builder: (_) => TrackerSetupPage(categoryId: categoryId, trackerId: trackerId),
     ),
   );
@@ -36,7 +38,8 @@ class TrackerSetupPage extends StatelessWidget {
               switch (state.event!.kind) {
                 case CategoryDetailEventKind.trackerArchived:
                   AppToast.show(context, context.l10n.detailTrackerArchived, icon: CupertinoIcons.archivebox_fill);
-                  Navigator.of(context).pop();
+                  // Zurück hinter alle Seiten dieses Trackers (Aufbau, Verlauf …) – zur Kategorie.
+                  Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name != TrackerPage.routeName);
                 case CategoryDetailEventKind.failed:
                   AppToast.show(context, context.l10n.errorSave, icon: CupertinoIcons.exclamationmark_circle_fill);
                 case CategoryDetailEventKind.trackerAdded || CategoryDetailEventKind.archived:

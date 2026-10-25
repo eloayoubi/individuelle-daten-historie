@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/models/tracking.dart';
+import '../../../core/utils/cost_engine.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
 /// Eine geplante Benachrichtigung.
@@ -22,7 +23,8 @@ class PlannedReminder extends Equatable {
 /// Plant Erinnerungen aus den Daten – bei jeder Änderung neu, alte werden ersetzt:
 ///
 /// - **Ablesen:** 30 Tage nach dem letzten Zählerstand um 18 Uhr; ist das vorbei, beim nächsten
-///   18-Uhr-Termin (eine Erinnerung je Zähler, keine Serie).
+///   18-Uhr-Termin (eine Erinnerung je Zähler, keine Serie). Erst ab bekanntem Verbrauch, wie in
+///   der Übersicht.
 /// - **Stichtage:** 30, 7 und 1 Tag vorher um 9 Uhr, nur künftige.
 /// - Höchstens [limit] (iOS erlaubt 64 geplante), die frühesten zuerst.
 abstract final class ReminderPlanner {
@@ -38,8 +40,9 @@ abstract final class ReminderPlanner {
     for (final category in categories) {
       if (category.isArchived || !category.canEdit) continue;
       for (final tracker in category.trackers) {
-        // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung.
-        if (tracker.meter case final FieldDefinition meter when !tracker.readsFromBills) {
+        // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung. Wie die Übersicht
+        // erst, wenn der Verbrauch bekannt ist ([CostEngine.hasMeter]).
+        if (tracker.meter case final FieldDefinition meter when !tracker.readsFromBills && CostEngine.measures(tracker)) {
           final last = _latest(tracker, meter.id)?.date;
           if (last != null) {
             var at = DateTime(last.year, last.month, last.day + readAfterDays, readHour);

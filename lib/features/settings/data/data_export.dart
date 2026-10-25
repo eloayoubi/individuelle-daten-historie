@@ -8,12 +8,15 @@ import '../../categories/data/categories_repository.dart';
 
 /// Beschriftungen der CSV in der App-Sprache.
 class ExportLabels {
-  const ExportLabels({required this.header, required this.yes, required this.no, this.decimalSeparator = ','});
+  const ExportLabels({required this.header, required this.yes, required this.no, this.consumption = 'Verbrauch', this.decimalSeparator = ','});
 
   /// Kategorie, Tracker, Datum, Feld, Wert, Einheit, Notiz, Zeitraum von, Zeitraum bis.
   final List<String> header;
   final String yes;
   final String no;
+
+  /// Feldname für den Verbrauch einer Rechnung (statt „Zählerstand“).
+  final String consumption;
   final String decimalSeparator;
 }
 
@@ -38,14 +41,16 @@ abstract final class DataExport {
           for (final f in t.fields) {
             final v = e.values[f.id];
             if (v == null) continue;
+            // Rechnung: Der Wert im Zählerfeld ist der Verbrauch, in der Verbrauchseinheit.
+            final consumption = t.isBill(e) && f.role == FieldRole.meterReading;
             lines.add(
               [
                 c.name,
                 t.name,
                 _isoDay(e.date),
-                f.name,
+                consumption ? labels.consumption : f.name,
                 value(v),
-                f.kind == FieldKind.percent ? '%' : f.unit ?? '',
+                consumption ? f.usageUnit : (f.kind == FieldKind.percent ? '%' : f.unit ?? ''),
                 e.note ?? '',
                 if (e.hasPeriod) ...[_isoDay(e.periodStart!), _isoDay(e.periodEnd!)] else ...['', ''],
               ].map(cell).join(sep),
@@ -98,6 +103,7 @@ abstract final class DataExport {
                       },
                       if (e.note != null) 'note': e.note,
                       if (e.meterChange) 'meterChange': true,
+                      if (t.isBill(e)) 'bill': true,
                       if (e.hasPeriod) 'period': {'from': _isoDay(e.periodStart!), 'to': _isoDay(e.periodEnd!)},
                     },
                 ],

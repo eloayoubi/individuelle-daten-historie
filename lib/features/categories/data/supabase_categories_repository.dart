@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/network/supabase_api.dart';
+import '../../attachments/data/attachments_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import 'categories_repository.dart';
 
@@ -152,7 +154,20 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   );
 
   @override
-  Future<void> deleteEntry(String trackerId, String entryId) => _write(() => _rejectable(() => _api.table('entries').delete().eq('id', entryId)));
+  Future<void> deleteEntry(String trackerId, String entryId) => _write(
+    () => _rejectable(
+      () => deleteWithFiles(
+        files: () async => [
+          for (final row in await _api.table('attachments').select('storage_path').eq('entry_id', entryId)) row['storage_path'] as String,
+        ],
+        delete: () async => confirmDeleted(
+          await _api.table('entries').delete().eq('id', entryId).select('id'),
+          () async => await _api.table('entries').select('id').eq('id', entryId).maybeSingle() != null,
+        ),
+        remove: (paths) => _api.remove(AttachmentsRepository.bucket, paths),
+      ),
+    ),
+  );
 
   @override
   Future<String> createInvite(String categoryId, MemberRole role) => _write(
@@ -164,17 +179,26 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     try {
       return await _api.rpc<String>('accept_category_invite', params: {'p_code': code.trim()});
     } on PostgrestException catch (e) {
-      throw WriteRejected(e.message);
+      throw inviteError(e);
     }
   });
+
+  /// Eigentümer ohne Cloud-Abo (P0064): Der Code bleibt gültig, Beitreten geht erst wieder mit Abo.
+  /// Alles andere heißt: Code unbekannt, abgelaufen oder schon benutzt.
+  @visibleForTesting
+  static WriteRejected inviteError(PostgrestException e) => WriteRejected(e.code == 'P0064' ? WriteRejected.cloudRequired : e.message);
 
   @override
   Future<void> setMemberRole(String categoryId, String userId, MemberRole role) =>
       _write(() => _api.table('category_members').update({'role': role.name}).eq('category_id', categoryId).eq('user_id', userId));
 
   @override
-  Future<void> removeMember(String categoryId, String userId) =>
-      _write(() => _api.table('category_members').delete().eq('category_id', categoryId).eq('user_id', userId));
+  Future<void> removeMember(String categoryId, String userId) => _write(
+    () async => confirmDeleted(
+      await _api.table('category_members').delete().eq('category_id', categoryId).eq('user_id', userId).select('user_id'),
+      () async => await _api.table('category_members').select('user_id').eq('category_id', categoryId).eq('user_id', userId).maybeSingle() != null,
+    ),
+  );
 
   @override
   Future<void> leaveCategory(String categoryId) => removeMember(categoryId, _auth.userId ?? '');
@@ -189,23 +213,59 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   @override
   void acknowledgeRejected() {}
 
+  @override
+  bool isWaiting(String entryId) => false;
+
+  @override
+  Future<void> discardHeld() async {}
+
   /// Fehler, bei denen erneutes Senden nicht hilft: Datenfehler (22), Integrität (23), Rechte (42),
   /// eigene `raise exception` (P0). Netzwerk- und Serverfehler bleiben vorübergehend.
   static final _permanent = RegExp(r'^(22|23|42|P0)');
 
   /// Fehlende Schreibrechte (42501) und fehlendes Cloud-Abo (P0064) können vorübergehend sein: Das
   /// Abo ist abgelaufen oder noch nicht verbucht. Einträge in der Warteschlange sind dann oft die
-  /// einzige Kopie – sie bleiben liegen, bis das Abo wieder läuft oder alles aufs Gerät umzieht.
+  /// einzige Kopie – sie bleiben liegen ([WriteHeld]), bis das Abo wieder läuft oder alles aufs Gerät
+  /// umzieht; die übrigen gehen weiter raus.
   static const _maybeTemporary = {'42501', 'P0064'};
+
+  /// Was die Offline-Schicht aus einem Fehler beim Schreiben eines Eintrags macht: [WriteRejected]
+  /// (verwerfen), [WriteHeld] (behalten, Rest senden) oder `null` (vorübergehend, später erneut).
+  @visibleForTesting
+  static Exception? entryWriteError(PostgrestException e) {
+    final code = e.code ?? '';
+    if (_maybeTemporary.contains(code)) return WriteHeld(e.message);
+    if (_permanent.hasMatch(code)) return WriteRejected(e.message);
+    return null;
+  }
 
   static Future<void> _rejectable(Future<void> Function() write) async {
     try {
       await write();
     } on PostgrestException catch (e) {
-      final code = e.code ?? '';
-      if (_permanent.hasMatch(code) && !_maybeTemporary.contains(code)) throw WriteRejected(e.message);
-      rethrow;
+      throw entryWriteError(e) ?? e;
     }
+  }
+
+  /// Belege hängen am Eintrag: Ihre Zeilen verschwinden per Cascade, die Dateien im Bucket nicht –
+  /// sie blieben für alle Mitglieder lesbar. Darum vorher die Pfade lesen ([files]) und nach dem
+  /// Löschen die Dateien entfernen; scheitert nur das, gilt der Eintrag trotzdem als gelöscht.
+  @visibleForTesting
+  static Future<void> deleteWithFiles({
+    required Future<List<String>> Function() files,
+    required Future<void> Function() delete,
+    required Future<void> Function(List<String> paths) remove,
+  }) async {
+    final paths = await files();
+    await delete();
+    if (paths.isNotEmpty) await remove(paths).catchError((Object _) {});
+  }
+
+  /// RLS lässt verbotenes Löschen nicht scheitern, es trifft nur keine Zeile. Ist nichts gelöscht
+  /// und die Zeile noch da ([stillThere]), war es nicht erlaubt; ist sie schon weg, ist es erledigt.
+  @visibleForTesting
+  static Future<void> confirmDeleted(List<Object?> deleted, Future<bool> Function() stillThere) async {
+    if (deleted.isEmpty && await stillThere()) throw const WriteRejected('delete_not_allowed');
   }
 
   static String _isoDay(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

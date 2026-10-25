@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/settings/data/data_export.dart';
 
@@ -38,5 +39,30 @@ void main() {
     expect(miete['sharedWith'], [
       {'name': 'Anna', 'role': 'editor'},
     ]);
+  });
+
+  test('Rechnung: Verbrauch in der Verbrauchseinheit, im JSON als Rechnung markiert', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'm³', consumptionUnit: 'kWh', factor: 10);
+    const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice, unit: '€/kWh');
+    final gas = Category(
+      id: 'c',
+      name: 'Heizung',
+      icon: CategoryIcon.flame,
+      swatch: CategorySwatch.red,
+      trackers: [
+        Tracker(
+          id: 't',
+          name: 'Gas',
+          fields: const [meter, price],
+          entries: [Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 9000}, periodStart: DateTime.utc(2025, 10), periodEnd: DateTime.utc(2026, 9, 30))],
+        ),
+      ],
+    );
+    const labels = ExportLabels(header: header, yes: 'Ja', no: 'Nein', consumption: 'Verbrauch');
+    final line = DataExport.csv([gas], labels).split('\r\n')[1];
+    expect(line, 'Heizung;Gas;2026-09-30;Verbrauch;9000;kWh;;2025-10-01;2026-09-30');
+    final json = DataExport.json([gas], DateTime.utc(2026, 10, 22));
+    final entry = ((((json['categories']! as List).single as Map)['trackers'] as List).single as Map)['entries'] as List;
+    expect((entry.single as Map)['bill'], isTrue);
   });
 }

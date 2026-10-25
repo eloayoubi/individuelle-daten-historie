@@ -37,7 +37,8 @@ class AppHeader extends StatelessWidget {
                   children: [
                     if (overline != null)
                       AppText(overline!.toUpperCase(), style: (t) => t.footnoteEmphasized, color: context.colors.textSecondary, maxLines: 1),
-                    AppText(title, style: (t) => t.largeTitle, maxLines: 1),
+                    // Lange Namen brechen um statt abgeschnitten zu werden.
+                    AppText(title, style: (t) => t.largeTitle, maxLines: 2),
                   ],
                 ),
               ),

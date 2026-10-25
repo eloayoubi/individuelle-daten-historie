@@ -48,6 +48,17 @@ void main() {
       expect(i.consumption.map((c) => c.tracker.id), contains('t-wasser'));
     });
 
+    test('Kosten, die in einer fehlenden oder archivierten Kategorie stecken sollen, zählen hier', () {
+      final miete = categories.firstWhere((c) => c.id == 'c-miete');
+      final archived = Category(id: miete.id, name: miete.name, icon: miete.icon, swatch: miete.swatch, trackers: miete.trackers, archivedAt: now);
+      final others = [for (final c in categories) if (c.id != 'c-miete') c];
+      for (final list in [others, [...others, archived]]) {
+        final insights = Insights.build(list, now, 2026);
+        expect(insights.comparisons.map((c) => c.category.id), contains('c-wasser'));
+        expect(insights.included.where((n) => n.tracker.id == 't-wasser'), isEmpty);
+      }
+    });
+
     test('Prognose mit Spanne und Aufteilung, Trend der Zähler', () {
       expect(i.forecast, closeTo(i.forecastParts.total, 1e-6));
       expect(i.forecastRange, greaterThan(0));
@@ -63,6 +74,33 @@ void main() {
       expect(strom.balance, closeTo(strom.paid - strom.cost, 1e-9));
       expect(strom.suggestedMonthly, (strom.cost / 12).ceilToDouble());
       expect(i.instalments.map((c) => c.tracker.id), containsAll(['t-strom', 't-gas']));
+    });
+
+    test('Abschlags-Check ab Juli: Monate ab dem ersten Abschlag, aktueller Abschlag', () {
+      const abschlag = FieldDefinition(id: 'ab', name: 'Abschlag', kind: FieldKind.currency, role: FieldRole.instalment);
+      const grund = FieldDefinition(id: 'gp', name: 'Grundpreis', kind: FieldKind.currency, role: FieldRole.recurringCost);
+      final strom = Category(
+        id: 'c',
+        name: 'Strom',
+        icon: CategoryIcon.bolt,
+        swatch: CategorySwatch.orange,
+        trackers: [
+          Tracker(
+            id: 't',
+            name: 'Strom',
+            fields: const [abschlag, grund],
+            entries: [
+              Entry(id: 'a', date: DateTime.utc(2026, 7, 1), values: const {'ab': 100, 'gp': 90}),
+              Entry(id: 'b', date: DateTime.utc(2026, 10, 1), values: const {'ab': 120}),
+            ],
+          ),
+        ],
+      );
+      final check = Insights.build([strom], now, 2026).instalments.single;
+      expect(check.paid, closeTo(3 * 100 + 3 * 120, 1e-6));
+      expect(check.cost, closeTo(6 * 90, 1e-6));
+      expect(check.monthly, 120);
+      expect(check.suggestedMonthly, 90);
     });
 
     test('früheres Jahr: ganze Jahre, keine Prognose', () {

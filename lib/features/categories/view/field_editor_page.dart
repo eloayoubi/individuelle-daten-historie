@@ -295,10 +295,10 @@ class _EditorViewState extends State<_EditorView> {
                 padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, 0),
                 child: AppButton(label: l10n.actionSave, onPressed: s.canSave ? cubit.save : null),
               ),
-              if (s.keepsBills)
+              if (s.keepsBills || s.keepsMeter)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, 0),
-                  child: AppText(l10n.fieldKeepsBills, style: (t) => t.footnote, color: c.textSecondary, align: TextAlign.center),
+                  child: AppText(s.keepsBills ? l10n.fieldKeepsBills : l10n.fieldKeepsMeter, style: (t) => t.footnote, color: c.textSecondary, align: TextAlign.center),
                 ),
               if (s.canArchive)
                 Padding(

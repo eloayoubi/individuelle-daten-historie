@@ -22,6 +22,7 @@ class TrackerState extends Equatable {
     this.currentValues = const [],
     this.contract = const [],
     this.missingPrice = false,
+    this.today,
     this.includedInName,
     this.event,
   });
@@ -41,6 +42,9 @@ class TrackerState extends Equatable {
 
   /// Verbrauch bekannt, aber noch kein Arbeitspreis – ohne ihn gibt es keine Kosten.
   final bool missingPrice;
+
+  /// Zeitpunkt des Ladens (aus der Uhr des Cubits) – für „geplant“ und Ähnliches.
+  final DateTime? today;
 
   /// Kategorie, in deren Kosten dieser Tracker steckt.
   final String? includedInName;
@@ -70,10 +74,11 @@ class TrackerState extends Equatable {
     currentValues: currentValues,
     contract: contract,
     missingPrice: missingPrice,
+    today: today,
     includedInName: includedInName,
     event: event,
   );
 
   @override
-  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues, contract, missingPrice, includedInName, event];
+  List<Object?> get props => [status, category, tracker, metrics, metric, history, currentValues, contract, missingPrice, today, includedInName, event];
 }

@@ -105,6 +105,30 @@ void main() {
       expect(vars['e-golf-p1']!.containsKey('tanken'), isFalse);
     });
 
+    test('Momentwerte und Zählerstände gelten nicht weiter, Preise schon', () {
+      const t = Tracker(
+        id: 't',
+        name: 'Heizöl',
+        fields: [
+          FieldDefinition(id: 'stand', name: 'Stand', kind: FieldKind.number, role: FieldRole.meterReading),
+          FieldDefinition(id: 'liter', name: 'Liter', kind: FieldKind.number, role: FieldRole.snapshot),
+          FieldDefinition(id: 'lp', name: 'Literpreis', kind: FieldKind.currency, role: FieldRole.unitPrice),
+          FieldDefinition(id: 'kosten', name: 'Kosten', kind: FieldKind.formula, role: FieldRole.oneOffCost, formula: 'liter * literpreis'),
+        ],
+      );
+      final tracker = t.copyWith(
+        entries: [
+          Entry(id: 'e1', date: DateTime.utc(2026, 3, 1), values: const {'stand': 100, 'liter': 40, 'lp': 1.8}),
+          Entry(id: 'e2', date: DateTime.utc(2026, 3, 10), values: const {'lp': 1.9}),
+        ],
+      );
+      final vars = Formulas.variablesByEntry(tracker)['e2']!;
+      expect(vars['literpreis'], 1.9);
+      expect(vars.containsKey('liter'), isFalse);
+      expect(vars.containsKey('stand'), isFalse);
+      expect(CostEngine(tracker, today: DateTime.utc(2026, 6, 1)).cost(DateTime.utc(2026, 3, 1), DateTime.utc(2026, 4, 1)), closeTo(72, 1e-9));
+    });
+
     test('hängt Formel-Werte an die Einträge (l/100 km)', () {
       final applied = Formulas.apply(golf);
       final entry = applied.entries.firstWhere((e) => e.id == 'e-golf-1');
@@ -138,6 +162,32 @@ void main() {
       final own = entry.values['f-golf-tanken']! as num;
       expect(entry.values['f-monat'], closeTo(previous + own, 1e-9));
       expect(entry.values['f-schnitt'], inInclusiveRange(34.5, 40.5));
+    });
+
+    test('summe und schnitt über verbrauch und tage', () {
+      const t = Tracker(
+        id: 't',
+        name: 'Auto',
+        fields: [
+          FieldDefinition(id: 'km', name: 'Kilometerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'km'),
+          FieldDefinition(id: 'f1', name: 'Monat', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'summe(verbrauch; 30)'),
+          FieldDefinition(id: 'f2', name: 'Abstand', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'schnitt(tage; 30)'),
+          FieldDefinition(id: 'f3', name: 'Month', kind: FieldKind.formula, role: FieldRole.snapshot, formula: 'sum(consumption; 30)'),
+        ],
+      );
+      final applied = Formulas.apply(
+        t.copyWith(
+          entries: [
+            Entry(id: 'a', date: DateTime.utc(2026, 1, 1), values: const {'km': 1000}),
+            Entry(id: 'b', date: DateTime.utc(2026, 1, 11), values: const {'km': 1500}),
+            Entry(id: 'c', date: DateTime.utc(2026, 1, 21), values: const {'km': 1800}),
+          ],
+        ),
+      );
+      final last = applied.entries.firstWhere((e) => e.id == 'c');
+      expect(last.values['f1'], 800);
+      expect(last.values['f2'], 10);
+      expect(last.values['f3'], 800);
     });
 
     test('Vorschau rechnet mit dem neuesten passenden Eintrag', () {
@@ -207,6 +257,18 @@ void main() {
       final vars = Formulas.variablesByEntry(t)['b']!;
       expect(vars['verbrauch'], 508);
       expect(vars['tage'], 183);
+    });
+
+    test('Rechnung ohne Zahl im Zählerfeld: kein verbrauch, kein Absturz', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [Entry(id: 'b', date: DateTime.utc(2026, 2, 28), values: const {'stand': 'kaputt'}, periodStart: DateTime.utc(2026, 2), periodEnd: DateTime.utc(2026, 2, 28))],
+      );
+      final vars = Formulas.variablesByEntry(t)['b']!;
+      expect(vars.containsKey('verbrauch'), isFalse);
+      expect(vars['tage'], 28);
     });
 
     test('Stand nach Rechnung rechnet gegen den vorigen Stand', () {

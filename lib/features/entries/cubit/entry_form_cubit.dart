@@ -16,7 +16,7 @@ class EntryFormArgs {
   final Tracker tracker;
   final Entry? entry;
 
-  /// Neue Preisänderung im Vertrag eines Versorgungszählers statt Rechnung oder Zählerstand.
+  /// Vertragsmodus eines Versorgungszählers: neue Preisänderung, bei [entry] dessen Preise bearbeiten.
   final bool contract;
 
   /// Aus der App-Sprache (`context.decimalSeparator`), für Eingabe und Vorbelegung.
@@ -37,11 +37,25 @@ class EntryFormCubit extends Cubit<EntryFormState> {
 
   /// Rechnung ↔ Zählerstand (nur bei einem neuen Eintrag). Die Rechnung bekommt ihren Zeitraum
   /// vorbelegt, der Zählerstand hat keinen.
+  ///
+  /// Der Zählerwert wird geleert – als Verbrauch und als Stand bedeutet dieselbe Zahl etwas anderes.
+  /// Ein selbst gewählter Zeitraum kommt beim Zurückwechseln wieder.
   void setMode(EntryFormMode mode) {
     if (!state.canSwitchMode || mode == state.mode || (mode != EntryFormMode.bill && mode != EntryFormMode.reading)) return;
-    final period = mode == EntryFormMode.bill ? EntryFormState.billPeriod(state.tracker, _now()) : null;
-    emit(state.copyWith(mode: mode, period: (start: period?.start, end: period?.end)));
+    if (state.isBill && state.hasPeriod) _billPeriod = (start: state.periodStart!, end: state.periodEnd!);
+    final period = mode == EntryFormMode.bill ? _billPeriod ?? EntryFormState.billPeriod(state.tracker, _now()) : null;
+    final meter = state.tracker.meter;
+    emit(
+      state.copyWith(
+        mode: mode,
+        period: (start: period?.start, end: period?.end),
+        inputs: {...state.inputs}..remove(meter?.id),
+      ),
+    );
   }
+
+  /// Zuletzt gewählter Zeitraum der Rechnung, solange man zwischen Rechnung und Stand wechselt.
+  ({DateTime start, DateTime end})? _billPeriod;
 
   void setText(String fieldId, String text) => _set(fieldId, text);
 
@@ -73,7 +87,8 @@ class EntryFormCubit extends Cubit<EntryFormState> {
     try {
       await _repository.saveEntry(args.tracker.id, state.toEntry());
       // Offline landet der Eintrag erst in der Warteschlange – das sagen wir dazu.
-      final kind = _repository.syncState.pending > 0 ? EntryFormEventKind.savedOffline : EntryFormEventKind.saved;
+      // Nur dieser Eintrag zählt: Wartet ein anderer noch, ist dieser trotzdem schon angekommen.
+      final kind = _repository.isWaiting(state.entryId) ? EntryFormEventKind.savedOffline : EntryFormEventKind.saved;
       if (!isClosed) emit(state.copyWith(saving: false, event: EntryFormEvent(kind)));
     } catch (_) {
       if (!isClosed) emit(state.copyWith(saving: false, event: EntryFormEvent(EntryFormEventKind.failed)));
@@ -84,7 +99,13 @@ class EntryFormCubit extends Cubit<EntryFormState> {
     if (state.isNew) return;
     emit(state.copyWith(saving: true));
     try {
-      await _repository.deleteEntry(args.tracker.id, state.entryId);
+      // Vertragsmodus bei einem Eintrag, der noch mehr trägt (Stand, Details): nur die Preise entfernen.
+      final rest = {...state.keptDetails, ...state.keptHidden};
+      if (state.mode == EntryFormMode.contract && rest.isNotEmpty) {
+        await _repository.saveEntry(args.tracker.id, state.toEntry().copyWith(values: rest));
+      } else {
+        await _repository.deleteEntry(args.tracker.id, state.entryId);
+      }
       if (!isClosed) emit(state.copyWith(saving: false, event: EntryFormEvent(EntryFormEventKind.deleted)));
     } catch (_) {
       if (!isClosed) emit(state.copyWith(saving: false, event: EntryFormEvent(EntryFormEventKind.failed)));

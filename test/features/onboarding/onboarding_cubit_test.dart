@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/core/utils/json_store.dart';
+import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/category_templates.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/onboarding/cubit/onboarding_cubit.dart';
@@ -59,4 +60,32 @@ void main() {
     expect(cubit.state.show, isFalse);
     await cubit.close();
   });
+
+  test('nach einem Fehler legt Wiederholen nur noch die fehlenden Vorlagen an', () async {
+    final repo = _FailOnce(failAt: 2);
+    final cubit = OnboardingCubit(repo, MemoryJsonStore());
+    await cubit.load();
+    await cubit.create(templates);
+    expect(cubit.state.step, isNot(OnboardingStep.reminders));
+    await cubit.create(templates);
+    expect(cubit.state.step, OnboardingStep.reminders);
+    final keys = [for (final c in await repo.loadCategories()) c.templateKey];
+    expect(keys, ['strom', 'heizung', 'wasser']);
+    await cubit.close();
+  });
+}
+
+/// Scheitert genau einmal beim [failAt]-ten Anlegen (wie ein Netzfehler mitten im Onboarding).
+class _FailOnce extends MockCategoriesRepository {
+  _FailOnce({required this.failAt}) : super(seed: const []);
+
+  final int failAt;
+  var _calls = 0;
+
+  @override
+  Future<String> createCategory(CategoryDraft draft) {
+    _calls++;
+    if (_calls == failAt) throw StateError('offline');
+    return super.createCategory(draft);
+  }
 }

@@ -76,70 +76,69 @@ class _SetupViewState extends State<_SetupView> {
           listener: _onEvent,
           builder: (context, state) {
             final template = state.template;
-            return ListView(
-              padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + Spacing.xxl),
-              children: [
-                AppHeader(title: template?.name ?? l10n.newCategoryCustom, onBack: () => Navigator.of(context).pop()),
-                Padding(
-                  padding: Spacing.screen,
-                  child: Row(
-                    spacing: Spacing.m,
-                    children: [
-                      AppIconTile(icon: state.icon.data, color: c.swatch(state.swatch), size: 52),
-                      Expanded(
-                        child: AppTextField(
-                          controller: _name,
-                          hint: l10n.setupNameHint,
-                          maxLength: CategorySetupState.maxName,
-                          textInputAction: TextInputAction.done,
-                          onChanged: cubit.setName,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SectionHeader(title: l10n.setupSymbol),
-                Padding(
-                  padding: Spacing.screen,
-                  child: AppCard(child: IconPicker(selected: state.icon, swatch: state.swatch, onSelect: cubit.setIcon)),
-                ),
-                SectionHeader(title: l10n.setupColor),
-                Padding(
-                  padding: Spacing.screen,
-                  child: AppCard(child: SwatchPicker(selected: state.swatch, onSelect: cubit.setSwatch)),
-                ),
-                if (template == null)
+            return AppActionBar(
+              action: AppButton(label: l10n.setupCreate, icon: CupertinoIcons.checkmark, onPressed: state.canCreate ? cubit.create : null),
+              content: ListView(
+                padding: EdgeInsets.only(bottom: AppActionBar.inset(context)),
+                children: [
+                  AppHeader(title: template?.name ?? l10n.newCategoryCustom, onBack: () => Navigator.of(context).pop()),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.l, Spacing.xl, 0),
-                    child: AppText(l10n.setupCustomHint, style: (t) => t.footnote, color: c.textSecondary),
-                  )
-                else ...[
-                  SectionHeader(title: l10n.setupFields),
-                  for (final (t, tracker) in template.trackers.indexed) ...[
-                    if (template.trackers.length > 1)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, Spacing.xs),
-                        child: AppText(tracker.name.toUpperCase(), style: (t) => t.footnoteEmphasized, color: c.textSecondary),
-                      ),
-                    AppListGroup(
-                      footer: t == template.trackers.length - 1 ? l10n.setupFieldsHint : null,
+                    padding: Spacing.screen,
+                    child: Row(
+                      spacing: Spacing.m,
                       children: [
-                        for (final (f, field) in tracker.fields.indexed)
-                          FieldRow(
-                            field: field,
-                            swatch: state.swatch,
-                            trailing: AppSwitch(value: state.isIncluded(t, f), semanticLabel: field.name, onChanged: (_) => cubit.toggleField(t, f)),
+                        AppIconTile(icon: state.icon.data, color: c.swatch(state.swatch), size: 52),
+                        Expanded(
+                          child: AppTextField(
+                            controller: _name,
+                            hint: l10n.setupNameHint,
+                            maxLength: CategorySetupState.maxName,
+                            textInputAction: TextInputAction.done,
+                            onChanged: cubit.setName,
                           ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: Spacing.s),
+                  ),
+                  SectionHeader(title: l10n.setupSymbol),
+                  Padding(
+                    padding: Spacing.screen,
+                    child: AppCard(child: IconPicker(selected: state.icon, swatch: state.swatch, onSelect: cubit.setIcon)),
+                  ),
+                  SectionHeader(title: l10n.setupColor),
+                  Padding(
+                    padding: Spacing.screen,
+                    child: AppCard(child: SwatchPicker(selected: state.swatch, onSelect: cubit.setSwatch)),
+                  ),
+                  if (template == null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.l, Spacing.xl, 0),
+                      child: AppText(l10n.setupCustomHint, style: (t) => t.footnote, color: c.textSecondary),
+                    )
+                  else ...[
+                    SectionHeader(title: l10n.setupFields),
+                    for (final (t, tracker) in template.trackers.indexed) ...[
+                      if (template.trackers.length > 1)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, Spacing.xs),
+                          child: AppText(tracker.name.toUpperCase(), style: (t) => t.footnoteEmphasized, color: c.textSecondary),
+                        ),
+                      AppListGroup(
+                        footer: t == template.trackers.length - 1 ? l10n.setupFieldsHint : null,
+                        children: [
+                          for (final (f, field) in tracker.fields.indexed)
+                            FieldRow(
+                              field: field,
+                              swatch: state.swatch,
+                              trailing: AppSwitch(value: state.isIncluded(t, f), semanticLabel: field.name, onChanged: (_) => cubit.toggleField(t, f)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: Spacing.s),
+                    ],
                   ],
                 ],
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, 0),
-                  child: AppButton(label: l10n.setupCreate, onPressed: state.canCreate ? cubit.create : null),
-                ),
-              ],
+              ),
             );
           },
         ),

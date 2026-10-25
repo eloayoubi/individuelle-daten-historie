@@ -14,6 +14,12 @@ class _Remote extends MockCategoriesRepository {
   var saves = 0;
   Completer<void>? gate;
 
+  /// Tracker, in die der Server gerade nicht schreiben lässt (Abo abgelaufen, nur noch Leserechte).
+  final held = <String>{};
+
+  /// Hält den nächsten Abruf an, nachdem er den Stand gelesen hat (Antwort unterwegs).
+  Completer<void>? fetchGate;
+
   Future<void> _net() async {
     if (!online) throw Exception('offline');
   }
@@ -21,7 +27,11 @@ class _Remote extends MockCategoriesRepository {
   @override
   Future<List<Category>> loadCategories() async {
     await _net();
-    return super.loadCategories();
+    final snapshot = await super.loadCategories();
+    final wait = fetchGate;
+    fetchGate = null;
+    await wait?.future;
+    return snapshot;
   }
 
   @override
@@ -34,7 +44,8 @@ class _Remote extends MockCategoriesRepository {
   Future<void> saveEntry(String trackerId, Entry entry) async {
     await _net();
     await gate?.future;
-    if (reject) throw const WriteRejected('42501');
+    if (reject) throw const WriteRejected('22P02');
+    if (held.contains(trackerId)) throw const WriteHeld('42501');
     saves++;
     return super.saveEntry(trackerId, entry);
   }
@@ -190,6 +201,51 @@ void main() {
     expect(repo.syncState, const SyncState());
     await pumpEventQueue();
     expect(changes, isNotEmpty);
+  });
+
+  test('gerade nicht erlaubt: bleibt in der Warteschlange, die übrigen Einträge gehen trotzdem raus', () async {
+    await repo.loadCategories();
+    remote.held.add('t-strom');
+    await repo.saveEntry('t-strom', reading);
+    final gas = Entry(id: 'neu-2', date: DateTime.utc(2026, 10, 20), values: const {'f-gas-stand': 900});
+    await repo.saveEntry('t-gas', gas);
+    await repo.sync();
+    expect(remote.saves, 1, reason: 'Der Gas-Eintrag wartet nicht auf den abgelehnten Strom-Eintrag');
+    expect(repo.syncState, const SyncState(held: 1), reason: 'Zurückgehalten ist nicht „wartet auf Verbindung“');
+    expect(repo.isWaiting('neu-1'), isTrue);
+    expect(repo.isWaiting('neu-2'), isFalse);
+    expect((await queue.read())! as Map, containsPair('writes', hasLength(1)));
+
+    remote.held.clear();
+    await repo.sync();
+    expect(repo.syncState, const SyncState());
+    expect(remote.saves, 2);
+  });
+
+  test('zurückgehaltene Einträge lassen sich verwerfen', () async {
+    await repo.loadCategories();
+    remote.held.add('t-strom');
+    await repo.saveEntry('t-strom', reading);
+    expect(repo.syncState, const SyncState(held: 1));
+    await repo.discardHeld();
+    expect(repo.syncState, const SyncState());
+    expect(repo.isWaiting('neu-1'), isFalse);
+    expect((await queue.read())! as Map, containsPair('writes', isEmpty));
+    expect((await strom(repo)).entries.map((e) => e.id), isNot(contains('neu-1')));
+  });
+
+  test('ein Abruf, der vor dem Senden begann, wirft den gesendeten Eintrag nicht wieder aus dem Cache', () async {
+    await repo.loadCategories();
+    final answer = remote.fetchGate = Completer<void>();
+    final loading = repo.loadCategories();
+    await pumpEventQueue();
+    await repo.saveEntry('t-strom', reading);
+    expect(repo.syncState, const SyncState());
+    answer.complete();
+    final loaded = await loading;
+    expect(loaded.firstWhere((c) => c.id == 'c-strom').trackers.single.entries.last, reading);
+    remote.online = false;
+    expect((await strom(repo)).entries.last, reading);
   });
 
   test('Cache und Warteschlange eines anderen Kontos gelten nicht', () async {

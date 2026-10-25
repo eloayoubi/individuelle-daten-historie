@@ -12,7 +12,7 @@ class MemoryCategoriesRepository implements CategoriesRepository {
   MemoryCategoriesRepository({List<Category> seed = const [], String Function(String kind)? ids}) : items = [...seed], _ids = ids ?? _uuid;
 
   /// Fehler-Code für alles, was nur in der Cloud geht (Teilen, Einladungen).
-  static const cloudRequired = 'cloud_required';
+  static const cloudRequired = WriteRejected.cloudRequired;
 
   /// Alle Kategorien in meiner Reihenfolge; Unterklassen lesen und ersetzen sie.
   @protected
@@ -188,6 +188,12 @@ class MemoryCategoriesRepository implements CategoriesRepository {
 
   @override
   void acknowledgeRejected() {}
+
+  @override
+  bool isWaiting(String entryId) => false;
+
+  @override
+  Future<void> discardHeld() async {}
 
   @protected
   void updateCategoryWith(String id, Category Function(Category) update) {

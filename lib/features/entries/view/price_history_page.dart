@@ -6,18 +6,35 @@ import '../../../core/core.dart';
 import '../../../core/utils/cost_engine.dart';
 import '../cubit/tracker_cubit.dart';
 import 'entry_form_page.dart';
+import 'tracker_page.dart';
 
 /// Verlauf eines Preises im Vertrag (Arbeitspreis, Grundpreis, Abschlag): alle Werte mit „ab …“,
-/// neueste zuerst, künftige als geplant. Antippen ändert die Preisänderung, Plus trägt eine neue ein.
-/// Liest den Tracker aus dem [TrackerCubit] der Zählerseite und aktualisiert sich mit ihm.
+/// neueste zuerst, künftige als geplant. Antippen ändert die Preisänderung; unten „Preise ändern“.
+/// Lädt den Tracker selbst und aktualisiert sich bei jeder Änderung.
 class PriceHistoryPage extends StatelessWidget {
-  const PriceHistoryPage({super.key, required this.fieldId});
+  const PriceHistoryPage({super.key, required this.args, required this.fieldId});
 
+  final TrackerArgs args;
   final String fieldId;
 
-  static Future<void> open(BuildContext context, {required TrackerCubit cubit, required String fieldId}) => Navigator.of(context).push(
-    CupertinoPageRoute<void>(builder: (_) => BlocProvider.value(value: cubit, child: PriceHistoryPage(fieldId: fieldId))),
-  );
+  static Future<void> open(BuildContext context, {required String categoryId, required String trackerId, required String fieldId}) =>
+      Navigator.of(context).push(
+        CupertinoPageRoute<void>(
+          settings: const RouteSettings(name: TrackerPage.routeName),
+          builder: (_) => PriceHistoryPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId), fieldId: fieldId),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(create: (_) => lookup<TrackerCubit>(param1: args)..load(), child: _PriceHistoryView(fieldId: fieldId));
+  }
+}
+
+class _PriceHistoryView extends StatelessWidget {
+  const _PriceHistoryView({required this.fieldId});
+
+  final String fieldId;
 
   @override
   Widget build(BuildContext context) {
@@ -31,55 +48,52 @@ class PriceHistoryPage extends StatelessWidget {
             final category = state.category;
             final tracker = state.tracker;
             final field = tracker?.fields.where((f) => f.id == fieldId).firstOrNull;
+            if (state.status == TrackerStatus.loading) return const Center(child: CupertinoActivityIndicator());
             if (category == null || tracker == null || field == null) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AppHeader(title: '', onBack: () => Navigator.of(context).pop()),
                   Expanded(
-                    child: Center(child: AppText(l10n.detailMissing, style: (t) => t.body, color: c.textSecondary)),
+                    child: Center(child: AppText(l10n.trackerMissing, style: (t) => t.body, color: c.textSecondary)),
                   ),
                 ],
               );
             }
-            final today = CostEngine.day(DateTime.now());
+            final today = CostEngine.day(state.today ?? DateTime.now());
             final history = state.priceHistory(field);
-            return ListView(
-              padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + Spacing.xxl),
-              children: [
-                AppHeader(
-                  title: field.name,
-                  overline: tracker.name,
-                  onBack: () => Navigator.of(context).pop(),
-                  actions: [
-                    if (category.canEdit)
-                      AppIconButton(
-                        icon: CupertinoIcons.plus,
-                        semanticLabel: l10n.contractChange,
-                        filled: true,
-                        onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true),
-                      ),
-                  ],
-                ),
-                if (history.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(Spacing.xxl, Spacing.l, Spacing.xxl, 0),
-                    child: AppText(l10n.priceHistoryEmpty, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
-                  )
-                else
-                  AppListGroup(
-                    dividerIndent: Spacing.l,
-                    children: [
-                      for (final e in history)
-                        AppListRow(
-                          title: l10n.priceHistoryFrom(context.shortDate(e.date)),
-                          subtitle: e.date.isAfter(today) ? l10n.priceHistoryPlanned : null,
-                          trailing: AppText(context.fieldValue(field, e.values[field.id]!), style: (t) => t.body, color: c.textSecondary),
-                          onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e) : null,
-                        ),
-                    ],
-                  ),
-              ],
+            return AppActionBar(
+              action: category.canEdit
+                  ? AppButton(
+                      label: l10n.contractChange,
+                      icon: CupertinoIcons.tag,
+                      onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true),
+                    )
+                  : null,
+              content: ListView(
+                padding: EdgeInsets.only(bottom: AppActionBar.inset(context)),
+                children: [
+                  AppHeader(title: field.name, overline: tracker.name, onBack: () => Navigator.of(context).pop()),
+                  if (history.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(Spacing.xxl, Spacing.l, Spacing.xxl, 0),
+                      child: AppText(l10n.priceHistoryEmpty, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
+                    )
+                  else
+                    AppListGroup(
+                      dividerIndent: Spacing.l,
+                      children: [
+                        for (final e in history)
+                          AppListRow(
+                            title: l10n.priceHistoryFrom(context.shortDate(e.date)),
+                            subtitle: e.date.isAfter(today) ? l10n.priceHistoryPlanned : null,
+                            trailing: AppText(context.fieldValue(field, e.values[field.id]!), style: (t) => t.numberM),
+                            onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e, contract: true) : null,
+                          ),
+                      ],
+                    ),
+                ],
+              ),
             );
           },
         ),

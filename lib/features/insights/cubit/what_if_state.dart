@@ -16,11 +16,13 @@ class WhatIfState extends Equatable {
   const WhatIfState({this.options = const [], this.selected, this.inputs = const {}, this.result});
 
   /// Tracker mit Arbeitspreis oder wiederkehrenden Kosten, deren Kosten hier zählen.
+  /// Steckt ein Tracker in einer Kategorie, die es hier nicht (mehr) gibt, zählen seine Kosten selbst.
   factory WhatIfState.initial(WhatIfArgs args) {
+    final visible = {for (final c in args.categories) if (!c.isArchived) c.id};
     final options = [
       for (final c in args.categories)
         for (final t in c.trackers)
-          if (t.includedIn == null && WhatIf.priceFields(t).isNotEmpty) WhatIfOption(category: c, tracker: t, fields: WhatIf.priceFields(t)),
+          if ((t.includedIn == null || t.includedIn == c.id || !visible.contains(t.includedIn)) && WhatIf.priceFields(t).isNotEmpty) WhatIfOption(category: c, tracker: t, fields: WhatIf.priceFields(t)),
     ];
     final first = options.firstOrNull;
     return WhatIfState(options: options, selected: first, result: first == null ? null : WhatIf.of(first.tracker, args.today, const {}));

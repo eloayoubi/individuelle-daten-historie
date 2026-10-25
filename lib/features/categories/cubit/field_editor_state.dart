@@ -15,6 +15,7 @@ class FieldEditorState extends Equatable {
     required this.originalKind,
     required this.hasValues,
     this.keepsBills = false,
+    this.keepsMeter = false,
     this.tracker,
     required this.name,
     required this.kind,
@@ -34,6 +35,7 @@ class FieldEditorState extends Equatable {
     originalKind: field?.kind,
     hasValues: hasValues,
     keepsBills: field != null && tracker != null && _carriesBills(tracker, field),
+    keepsMeter: hasValues && field?.role == FieldRole.meterReading,
     tracker: tracker,
     formula: field?.formula ?? '',
     name: field?.name ?? '',
@@ -64,6 +66,12 @@ class FieldEditorState extends Equatable {
   /// archivieren.
   final bool keepsBills;
 
+  /// Zählerstand mit Werten: bleibt Zählerstand (als Zahl) – sonst würden alle Stände umgedeutet.
+  final bool keepsMeter;
+
+  /// Zeitverhalten liegt fest (Zählerstand mit Werten, Arbeitspreis mit Rechnungen).
+  FieldRole? get lockedRole => keepsMeter ? FieldRole.meterReading : (keepsBills ? FieldRole.unitPrice : null);
+
   /// Für Formeln: welche Namen es gibt und wie die Vorschau rechnet.
   final Tracker? tracker;
 
@@ -84,7 +92,7 @@ class FieldEditorState extends Equatable {
   final FieldEditorEvent? event;
 
   /// Vorhandene Werte begrenzen den Wechsel (eine Formel speichert keine Werte).
-  bool canPick(FieldKind k) => originalKind?.canBecome(k, hasValues: hasValues) ?? true;
+  bool canPick(FieldKind k) => (originalKind?.canBecome(k, hasValues: hasValues) ?? true) && (lockedRole == null || k.roles.contains(lockedRole));
 
   /// Prüfung des Ausdrucks gegen die Felder des Trackers.
   FormulaCheck get formulaCheck => Formulas.check(formula, tracker ?? const Tracker(id: '', name: ''));
@@ -143,6 +151,7 @@ class FieldEditorState extends Equatable {
     originalKind: originalKind,
     hasValues: hasValues,
     keepsBills: keepsBills,
+    keepsMeter: keepsMeter,
     tracker: tracker,
     formula: formula ?? this.formula,
     name: name ?? this.name,
@@ -158,5 +167,5 @@ class FieldEditorState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, saving, event];
+  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, keepsMeter, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, saving, event];
 }

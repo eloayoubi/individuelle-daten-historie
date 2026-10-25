@@ -233,6 +233,7 @@
   },
   "detailReadOnlyUnknown": "Nur lesen – diese Kategorie wurde mit dir geteilt.",
   "detailMissing": "Diese Kategorie gibt es nicht mehr.",
+  "trackerMissing": "Diesen Tracker gibt es nicht mehr.",
   "detailTrackerAdded": "Tracker angelegt.",
   "detailTrackerArchived": "Tracker archiviert.",
   "trackerNew": "Neuer Tracker",
@@ -275,6 +276,8 @@
   "fieldChoicesEmpty": "Mindestens einen Wert hinzufügen.",
   "fieldArchive": "Feld entfernen",
   "fieldKeepsBills": "Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.",
+  "fieldKeepsMeter": "Dieser Zählerstand hat schon Werte – er bleibt ein Zählerstand, sonst würden alle Stände umgedeutet.",
+  "trackerNoEntriesViewer": "Sobald jemand einen Wert einträgt, erscheint er hier.",
   "fieldArchiveTitle": "„{name}“ entfernen?",
   "@fieldArchiveTitle": {
     "placeholders": {
@@ -425,6 +428,13 @@
   "entryMeterChangeHint": "Der Verbrauch seit dem letzten Stand wird aus dem Zeitraum davor geschätzt.",
   "entryInvalidNumber": "Bitte eine Zahl eingeben.",
   "entryNeedsValue": "Trag mindestens einen Wert ein.",
+  "wordAnd": "und",
+  "entryNoteHintBill": "Optional, z. B. Rechnungsnummer",
+  "entryNoteHintContract": "Optional, z. B. Preiserhöhung laut Schreiben",
+  "entryNeedsConsumption": "Trag den Verbrauch laut Rechnung ein.",
+  "entryNeedsPrice": "Trag mindestens einen Preis ein.",
+  "entryNeedsReading": "Trag den Zählerstand ein.",
+  "contractSave": "Preise speichern",
   "entryNoFields": "Dieser Tracker hat noch keine Felder zum Eintragen. Lege sie unter „Bearbeiten“ an.",
   "entrySave": "Eintrag speichern",
   "entrySaved": "Gespeichert.",
@@ -475,9 +485,18 @@
   },
   "trackerCurrentValues": "Aktuelle Werte",
   "trackerEntries": "Einträge",
+  "trackerAllEntries": "Alle {count}",
+  "@trackerAllEntries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "trackerNoEntriesTitle": "Noch keine Einträge",
   "trackerNoEntriesBody": "Trag den ersten Wert ein – ab einer Rechnung oder dem zweiten Zählerstand entsteht der Verlauf.",
   "trackerAddEntry": "Wert eintragen",
+  "trackerAddEntryFor": "Wert eintragen für …",
   "trackerMeterChanged": "Neuer Zähler",
   "homeSyncPending": "{count, plural, =1{1 Eintrag wartet auf Verbindung} other{{count} Einträge warten auf Verbindung}}",
   "@homeSyncPending": {
@@ -497,6 +516,25 @@
     }
   },
   "homeSyncRejectedHint": "Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.",
+  "homeSyncHeld": "{count, plural, =1{1 Eintrag wird zurückgehalten} other{{count} Einträge werden zurückgehalten}}",
+  "@homeSyncHeld": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSyncHeldHint": "Keine Schreibrechte mehr oder das Cloud-Abo der Kategorie ist beendet. Er wird erneut gesendet, sobald es wieder geht.",
+  "homeSyncDiscard": "Verwerfen",
+  "homeSyncDiscardTitle": "{count, plural, =1{Zurückgehaltenen Eintrag verwerfen?} other{{count} zurückgehaltene Einträge verwerfen?}}",
+  "@homeSyncDiscardTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSyncDiscardBody": "Sie verschwinden von diesem Gerät und kommen nicht mehr in die Cloud.",
   "remindersEnable": "Erinnerungen aktivieren",
   "remindersEnableHint": "Ans Ablesen und an Fristen erinnern lassen",
   "settingsReminders": "Erinnerungen",
@@ -623,7 +661,7 @@
   },
   "insightsConsumptionHint": "Bis heute, verglichen mit demselben Zeitraum im Vorjahr.",
   "insightsInstalments": "Abschlags-Check",
-  "insightsInstalmentDetail": "Ø {paid} pro Monat · Kosten {year} ≈ {cost}",
+  "insightsInstalmentDetail": "Abschlag {paid} pro Monat · Kosten {year} ≈ {cost}",
   "@insightsInstalmentDetail": {
     "placeholders": {
       "paid": {
@@ -780,6 +818,14 @@
   "accountSignOutTitle": "Abmelden?",
   "accountSignOutBody": "Deine Daten bleiben in der Cloud. Auf diesem Gerät wählst du danach neu, wo du speicherst.",
   "accountSignOut": "Abmelden",
+  "accountSignOutPending": "{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet. Er geht verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.} other{Achtung: {count} Einträge sind noch nicht gesendet. Sie gehen verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.}}",
+  "@accountSignOutPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "accountAnonymousTitle": "Nur auf diesem Gerät",
   "accountAnonymousBody": "Deine Daten liegen in einem Konto ohne Anmeldung. Sichere es, damit sie ein neues Handy überstehen und du Kategorien teilen kannst.",
   "accountSecuredTitle": "Konto gesichert",
@@ -877,6 +923,7 @@
   "joinRowHint": "Kategorie eines Partners beitreten",
   "joinDone": "Beigetreten",
   "joinInvalid": "Code unbekannt, abgelaufen oder schon benutzt.",
+  "joinOwnerNoCloud": "Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.",
   "joinBody": "Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.",
   "joinHint": "Code, z. B. K7Q2M9X4TA",
   "joinAction": "Beitreten",
@@ -891,6 +938,14 @@
   "accountDelete": "Konto löschen",
   "accountDeleteTitle": "Konto und alle Daten löschen?",
   "accountDeleteBody": "Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.",
+  "accountDeletePending": "{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet und geht mit dem Konto verloren.} other{Achtung: {count} Einträge sind noch nicht gesendet und gehen mit dem Konto verloren.}}",
+  "@accountDeletePending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "accountDeleteFooter": "Exportiere vorher deine Daten, wenn du sie behalten willst (Einstellungen › Daten exportieren).",
   "accountDeletedToast": "Konto gelöscht",
   "attachmentsTitle": "Belege",
@@ -944,9 +999,12 @@
       }
     }
   },
-  "contractDeleteBody": "{prices} verschwinden aus Vertrag, Kosten und Prognose.",
+  "contractDeleteBody": "{count, plural, =1{{prices} verschwindet} other{{prices} verschwinden}} aus Vertrag, Kosten und Prognose.",
   "@contractDeleteBody": {
     "placeholders": {
+      "count": {
+        "type": "int"
+      },
       "prices": {
         "type": "String"
       }
@@ -955,6 +1013,9 @@
   "contractTitle": "Vertrag",
   "contractSet": "Eintragen",
   "contractMissingPrice": "Ohne Arbeitspreis rechnet die App noch keine Kosten.",
+  "contractMissingTitle": "Noch keine Preise",
+  "contractMissingBody": "Trag Arbeitspreis, Grundpreis und Abschlag aus deinem Vertrag ein – dann rechnet die App deine Kosten und prüft den Abschlag.",
+  "contractEnterPrices": "Preise eintragen",
   "priceHistoryFrom": "ab {date}",
   "@priceHistoryFrom": {
     "placeholders": {
@@ -1221,7 +1282,7 @@
   "storageAskUploadYes": "Hinzufügen",
   "storageAskUploadNo": "Auf dem Gerät lassen",
   "cloudPausedTitle": "Cloud pausiert",
-  "cloudPausedBody": "Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.",
+  "cloudPausedBody": "Dein Cloud-Abo ist beendet. Deine Daten sind sicher gespeichert – mit Abo kannst du sie wieder ansehen und ändern. Oder du holst alles kostenlos auf dieses Gerät.",
   "cloudPausedRenew": "Abo erneuern",
   "cloudPausedMove": "Kostenlos aufs Gerät holen",
   "settingsStorageTitle": "Speicherort",

@@ -5,6 +5,9 @@ import '../../../core/core.dart';
 import '../../plus/cubit/plus_cubit.dart';
 import '../cubit/storage_cubit.dart';
 import '../data/storage_mode.dart';
+import '../../plus/data/plus_store.dart';
+import '../../plus/view/paywall_page.dart';
+import 'cloud_flow.dart';
 import 'cloud_paused_page.dart';
 import 'start_page.dart';
 
@@ -45,6 +48,16 @@ class StartGate extends StatelessWidget {
         BlocListener<StorageCubit, StorageState>(
           listenWhen: (previous, current) => previous.mode != current.mode,
           listener: (context, _) => Navigator.of(context).popUntil((route) => route.isFirst),
+        ),
+        // Kauf, der in dieser Sitzung begonnen und erst nach dem Schließen der Paywall bestätigt wurde
+        // („Kaufen anfragen“): jetzt in die Cloud wechseln. Verlängerungen im Hintergrund lösen nichts aus.
+        BlocListener<PlusCubit, PlusState>(
+          listenWhen: (previous, current) =>
+              current.event != previous.event && current.event?.kind == PlusStoreUpdateKind.unlocked && PaywallPage.openCount == 0 && PaywallPage.awaitingApproval,
+          listener: (context, _) {
+            PaywallPage.awaitingApproval = false;
+            if (context.read<StorageCubit>().state.mode != StorageMode.cloud) CloudFlow.activate(context);
+          },
         ),
       ],
       child: AnimatedSwitcher(

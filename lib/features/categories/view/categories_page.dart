@@ -197,7 +197,7 @@ class _CategoryRow extends StatelessWidget {
           if (category.isShared)
             AppChip(
               icon: CupertinoIcons.person_2_fill,
-              label: l10n.homeSharedWith(category.sharedWith.map((m) => m.name).join(', ')),
+              label: l10n.homeSharedWith(context.memberNames(category.sharedWith)),
               background: c.accentSoft,
               foreground: c.accent,
             ),

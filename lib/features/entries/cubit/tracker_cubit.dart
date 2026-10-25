@@ -49,7 +49,10 @@ class TrackerCubit extends Cubit<TrackerState> {
       final tracker = Formulas.apply(raw);
       final into = all.where((c) => c.id == raw.includedIn).firstOrNull;
       final metrics = TrackerHistory.metricsFor(tracker);
-      final metric = metrics.contains(state.metric) ? state.metric : metrics.firstOrNull;
+      // Ohne Preise gibt es noch keine Kosten – dann zuerst den Verbrauch zeigen.
+      final missingPrice = _missingPrice(raw, metrics);
+      final preferred = missingPrice && metrics.contains(HistoryMetric.consumption) ? HistoryMetric.consumption : metrics.firstOrNull;
+      final metric = metrics.contains(state.metric) ? state.metric : preferred;
       emit(
         TrackerState(
           status: TrackerStatus.ready,
@@ -60,7 +63,8 @@ class TrackerCubit extends Cubit<TrackerState> {
           history: metric == null ? null : TrackerHistory.build(raw, _now(), metric),
           currentValues: TrackerHistory.currentValuesOf(tracker, _now()),
           contract: TrackerHistory.contractOf(tracker, _now()),
-          missingPrice: _missingPrice(raw, metrics),
+          missingPrice: missingPrice,
+          today: _now(),
           includedInName: into?.name,
         ),
       );

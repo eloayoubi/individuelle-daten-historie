@@ -28,7 +28,10 @@ class _HistoryChartState extends State<HistoryChart> {
   @override
   void didUpdateWidget(HistoryChart old) {
     super.didUpdateWidget(old);
-    if (old.history.metric != widget.history.metric) _selected = widget.history.months.length - 1;
+    // Andere Kennzahl oder andere Monate (Eintrag gelöscht/ergänzt): wieder der laufende Monat.
+    if (old.history.metric != widget.history.metric || old.history.months.length != widget.history.months.length) {
+      _selected = widget.history.months.length - 1;
+    }
   }
 
   /// Plätze für Balken: wenige Monate stehen links und werden nicht breit gezogen.
@@ -43,7 +46,7 @@ class _HistoryChartState extends State<HistoryChart> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final months = widget.history.months;
-    final selected = months[_selected];
+    final selected = months[_selected.clamp(0, months.length - 1)];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: Spacing.s,

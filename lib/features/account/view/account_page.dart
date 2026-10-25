@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../../core/core.dart';
+import '../../categories/data/categories_repository.dart';
 import '../cubit/account_cubit.dart';
 import 'email_code_sheet.dart';
 
@@ -11,6 +12,20 @@ import 'email_code_sheet.dart';
 /// anmelden, Name für geteilte Kategorien, abmelden.
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
+
+  /// Abmelden bestätigen; warnt, wenn noch Einträge auf dem Gerät auf das Senden warten.
+  static Future<bool> confirmSignOut(BuildContext context) {
+    final l10n = context.l10n;
+    final sync = lookup<CategoriesRepository>().syncState;
+    final pending = sync.pending + sync.held;
+    return AppDialog.confirm(
+      context,
+      title: l10n.accountSignOutTitle,
+      message: pending > 0 ? '${l10n.accountSignOutBody}\n\n${l10n.accountSignOutPending(pending)}' : l10n.accountSignOutBody,
+      confirmLabel: l10n.accountSignOut,
+      destructive: true,
+    );
+  }
 
   static Future<void> open(BuildContext context) => Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => const AccountPage()));
 
@@ -85,17 +100,19 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<void> _signOut(BuildContext context) async {
-    final l10n = context.l10n;
     final cubit = context.read<AccountCubit>();
-    final ok = await AppDialog.confirm(context, title: l10n.accountSignOutTitle, message: l10n.accountSignOutBody, confirmLabel: l10n.accountSignOut, destructive: true);
-    if (ok) await cubit.signOut();
+    if (await AccountPage.confirmSignOut(context)) await cubit.signOut();
   }
 
   /// Zweimal fragen: Löschen lässt sich nicht rückgängig machen und betrifft auch geteilte Kategorien.
+  /// Noch nicht gesendete Einträge gehen mit dem Konto verloren – darauf weist die Rückfrage hin.
   Future<void> _delete(BuildContext context) async {
     final l10n = context.l10n;
     final cubit = context.read<AccountCubit>();
-    final ok = await AppDialog.confirm(context, title: l10n.accountDeleteTitle, message: l10n.accountDeleteBody, confirmLabel: l10n.accountDelete, destructive: true);
+    final sync = lookup<CategoriesRepository>().syncState;
+    final pending = sync.pending + sync.held;
+    final message = pending > 0 ? '${l10n.accountDeleteBody}\n\n${l10n.accountDeletePending(pending)}' : l10n.accountDeleteBody;
+    final ok = await AppDialog.confirm(context, title: l10n.accountDeleteTitle, message: message, confirmLabel: l10n.accountDelete, destructive: true);
     if (ok) await cubit.deleteAccount();
   }
 

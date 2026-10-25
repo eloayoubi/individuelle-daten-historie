@@ -77,19 +77,23 @@ class _FormViewState extends State<_FormView> {
     }
   }
 
-  Future<void> _pickDate(BuildContext context, DateTime current, ValueChanged<DateTime> onPicked) async {
-    final picked = await AppDateSheet.show(context, initial: current, minimum: DateTime(2000), maximum: DateTime(DateTime.now().year + 5, 12, 31));
+  /// Datum wählen; ohne [maximum] bis fünf Jahre voraus (Preise im Voraus), sonst höchstens [maximum].
+  Future<void> _pickDate(BuildContext context, DateTime current, ValueChanged<DateTime> onPicked, {DateTime? minimum, DateTime? maximum}) async {
+    final last = maximum ?? DateTime(DateTime.now().year + 5, 12, 31);
+    final first = minimum ?? DateTime(2000);
+    final initial = current.isAfter(last) ? last : (current.isBefore(first) ? first : current);
+    final picked = await AppDateSheet.show(context, initial: initial, minimum: first, maximum: last);
     if (picked != null) onPicked(picked);
   }
 
   Future<void> _delete(BuildContext context, EntryFormCubit cubit, EntryFormState s) async {
     final l10n = context.l10n;
     final contract = s.mode == EntryFormMode.contract;
-    final prices = [for (final f in s.fields) if (s.originalValues.containsKey(f.id)) f.name].join(', ');
+    final prices = [for (final f in s.fields) if (s.originalValues.containsKey(f.id)) f.name];
     final confirmed = await AppDialog.confirm(
       context,
       title: contract ? l10n.contractDeleteTitle(context.shortDate(s.date)) : l10n.entryDeleteTitle(context.shortDate(s.date)),
-      message: contract ? l10n.contractDeleteBody(prices) : l10n.entryDeleteBody,
+      message: contract && prices.isNotEmpty ? l10n.contractDeleteBody(prices.length, context.joinNames(prices)) : l10n.entryDeleteBody,
       confirmLabel: l10n.actionDelete,
       destructive: true,
     );
@@ -98,160 +102,188 @@ class _FormViewState extends State<_FormView> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final l10n = context.l10n;
     final cubit = context.read<EntryFormCubit>();
-    final swatch = c.swatch(widget.args.category.swatch);
     return Scaffold(
       body: SafeArea(
         bottom: false,
         child: BlocConsumer<EntryFormCubit, EntryFormState>(
           listenWhen: (previous, current) => current.event != null && current.event != previous.event,
           listener: _onEvent,
-          builder: (context, s) => ListView(
-            padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + Spacing.xxl),
-            children: [
-              AppHeader(
-                title: s.tracker.name,
-                overline: switch ((s.mode, s.isNew)) {
-                  (EntryFormMode.contract, true) => l10n.contractChange,
-                  (EntryFormMode.contract, false) => l10n.contractEdit,
-                  (_, true) => l10n.entryNew,
-                  (_, false) => l10n.entryEdit,
-                },
-                onBack: () => Navigator.of(context).pop(),
-              ),
-              if (s.canSwitchMode)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.l, 0, Spacing.l, Spacing.m),
-                  child: AppSegmented<EntryFormMode>(
-                    value: s.mode,
-                    segments: {EntryFormMode.bill: l10n.entryKindBill, EntryFormMode.reading: l10n.entryKindReading},
-                    onChanged: cubit.setMode,
-                  ),
-                ),
-              if (s.isBill)
-                AppListGroup(
-                  footer: s.periodInvalid
-                      ? l10n.entryPeriodInvalid
-                      : s.billOverlaps
-                      ? l10n.entryBillOverlap
-                      : l10n.entryBillHint,
-                  children: [
-                    AppListRow(
-                      leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
-                      title: l10n.entryPeriodFrom,
-                      trailing: AppText(context.shortDate(s.periodStart!), style: (t) => t.body, color: c.accent),
-                      chevron: false,
-                      onTap: () => _pickDate(context, s.periodStart!, cubit.setPeriodStart),
-                    ),
-                    AppListRow(
-                      leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
-                      title: l10n.entryPeriodTo,
-                      trailing: AppText(context.shortDate(s.periodEnd!), style: (t) => t.body, color: s.periodInvalid ? c.danger : c.accent),
-                      chevron: false,
-                      onTap: () => _pickDate(context, s.periodEnd!, cubit.setPeriodEnd),
-                    ),
-                  ],
-                )
-              else
-                AppListGroup(
-                  children: [
-                    AppListRow(
-                      leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
-                      title: s.validFrom ? l10n.entryValidFrom : l10n.entryDate,
-                      trailing: AppText(context.shortDate(s.date), style: (t) => t.body, color: c.accent),
-                      chevron: false,
-                      onTap: () => _pickDate(context, s.date, cubit.setDate),
-                    ),
-                  ],
-                ),
-              if (s.fields.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.xl, Spacing.xl, 0),
-                  child: AppText(l10n.entryNoFields, style: (t) => t.subheadline, color: c.textSecondary),
-                ),
-              for (final field in s.fields) ...[
-                const SizedBox(height: Spacing.l),
-                Padding(padding: Spacing.screen, child: _FieldInput(field: field, state: s, controller: _controllers[field.id], onPickDate: _pickDate)),
-              ],
-              if (s.hasMeter) ...[
-                const SizedBox(height: Spacing.l),
-                AppListGroup(
-                  dividerIndent: Spacing.l,
-                  footer: l10n.entryMeterChangeHint,
-                  children: [
-                    AppListRow(
-                      title: l10n.entryMeterChange,
-                      trailing: AppSwitch(value: s.meterChange, semanticLabel: l10n.entryMeterChange, onChanged: cubit.setMeterChange),
-                    ),
-                  ],
-                ),
-              ],
-              if (s.hasOneOff) ...[
-                const SizedBox(height: Spacing.l),
-                AppListGroup(
-                  dividerIndent: Spacing.l,
-                  footer: s.periodInvalid ? l10n.entryPeriodInvalid : l10n.entryPeriodHint,
-                  children: [
-                    AppListRow(
-                      title: l10n.entryPeriod,
-                      trailing: AppSwitch(value: s.hasPeriod, semanticLabel: l10n.entryPeriod, onChanged: cubit.setPeriodEnabled),
-                    ),
-                    if (s.periodStart case final DateTime from)
-                      AppListRow(
-                        title: l10n.entryPeriodFrom,
-                        trailing: AppText(context.shortDate(from), style: (t) => t.body, color: c.accent),
-                        chevron: false,
-                        onTap: () => _pickDate(context, from, cubit.setPeriodStart),
-                      ),
-                    if (s.periodEnd case final DateTime to)
-                      AppListRow(
-                        title: l10n.entryPeriodTo,
-                        trailing: AppText(context.shortDate(to), style: (t) => t.body, color: s.periodInvalid ? c.danger : c.accent),
-                        chevron: false,
-                        onTap: () => _pickDate(context, to, cubit.setPeriodEnd),
-                      ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: Spacing.l),
-              Padding(
-                padding: Spacing.screen,
-                child: AppTextField(controller: _note, hint: l10n.entryNoteHint, maxLength: EntryFormState.maxNote, onChanged: cubit.setNote),
-              ),
-              // Belege liegen in der Cloud; lokal gibt es sie nicht.
-              if (context.select((StorageCubit storage) => storage.state.isCloud))
-                EntryAttachments(
-                  categoryId: widget.args.category.id,
-                  entryId: s.entryId,
-                  isNew: s.isNew,
-                  canEdit: widget.args.category.canEdit,
-                ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, 0),
-                child: AppButton(label: l10n.entrySave, onPressed: s.canSave ? cubit.save : null),
-              ),
-              if (s.values.isEmpty && s.fields.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, 0),
-                  child: AppText(l10n.entryNeedsValue, style: (t) => t.footnote, color: c.textSecondary, align: TextAlign.center),
-                ),
-              if (!s.isNew)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.s, Spacing.l, 0),
-                  child: AppButton(
-                    label: l10n.entryDelete,
-                    variant: AppButtonVariant.destructive,
-                    onPressed: s.saving ? null : () => _delete(context, cubit, s),
-                  ),
-                ),
-            ],
+          builder: (context, s) => AppActionBar(
+            hint: s.saving || s.canSave || s.fields.isEmpty ? null : _missing(context, s),
+            action: AppButton(label: s.mode == EntryFormMode.contract ? l10n.contractSave : l10n.entrySave, onPressed: s.canSave ? cubit.save : null),
+            content: _form(context, s),
           ),
         ),
       ),
     );
   }
+
+  /// Was zum Speichern fehlt – über dem Button.
+  String? _missing(BuildContext context, EntryFormState s) {
+    final l10n = context.l10n;
+    if (s.periodInvalid) return l10n.entryPeriodInvalid;
+    if (s.invalid.isNotEmpty) return l10n.entryInvalidNumber;
+    return switch (s.mode) {
+      EntryFormMode.bill => l10n.entryNeedsConsumption,
+      EntryFormMode.contract => l10n.entryNeedsPrice,
+      EntryFormMode.reading => l10n.entryNeedsReading,
+      _ => l10n.entryNeedsValue,
+    };
+  }
+
+  Widget _form(BuildContext context, EntryFormState s) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final cubit = context.read<EntryFormCubit>();
+    final swatch = c.swatch(widget.args.category.swatch);
+    return ListView(
+      padding: EdgeInsets.only(bottom: AppActionBar.inset(context)),
+      children: [
+        AppHeader(
+          title: s.tracker.name,
+          overline: switch ((s.mode, s.isNew)) {
+            (EntryFormMode.contract, true) => l10n.contractChange,
+            (EntryFormMode.contract, false) => l10n.contractEdit,
+            (_, true) => l10n.entryNew,
+            (_, false) => l10n.entryEdit,
+          },
+          onBack: () => Navigator.of(context).pop(),
+        ),
+        if (s.canSwitchMode)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.l, 0, Spacing.l, Spacing.m),
+            child: AppSegmented<EntryFormMode>(
+              value: s.mode,
+              segments: {EntryFormMode.bill: l10n.entryKindBill, EntryFormMode.reading: l10n.entryKindReading},
+              onChanged: (mode) {
+                // Dieselbe Zahl heißt als Verbrauch und als Stand etwas anderes – neu eingeben.
+                if (s.tracker.meter case final FieldDefinition meter) _controllers[meter.id]?.clear();
+                cubit.setMode(mode);
+              },
+            ),
+          ),
+        if (s.isBill)
+          AppListGroup(
+            footer: s.periodInvalid
+                ? l10n.entryPeriodInvalid
+                : s.billOverlaps
+                ? l10n.entryBillOverlap
+                : l10n.entryBillHint,
+            children: [
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
+                title: l10n.entryPeriodFrom,
+                trailing: AppText(context.shortDate(s.periodStart!), style: (t) => t.body, color: c.accent),
+                chevron: false,
+                onTap: () => _pickDate(context, s.periodStart!, cubit.setPeriodStart, maximum: s.periodEnd),
+              ),
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
+                title: l10n.entryPeriodTo,
+                trailing: AppText(context.shortDate(s.periodEnd!), style: (t) => t.body, color: s.periodInvalid ? c.danger : c.accent),
+                chevron: false,
+                onTap: () => _pickDate(context, s.periodEnd!, cubit.setPeriodEnd, minimum: s.periodStart, maximum: s.latestDate),
+              ),
+            ],
+          )
+        else
+          AppListGroup(
+            children: [
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
+                title: s.validFrom ? l10n.entryValidFrom : l10n.entryDate,
+                trailing: AppText(context.shortDate(s.date), style: (t) => t.body, color: c.accent),
+                chevron: false,
+                onTap: () => _pickDate(context, s.date, cubit.setDate, maximum: s.latestDate),
+              ),
+            ],
+          ),
+        if (s.fields.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.xl, Spacing.xl, 0),
+            child: AppText(l10n.entryNoFields, style: (t) => t.subheadline, color: c.textSecondary),
+          ),
+        for (final field in s.fields) ...[
+          const SizedBox(height: Spacing.l),
+          Padding(padding: Spacing.screen, child: _FieldInput(field: field, state: s, controller: _controllers[field.id], onPickDate: _pickDate)),
+        ],
+        if (s.hasMeter) ...[
+          const SizedBox(height: Spacing.l),
+          AppListGroup(
+            dividerIndent: Spacing.l,
+            footer: l10n.entryMeterChangeHint,
+            children: [
+              AppListRow(
+                title: l10n.entryMeterChange,
+                trailing: AppSwitch(value: s.meterChange, semanticLabel: l10n.entryMeterChange, onChanged: cubit.setMeterChange),
+              ),
+            ],
+          ),
+        ],
+        if (s.hasOneOff) ...[
+          const SizedBox(height: Spacing.l),
+          AppListGroup(
+            dividerIndent: Spacing.l,
+            footer: s.periodInvalid ? l10n.entryPeriodInvalid : l10n.entryPeriodHint,
+            children: [
+              AppListRow(
+                title: l10n.entryPeriod,
+                trailing: AppSwitch(value: s.hasPeriod, semanticLabel: l10n.entryPeriod, onChanged: cubit.setPeriodEnabled),
+              ),
+              if (s.periodStart case final DateTime from)
+                AppListRow(
+                  title: l10n.entryPeriodFrom,
+                  trailing: AppText(context.shortDate(from), style: (t) => t.body, color: c.accent),
+                  chevron: false,
+                  onTap: () => _pickDate(context, from, cubit.setPeriodStart),
+                ),
+              if (s.periodEnd case final DateTime to)
+                AppListRow(
+                  title: l10n.entryPeriodTo,
+                  trailing: AppText(context.shortDate(to), style: (t) => t.body, color: s.periodInvalid ? c.danger : c.accent),
+                  chevron: false,
+                  onTap: () => _pickDate(context, to, cubit.setPeriodEnd),
+                ),
+            ],
+          ),
+        ],
+        const SizedBox(height: Spacing.l),
+        Padding(
+          padding: Spacing.screen,
+          child: AppTextField(
+            controller: _note,
+            hint: switch (s.mode) {
+              EntryFormMode.bill => l10n.entryNoteHintBill,
+              EntryFormMode.contract => l10n.entryNoteHintContract,
+              _ => l10n.entryNoteHint,
+            },
+            maxLength: EntryFormState.maxNote,
+            onChanged: cubit.setNote,
+          ),
+        ),
+        // Belege liegen in der Cloud; lokal gibt es sie nicht.
+        if (context.select((StorageCubit storage) => storage.state.isCloud))
+          EntryAttachments(
+            categoryId: widget.args.category.id,
+            entryId: s.entryId,
+            isNew: s.isNew,
+            canEdit: widget.args.category.canEdit,
+          ),
+        if (!s.isNew)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xl, Spacing.l, 0),
+            child: AppButton(
+              label: l10n.entryDelete,
+              variant: AppButtonVariant.destructive,
+              onPressed: s.saving ? null : () => _delete(context, cubit, s),
+            ),
+          ),
+      ],
+    );
+  }
+
 }
 
 /// Eingabe für ein Feld, passend zum Feldtyp, darunter ein Hinweis (letzter Wert, Verbrauch seitdem,
@@ -371,9 +403,7 @@ class _FieldInput extends StatelessWidget {
       final sign = delta >= 0 ? '+' : '';
       return (l10n.entryDelta('$sign${context.amount(delta, field.usageUnit, decimals: delta.abs() < 10 ? 1 : 0)}', context.shortDate(date)), c.textSecondary);
     }
-    if (field.role == FieldRole.unitPrice || field.role == FieldRole.recurringCost) {
-      return (l10n.entryCurrent(last, context.shortDate(date)), c.textSecondary);
-    }
+    if (field.isRate && state.isNew) return (l10n.entryCurrent(last, context.shortDate(date)), c.textSecondary);
     return (l10n.entryLast(last, context.shortDate(date)), c.textSecondary);
   }
 }

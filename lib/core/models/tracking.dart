@@ -166,8 +166,8 @@ class Entry extends Equatable {
     _ => null,
   };
 
-  Entry copyWith({Map<String, Object>? values}) => Entry(
-    id: id,
+  Entry copyWith({String? id, Map<String, Object>? values}) => Entry(
+    id: id ?? this.id,
     date: date,
     values: values ?? this.values,
     note: note,
@@ -233,6 +233,9 @@ class Tracker extends Equatable {
 
   /// Preise und Beträge, die ab einem Datum gelten (Arbeitspreis, Grundpreis, Abschlag).
   List<FieldDefinition> get rateFields => [for (final f in fields) if (f.isRate) f];
+
+  /// Preise, die man im Vertrag einträgt – ohne Formeln, die rechnet die App.
+  List<FieldDefinition> get contractFields => [for (final f in rateFields) if (f.kind != FieldKind.formula) f];
 
   /// Rechnung: Eintrag eines Versorgungszählers mit Zeitraum und Wert im Zählerfeld. Der Wert ist der
   /// Verbrauch im Zeitraum (in der Verbrauchseinheit), kein Zählerstand.

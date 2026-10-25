@@ -72,26 +72,30 @@ class TrendNote extends Equatable {
   List<Object?> get props => [category, tracker, trend];
 }
 
-/// Abschlags-Check: gezahlte Abschläge im Jahr gegen die gerechneten Kosten.
+/// Abschlags-Check: gezahlte Abschläge im Jahr gegen die gerechneten Kosten – ab dem ersten
+/// Abschlag, wer im Juli anfängt, vergleicht also Juli bis Dezember.
 class InstalmentCheck extends Equatable {
-  const InstalmentCheck({required this.category, required this.tracker, required this.paid, required this.cost, required this.monthly});
+  const InstalmentCheck({required this.category, required this.tracker, required this.paid, required this.cost, required this.monthly, this.months = 12});
 
   final Category category;
   final Tracker tracker;
   final double paid;
   final double cost;
 
-  /// Aktueller Abschlag je Monat.
+  /// Aktueller Abschlag je Monat (heute, in früheren Jahren am 31. Dezember).
   final double monthly;
+
+  /// Monate mit Abschlag in diesem Jahr (angefangene anteilig).
+  final double months;
 
   /// Positiv = Guthaben, negativ = Nachzahlung.
   double get balance => paid - cost;
 
   /// Abschlag, der die Kosten genau deckt (auf ganze Euro aufgerundet).
-  double get suggestedMonthly => (cost / 12).ceilToDouble();
+  double get suggestedMonthly => (cost / months).ceilToDouble();
 
   @override
-  List<Object?> get props => [category, tracker, paid, cost, monthly];
+  List<Object?> get props => [category, tracker, paid, cost, monthly, months];
 }
 
 /// Kosten eines Trackers, die in einer anderen Kategorie stecken.
@@ -176,6 +180,15 @@ class Insights extends Equatable {
     return first == null || first.year != year ? 0 : first.month - 1;
   }
 
+  /// Monate in `[from, to)`, angefangene anteilig nach Tagen.
+  static double _months(DateTime from, DateTime to) {
+    var months = 0.0;
+    for (var d = from; d.isBefore(to); d = d.add(const Duration(days: 1))) {
+      months += 1 / DateTime.utc(d.year, d.month + 1, 0).day;
+    }
+    return months;
+  }
+
   /// Hat [tracker] einen Eintrag am oder vor [start]?
   static bool _trackedSince(Tracker tracker, DateTime start) =>
       tracker.records.any((e) => !CostEngine.day(e.hasPeriod ? e.periodStart! : e.date).isAfter(start));
@@ -200,10 +213,11 @@ class Insights extends Equatable {
     final current = year == today.year;
     final tomorrow = today.add(const Duration(days: 1));
     final yearStart = DateTime.utc(year);
+    final yearEnd = DateTime.utc(year + 1);
     // Verbrauch im laufenden Jahr nur bis heute vergleichen, sonst ganze Jahre.
     final usageEnd = current ? tomorrow : DateTime.utc(year + 1);
     final previousUsageEnd = current ? DateTime.utc(year - 1, today.month, today.day + 1) : DateTime.utc(year);
-    final byId = {for (final c in categories) c.id: c};
+    final byId = {for (final c in categories) if (!c.isArchived) c.id: c};
 
     final months = List.generate(12, (_) => <String, double>{});
     final comparisons = <YearComparison>[];
@@ -219,9 +233,11 @@ class Insights extends Equatable {
       var total = 0.0, previous = 0.0, forecast = 0.0, categoryRange = 0.0, sameTotal = 0.0, samePrevious = 0.0;
       for (final tracker in category.trackers) {
         final engine = CostEngine(tracker, today: today);
-        final into = tracker.includedIn == null ? null : byId[tracker.includedIn];
-        if (tracker.includedIn != null) {
-          if (into != null) included.add(IncludedNote(tracker: tracker, category: category, into: into, cost: engine.costInYear(year)));
+        // Fehlt die Kategorie, in der die Kosten stecken (archiviert, gelöscht, nicht geladen), zählen
+        // sie hier – sonst fehlten sie überall.
+        final into = tracker.includedIn == null || tracker.includedIn == category.id ? null : byId[tracker.includedIn];
+        if (into != null) {
+          included.add(IncludedNote(tracker: tracker, category: category, into: into, cost: engine.costInYear(year)));
         } else {
           var trackerTotal = 0.0;
           for (var m = 1; m <= 12; m++) {
@@ -257,14 +273,25 @@ class Insights extends Equatable {
             ),
           );
           // Nur Zähler, deren Kosten hier zählen, prägen die Prognose.
-          if (engine.trend case final double trend when current && tracker.includedIn == null && (trend - 1).abs() >= 0.02) {
+          if (engine.trend case final double trend when current && into == null && (trend - 1).abs() >= 0.02) {
             trends.add(TrendNote(category: category, tracker: tracker, trend: trend));
           }
         }
-        if (engine.hasInstalment) {
-          final cost = engine.costInYear(year);
-          final paid = engine.paid(yearStart, DateTime.utc(year + 1));
-          if (paid > 0) instalments.add(InstalmentCheck(category: category, tracker: tracker, paid: paid, cost: cost, monthly: paid / 12));
+        if (engine.instalmentSince case final DateTime since when since.isBefore(yearEnd)) {
+          final from = since.isAfter(yearStart) ? since : yearStart;
+          final paid = engine.paid(from, yearEnd);
+          if (paid > 0) {
+            instalments.add(
+              InstalmentCheck(
+                category: category,
+                tracker: tracker,
+                paid: paid,
+                cost: engine.cost(from, yearEnd),
+                monthly: engine.instalmentOn(current ? today : DateTime.utc(year, 12, 31)),
+                months: _months(from, yearEnd),
+              ),
+            );
+          }
         }
       }
       if (total.abs() > 0.004 || previous.abs() > 0.004) {

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/models/tracking.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/insights/cubit/what_if_cubit.dart';
 import 'package:kostenkurve/features/insights/data/what_if.dart';
@@ -8,6 +9,18 @@ void main() {
   final categories = MockCategoriesRepository.categories.where((c) => !c.isArchived).toList();
   final strom = categories.firstWhere((c) => c.id == 'c-strom').trackers.single;
   final price = strom.fields.firstWhere((f) => f.role.name == 'unitPrice');
+
+  test('Formel-Felder lassen sich nicht durchspielen – die App rechnet sie selbst', () {
+    const t = Tracker(
+      id: 't',
+      name: 'Strom',
+      fields: [
+        FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice),
+        FieldDefinition(id: 'gp', name: 'Grundpreis', kind: FieldKind.formula, role: FieldRole.recurringCost, formula: 'arbeitspreis * 40'),
+      ],
+    );
+    expect(WhatIf.priceFields(t).map((f) => f.id), ['ap']);
+  });
 
   test('ohne neue Preise: vorher = nachher', () {
     final r = WhatIf.of(strom, today, const {});
@@ -40,5 +53,18 @@ void main() {
     cubit.setInput(price.id, 'abc');
     expect(cubit.state.result!.delta, 0);
     cubit.close();
+  });
+
+  test('Tracker, dessen Ziel-Kategorie fehlt, zählt selbst und steht zur Wahl', () {
+    const price = FieldDefinition(id: 'p', name: 'Preis', kind: FieldKind.currency, role: FieldRole.recurringCost);
+    final c = Category(
+      id: 'c',
+      name: 'Wasser',
+      icon: CategoryIcon.drop,
+      swatch: CategorySwatch.blue,
+      trackers: [Tracker(id: 't', name: 'Kaltwasser', includedIn: 'weg', fields: const [price], entries: [Entry(id: 'e', date: DateTime.utc(2026), values: const {'p': 30})])],
+    );
+    final cubit = WhatIfCubit(WhatIfArgs(categories: [c], today: DateTime.utc(2026, 10, 22)));
+    expect(cubit.state.options.map((o) => o.tracker.id), ['t']);
   });
 }

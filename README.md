@@ -83,7 +83,7 @@ Ein Tracker kann seine Kosten einer anderen Kategorie zuordnen (`includedIn`, z.
 
 **Lokal oder Cloud:** Beim ersten Start wählt der Nutzer den Speicherort (Ablauf, Technik und Sicherheit: [IMPLEMENTIERUNGSPLAN.md, Abschnitt 8](docs/IMPLEMENTIERUNGSPLAN.md#8-lokal-oder-cloud-abo)). Lokal liegt alles in `local_data.json` im App-Support-Ordner, ohne Netz und ohne Konto. In der Cloud entscheidet der Server per RLS, ob geschrieben werden darf (Abo des Schreibenden oder des Eigentümers).
 
-**Offline (Cloud):** Mit Supabase liest die App ohne Netz aus dem Cache des letzten Abrufs. Einträge landen zuerst in einer Warteschlange auf dem Gerät und erscheinen sofort. Gesendet wird gleich, beim Zurückkehren in die App und alle 30 Sekunden, solange etwas wartet. Die Id vergibt das Gerät, daher landet ein Eintrag auch bei doppeltem Senden nur einmal (`save_entry` ist ein Upsert). Die Übersicht zeigt, was noch wartet oder abgelehnt wurde. Kategorien, Tracker und Felder ändern geht nur online.
+**Offline (Cloud):** Mit Supabase liest die App ohne Netz aus dem Cache des letzten Abrufs. Einträge landen zuerst in einer Warteschlange auf dem Gerät und erscheinen sofort. Gesendet wird gleich, beim Zurückkehren in die App und alle 30 Sekunden, solange etwas wartet. Die Id vergibt das Gerät, daher landet ein Eintrag auch bei doppeltem Senden nur einmal (`save_entry` ist ein Upsert). Lässt der Server einen Eintrag gerade nicht zu (Abo abgelaufen, Rolle geändert), bleibt er liegen und die übrigen gehen weiter raus. Die Übersicht zeigt, was noch wartet oder abgelehnt wurde; Abmelden und Konto löschen warnen vor wartenden Einträgen. Kategorien, Tracker und Felder ändern geht nur online.
 
 Cubits mit Parameter (z. B. die Kategorie-Id) sind per `registerFactoryParam` registriert und kommen über `lookup<T>(param1: …)`. Nach jeder Änderung meldet `CategoriesRepository.changes` ein Ereignis, darauf laden Übersicht, Kategorien-Tab und Detailseite neu.
 
@@ -94,6 +94,7 @@ Cubits mit Parameter (z. B. die Kategorie-Id) sind per `registerFactoryParam` re
 - **Keine Hex-Farben, keine `TextStyle(...)`, keine festen Strings in Widgets** – immer `context.colors` / `context.textStyles` / `context.l10n`.
 - **Neue Farbe/Textstil:** erst in `core/theme/color_config.dart` bzw. `core/theme/text_styles.dart`, dann benutzen.
 - **Neues Feature:** Ordner unter `features/`, Repository (+ Mock + Supabase) und Cubit in `configureDependencies()` registrieren, Page in die Shell.
+- **Hauptaktion unten:** Die eine Aktion, für die man auf einen Screen kommt (Wert eintragen, Speichern, Kategorie anlegen), steht als gefüllter Button in `AppActionBar` fest unten. Die Liste darüber trägt Daten und Einstellungen, zweite Aktionen sind `tinted`.
 - **Wiederverwenden vor neu bauen:** erst `core/widgets/` durchsehen, dann vorhandene Widgets um Parameter ergänzen, erst dann ein neues Widget.
 - Beträge, Mengen und Daten nur über `core/extensions/format_x.dart` formatieren (`context.euros`, `context.amount`, `context.change`, …).
 - Rechenlogik (Verbrauch, Kosten, Prognose) gehört in `core/utils/cost_engine.dart` bzw. `features/*/data/`, nicht in Widgets – und bekommt Unit-Tests.

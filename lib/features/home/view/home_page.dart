@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/core.dart';
 import '../../categories/data/categories_repository.dart';
@@ -94,7 +95,8 @@ class _Content extends StatelessWidget {
             ],
           ),
         ),
-        if (sync.pending > 0 || sync.rejected > 0) SliverToBoxAdapter(child: _SyncBanner(sync: sync, onDismiss: cubit.acknowledgeRejected)),
+        if (sync.pending > 0 || sync.rejected > 0 || sync.held > 0)
+          SliverToBoxAdapter(child: _SyncBanner(sync: sync, onDismiss: cubit.acknowledgeRejected, onDiscard: cubit.discardHeld)),
         if (overview.isEmpty)
           const SliverFillRemaining(hasScrollBody: false, child: _Empty())
         else
@@ -125,10 +127,23 @@ class _Content extends StatelessWidget {
 
 /// Offline erfasste Einträge: warten noch oder wurden abgelehnt (antippen blendet aus).
 class _SyncBanner extends StatelessWidget {
-  const _SyncBanner({required this.sync, required this.onDismiss});
+  const _SyncBanner({required this.sync, required this.onDismiss, required this.onDiscard});
 
   final SyncState sync;
   final VoidCallback onDismiss;
+  final Future<void> Function() onDiscard;
+
+  Future<void> _discard(BuildContext context) async {
+    final l10n = context.l10n;
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: l10n.homeSyncDiscardTitle(sync.held),
+      message: l10n.homeSyncDiscardBody,
+      confirmLabel: l10n.homeSyncDiscard,
+      destructive: true,
+    );
+    if (confirmed) await onDiscard();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +158,15 @@ class _SyncBanner extends StatelessWidget {
               leading: AppIconTile(icon: CupertinoIcons.cloud_upload_fill, color: c.warning),
               title: l10n.homeSyncPending(sync.pending),
               subtitle: l10n.homeSyncPendingHint,
+            ),
+          if (sync.held > 0)
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.lock_fill, color: c.warning),
+              title: l10n.homeSyncHeld(sync.held),
+              subtitle: l10n.homeSyncHeldHint,
+              trailing: AppText(l10n.homeSyncDiscard, style: (t) => t.body, color: c.danger),
+              chevron: false,
+              onTap: () => _discard(context),
             ),
           if (sync.rejected > 0)
             AppListRow(
@@ -176,8 +200,9 @@ class _EnableReminders extends StatelessWidget {
                     leading: AppIconTile(icon: CupertinoIcons.bell_fill, color: context.colors.accent),
                     title: l10n.remindersEnable,
                     subtitle: state.denied ? l10n.settingsRemindersDenied : l10n.remindersEnableHint,
-                    chevron: false,
-                    onTap: () => context.read<RemindersCubit>().setEnabled(true),
+                    // Abgelehnt: iOS fragt nicht noch einmal – dann direkt in die Systemeinstellungen der App.
+                    chevron: state.denied,
+                    onTap: () => state.denied ? launchUrl(Uri.parse('app-settings:')) : context.read<RemindersCubit>().setEnabled(true),
                   ),
                 ],
               ),

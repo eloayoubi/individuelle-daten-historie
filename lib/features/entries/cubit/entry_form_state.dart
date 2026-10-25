@@ -32,6 +32,7 @@ class EntryFormState extends Equatable {
     required this.isNew,
     required this.date,
     required this.decimalSeparator,
+    required this.today,
     this.mode = EntryFormMode.standard,
     this.inputs = const {},
     this.originalValues = const {},
@@ -54,6 +55,7 @@ class EntryFormState extends Equatable {
       isNew: entry == null,
       date: CostEngine.day(entry?.date ?? (mode == EntryFormMode.contract ? _firstContractDay(tracker, now) : now)),
       decimalSeparator: args.decimalSeparator,
+      today: CostEngine.day(now),
       mode: mode,
       note: entry?.note ?? '',
       meterChange: entry?.meterChange ?? false,
@@ -76,8 +78,9 @@ class EntryFormState extends Equatable {
       final hasMeterEntry = tracker.entries.any((e) => e.values.containsKey(meter.id));
       return !hasMeterEntry || tracker.readsFromBills ? EntryFormMode.bill : EntryFormMode.reading;
     }
+    // Aus dem Preisverlauf: immer die Preise bearbeiten, auch wenn der Eintrag noch einen Stand trägt.
+    if (contract || tracker.isPriceChange(entry)) return EntryFormMode.contract;
     if (tracker.isBill(entry)) return EntryFormMode.bill;
-    if (tracker.isPriceChange(entry)) return EntryFormMode.contract;
     return EntryFormMode.reading;
   }
 
@@ -102,7 +105,10 @@ class EntryFormState extends Equatable {
     for (final e in tracker.entries) {
       if (tracker.isBill(e) && (lastEnd == null || e.periodEnd!.isAfter(lastEnd))) lastEnd = CostEngine.day(e.periodEnd!);
     }
-    final start = lastEnd?.add(const Duration(days: 1)) ?? DateTime.utc(today.year, today.month - 6, today.day);
+    // Sechs Monate zurück, am Monatsende gekürzt (31.8. → 28.2., nicht 3.3.).
+    final monthStart = DateTime.utc(today.year, today.month - 6);
+    final lastDay = DateTime.utc(monthStart.year, monthStart.month + 1, 0).day;
+    final start = lastEnd?.add(const Duration(days: 1)) ?? DateTime.utc(monthStart.year, monthStart.month, today.day > lastDay ? lastDay : today.day);
     return (start: start, end: start.isAfter(today) ? start : today);
   }
 
@@ -116,6 +122,9 @@ class EntryFormState extends Equatable {
   /// Stichtag des Eintrags (UTC-Mitternacht). Bei einer Rechnung zählt stattdessen [periodEnd].
   final DateTime date;
   final String decimalSeparator;
+
+  /// Heute (UTC-Mitternacht) – Grenze für Daten von Rechnungen und Ständen.
+  final DateTime today;
   final EntryFormMode mode;
 
   /// Eingaben je Feld: `String` bei Zahlen und Text, `String?` bei Auswahl, `bool?` bei Ja/Nein,
@@ -142,7 +151,7 @@ class EntryFormState extends Equatable {
     EntryFormMode.standard => tracker.entryFields,
     EntryFormMode.bill => [for (final f in tracker.entryFields) if (f.role == FieldRole.meterReading || f.role == FieldRole.oneOffCost) f],
     EntryFormMode.reading => [for (final f in tracker.entryFields) if (!f.isRate) f],
-    EntryFormMode.contract => tracker.rateFields,
+    EntryFormMode.contract => tracker.contractFields,
   };
 
   /// Rechnung und Zählerstand lassen sich bei einem neuen Eintrag wechseln.
@@ -157,6 +166,19 @@ class EntryFormState extends Equatable {
     for (final f in tracker.detailFields)
       if (originalValues[f.id] case final Object v) f.id: v,
   };
+
+  /// Werte, die ein vorhandener Eintrag für Felder trägt, die dieser Modus nicht zeigt (z. B. Preise in
+  /// einem Stand von früher): Sie bleiben beim Speichern erhalten. Formel-Werte rechnet die App.
+  Map<String, Object> get keptHidden {
+    final shown = {for (final f in fields) f.id};
+    return {
+      for (final MapEntry(:key, :value) in originalValues.entries)
+        if (!shown.contains(key) && tracker.fields.any((f) => f.id == key && f.kind != FieldKind.formula)) key: value,
+    };
+  }
+
+  /// Spätestes wählbares Datum: Rechnungen und Stände liegen nicht in der Zukunft, Preise dürfen es.
+  DateTime? get latestDate => mode == EntryFormMode.bill || mode == EntryFormMode.reading ? today : null;
 
   /// Schalter „Neuer Zähler“: nur bei einem Zählerstand.
   bool get hasMeter => (mode == EntryFormMode.standard || mode == EntryFormMode.reading) && tracker.meter != null;
@@ -235,7 +257,7 @@ class EntryFormState extends Equatable {
   Entry toEntry() => Entry(
     id: entryId,
     date: isBill ? periodEnd! : date,
-    values: {...keptDetails, ...values},
+    values: {...keptDetails, ...keptHidden, ...values},
     note: note.trim().isEmpty ? null : note.trim(),
     meterChange: hasMeter && meterChange,
     periodStart: isBill || (hasOneOff && hasPeriod) ? periodStart : null,
@@ -258,6 +280,7 @@ class EntryFormState extends Equatable {
     isNew: isNew,
     date: date ?? this.date,
     decimalSeparator: decimalSeparator,
+    today: today,
     mode: mode ?? this.mode,
     inputs: inputs ?? this.inputs,
     originalValues: originalValues,
@@ -270,5 +293,5 @@ class EntryFormState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, mode, inputs, originalValues, note, meterChange, periodStart, periodEnd, saving, event];
+  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, today, mode, inputs, originalValues, note, meterChange, periodStart, periodEnd, saving, event];
 }

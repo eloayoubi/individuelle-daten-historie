@@ -335,6 +335,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get detailMissing => 'Diese Kategorie gibt es nicht mehr.';
 
   @override
+  String get trackerMissing => 'Diesen Tracker gibt es nicht mehr.';
+
+  @override
   String get detailTrackerAdded => 'Tracker angelegt.';
 
   @override
@@ -425,6 +428,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fieldKeepsBills =>
       'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.';
+
+  @override
+  String get fieldKeepsMeter =>
+      'Dieser Zählerstand hat schon Werte – er bleibt ein Zählerstand, sonst würden alle Stände umgedeutet.';
+
+  @override
+  String get trackerNoEntriesViewer =>
+      'Sobald jemand einen Wert einträgt, erscheint er hier.';
 
   @override
   String fieldArchiveTitle(String name) {
@@ -749,6 +760,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get entryNeedsValue => 'Trag mindestens einen Wert ein.';
 
   @override
+  String get wordAnd => 'und';
+
+  @override
+  String get entryNoteHintBill => 'Optional, z. B. Rechnungsnummer';
+
+  @override
+  String get entryNoteHintContract =>
+      'Optional, z. B. Preiserhöhung laut Schreiben';
+
+  @override
+  String get entryNeedsConsumption => 'Trag den Verbrauch laut Rechnung ein.';
+
+  @override
+  String get entryNeedsPrice => 'Trag mindestens einen Preis ein.';
+
+  @override
+  String get entryNeedsReading => 'Trag den Zählerstand ein.';
+
+  @override
+  String get contractSave => 'Preise speichern';
+
+  @override
   String get entryNoFields =>
       'Dieser Tracker hat noch keine Felder zum Eintragen. Lege sie unter „Bearbeiten“ an.';
 
@@ -817,6 +850,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get trackerEntries => 'Einträge';
 
   @override
+  String trackerAllEntries(int count) {
+    return 'Alle $count';
+  }
+
+  @override
   String get trackerNoEntriesTitle => 'Noch keine Einträge';
 
   @override
@@ -825,6 +863,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get trackerAddEntry => 'Wert eintragen';
+
+  @override
+  String get trackerAddEntryFor => 'Wert eintragen für …';
 
   @override
   String get trackerMeterChanged => 'Neuer Zähler';
@@ -858,6 +899,39 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get homeSyncRejectedHint =>
       'Fehlende Rechte oder ein ungültiger Wert. Tippen zum Ausblenden.';
+
+  @override
+  String homeSyncHeld(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge werden zurückgehalten',
+      one: '1 Eintrag wird zurückgehalten',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncHeldHint =>
+      'Keine Schreibrechte mehr oder das Cloud-Abo der Kategorie ist beendet. Er wird erneut gesendet, sobald es wieder geht.';
+
+  @override
+  String get homeSyncDiscard => 'Verwerfen';
+
+  @override
+  String homeSyncDiscardTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count zurückgehaltene Einträge verwerfen?',
+      one: 'Zurückgehaltenen Eintrag verwerfen?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSyncDiscardBody =>
+      'Sie verschwinden von diesem Gerät und kommen nicht mehr in die Cloud.';
 
   @override
   String get remindersEnable => 'Erinnerungen aktivieren';
@@ -986,7 +1060,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String insightsInstalmentDetail(String paid, String year, String cost) {
-    return 'Ø $paid pro Monat · Kosten $year ≈ $cost';
+    return 'Abschlag $paid pro Monat · Kosten $year ≈ $cost';
   }
 
   @override
@@ -1141,6 +1215,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get accountSignOut => 'Abmelden';
+
+  @override
+  String accountSignOutPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Achtung: $count Einträge sind noch nicht gesendet. Sie gehen verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.',
+      one:
+          'Achtung: 1 Eintrag ist noch nicht gesendet. Er geht verloren, wenn du dich nicht wieder mit diesem Konto anmeldest.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get accountAnonymousTitle => 'Nur auf diesem Gerät';
@@ -1308,6 +1395,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get joinInvalid => 'Code unbekannt, abgelaufen oder schon benutzt.';
 
   @override
+  String get joinOwnerNoCloud =>
+      'Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.';
+
+  @override
   String get joinBody =>
       'Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.';
 
@@ -1331,6 +1422,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get accountDeleteBody =>
       'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.';
+
+  @override
+  String accountDeletePending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Achtung: $count Einträge sind noch nicht gesendet und gehen mit dem Konto verloren.',
+      one:
+          'Achtung: 1 Eintrag ist noch nicht gesendet und geht mit dem Konto verloren.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get accountDeleteFooter =>
@@ -1465,8 +1569,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String contractDeleteBody(String prices) {
-    return '$prices verschwinden aus Vertrag, Kosten und Prognose.';
+  String contractDeleteBody(int count, String prices) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$prices verschwinden',
+      one: '$prices verschwindet',
+    );
+    return '$_temp0 aus Vertrag, Kosten und Prognose.';
   }
 
   @override
@@ -1478,6 +1588,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get contractMissingPrice =>
       'Ohne Arbeitspreis rechnet die App noch keine Kosten.';
+
+  @override
+  String get contractMissingTitle => 'Noch keine Preise';
+
+  @override
+  String get contractMissingBody =>
+      'Trag Arbeitspreis, Grundpreis und Abschlag aus deinem Vertrag ein – dann rechnet die App deine Kosten und prüft den Abschlag.';
+
+  @override
+  String get contractEnterPrices => 'Preise eintragen';
 
   @override
   String priceHistoryFrom(String date) {
@@ -1999,7 +2119,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cloudPausedBody =>
-      'Dein Cloud-Abo ist beendet. Deine Daten sind sicher und bleiben lesbar – ändern kannst du sie wieder mit Abo. Oder du holst alles kostenlos auf dieses Gerät.';
+      'Dein Cloud-Abo ist beendet. Deine Daten sind sicher gespeichert – mit Abo kannst du sie wieder ansehen und ändern. Oder du holst alles kostenlos auf dieses Gerät.';
 
   @override
   String get cloudPausedRenew => 'Abo erneuern';

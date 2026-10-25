@@ -17,6 +17,16 @@ void main() {
     });
   });
 
+  group('derivedId', () {
+    test('gleiche Eingaben, gleiche UUID (Version 5); andere Eingaben, andere UUID', () {
+      final id = derivedId('tracker-a', 'e1');
+      expect(id, derivedId('tracker-a', 'e1'));
+      expect(id, matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')));
+      expect(derivedId('tracker-b', 'e1'), isNot(id));
+      expect(derivedId('tracker-a', 'e2'), isNot(id));
+    });
+  });
+
   group('parseNumber', () {
     double? de(String t) => parseNumber(t, decimalSeparator: ',');
     double? en(String t) => parseNumber(t, decimalSeparator: '.');
@@ -64,6 +74,11 @@ void main() {
     test('Werte behalten ihren Typ', () {
       final entry = Entry(id: 'e', date: DateTime.utc(2026, 10, 1), values: {'n': 1.5, 'i': 3, 't': 'Text', 'd': DateTime.utc(2027, 3, 31), 'b': true}, note: 'Notiz', meterChange: true);
       expect(TrackingCodec.entryFrom(TrackingCodec.entry(entry)), entry);
+    });
+
+    test('Rechnung behält Zeitraum und Verbrauch', () {
+      final bill = Entry(id: 'b', date: DateTime.utc(2026, 9, 30), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 4), periodEnd: DateTime.utc(2026, 9, 30));
+      expect(TrackingCodec.entryFrom(TrackingCodec.entry(bill)), bill);
     });
   });
 }

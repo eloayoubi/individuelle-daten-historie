@@ -7,7 +7,9 @@ import '../../categories/view/tracker_setup_page.dart';
 import '../cubit/tracker_cubit.dart';
 import '../data/tracker_history.dart';
 import 'entry_form_page.dart';
-import 'price_history_page.dart';
+import 'entries_page.dart';
+import 'widgets/contract_group.dart';
+import 'widgets/entry_row.dart';
 import 'widgets/history_chart.dart';
 import 'widgets/tracker_details.dart';
 
@@ -18,10 +20,14 @@ import 'widgets/tracker_details.dart';
 class TrackerPage extends StatelessWidget {
   const TrackerPage({super.key, required this.args});
 
+  /// Seiten eines Trackers (Verlauf, alle Einträge, Preisverlauf, Aufbau) – nach dem Archivieren
+  /// des Trackers geht es hinter sie zurück.
+  static const routeName = 'tracker';
+
   final TrackerArgs args;
 
   static Future<void> open(BuildContext context, {required String categoryId, required String trackerId}) => Navigator.of(context).push(
-    CupertinoPageRoute<void>(builder: (_) => TrackerPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId))),
+    CupertinoPageRoute<void>(settings: const RouteSettings(name: routeName), builder: (_) => TrackerPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId))),
   );
 
   @override
@@ -44,7 +50,7 @@ class TrackerPage extends StatelessWidget {
                   Expanded(
                     child: Center(
                       child: AppText(
-                        state.status == TrackerStatus.failure ? context.l10n.errorLoad : context.l10n.detailMissing,
+                        state.status == TrackerStatus.failure ? context.l10n.errorLoad : context.l10n.trackerMissing,
                         style: (t) => t.body,
                         color: context.colors.textSecondary,
                       ),
@@ -66,6 +72,9 @@ class _Content extends StatelessWidget {
   /// Platz für Werte rechts in „Aktuelle Werte“ (längere werden gekürzt).
   static const _valueWidth = 190.0;
 
+  /// So viele Einträge zeigt die Seite selbst; alle stehen unter „Alle“.
+  static const _recent = 5;
+
   final TrackerState state;
   final Category category;
   final Tracker tracker;
@@ -78,217 +87,168 @@ class _Content extends StatelessWidget {
     final history = state.history;
     final entries = state.entries;
     String format(double v) => history?.metric == HistoryMetric.consumption ? context.amount(v, history!.unit) : context.euros(v);
-    void add() => EntryFormPage.open(context, category: category, tracker: tracker);
-    final canAdd = category.canEdit && tracker.entryFields.isNotEmpty;
-    final years = <int, List<Entry>>{};
-    for (final e in entries) {
-      years.putIfAbsent(e.date.year, () => []).add(e);
-    }
-    final now = DateTime.now().year;
-    return ListView(
-      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + Spacing.xxl),
-      children: [
-        AppHeader(
-          title: tracker.name,
-          overline: category.name,
-          onBack: () => Navigator.of(context).pop(),
-          actions: [
-            if (category.canEdit)
-              AppIconButton(
-                icon: CupertinoIcons.pencil,
-                semanticLabel: l10n.trackerSetup,
-                onPressed: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
-              ),
-            if (canAdd) AppIconButton(icon: CupertinoIcons.plus, semanticLabel: l10n.trackerAddEntry, filled: true, onPressed: add),
-          ],
-        ),
-        if (state.includedInName case final String into)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Spacing.xl, 0, Spacing.xl, Spacing.m),
-            child: Row(
-              spacing: Spacing.s,
-              children: [
-                Icon(CupertinoIcons.arrow_turn_down_right, size: 16, color: c.textSecondary),
-                Expanded(child: AppText(l10n.trackerIncludedNote(into), style: (t) => t.footnote, color: c.textSecondary)),
-              ],
-            ),
-          ),
-        if (history != null) ...[
-          if (state.metrics.length > 1)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.l, 0, Spacing.l, Spacing.m),
-              child: AppSegmented<HistoryMetric>(
-                value: history.metric,
-                segments: {for (final m in state.metrics) m: m == HistoryMetric.cost ? l10n.metricCost : l10n.metricConsumption},
-                onChanged: cubit.selectMetric,
-              ),
-            ),
-          Padding(
-            padding: Spacing.screen,
-            child: AppCard(
-              padding: const EdgeInsets.all(Spacing.xl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: Spacing.m,
-                children: [
-                  AppText(
-                    (history.months.length < 12 ? l10n.trackerSince(context.monthYear(history.months.first.month)) : l10n.trackerLast12).toUpperCase(),
-                    style: (t) => t.footnoteEmphasized,
-                    color: c.textSecondary,
-                  ),
-                  if (history.hasData)
-                    HistoryChart(history: history, color: c.swatch(category.swatch), format: format)
-                  else
-                    AppText(l10n.trackerChartEmpty, style: (t) => t.subheadline, color: c.textSecondary),
-                  Divider(height: Spacing.s, color: c.separator),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _Stat(label: l10n.trackerThisYear('$now'), value: format(history.thisYear)),
-                      _Stat(label: l10n.trackerLastYear, value: history.lastYearToDate == null ? '–' : format(history.lastYearToDate!)),
-                      _Stat(label: l10n.homeForecastTitle('${now + 1}'), value: format(history.forecastNextYear)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-        if (tracker.isUtilityMeter) ...[
-          SectionHeader(title: l10n.contractTitle),
-          AppListGroup(
-            dividerIndent: Spacing.l,
-            footer: state.missingPrice ? l10n.contractMissingPrice : null,
-            children: [
-              for (final field in tracker.rateFields)
-                _ContractRow(
-                  field: field,
-                  value: state.contract.where((v) => v.field.id == field.id).firstOrNull,
-                  onTap: () => PriceHistoryPage.open(context, cubit: cubit, fieldId: field.id),
+    void open(Entry e) => EntryFormPage.open(context, category: category, tracker: tracker, entry: e);
+    final now = (state.today ?? DateTime.now()).year;
+    // Hauptaktion unten: Wert eintragen – oder, ohne Felder, erst die Felder festlegen.
+    final action = !category.canEdit
+        ? null
+        : tracker.entryFields.isNotEmpty
+        ? AppButton(label: l10n.trackerAddEntry, icon: CupertinoIcons.plus, onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker))
+        : AppButton(
+            label: l10n.trackerSetUpFields,
+            icon: CupertinoIcons.slider_horizontal_3,
+            onPressed: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
+          );
+    return AppActionBar(
+      action: action,
+      content: ListView(
+        padding: EdgeInsets.only(bottom: action == null ? MediaQuery.paddingOf(context).bottom + Spacing.xxl : AppActionBar.inset(context)),
+        children: [
+          AppHeader(
+            title: tracker.name,
+            overline: category.name,
+            onBack: () => Navigator.of(context).pop(),
+            actions: [
+              if (category.canEdit)
+                AppIconButton(
+                  icon: CupertinoIcons.slider_horizontal_3,
+                  semanticLabel: l10n.trackerSetup,
+                  onPressed: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
                 ),
             ],
           ),
-          if (tracker.detailFields.isNotEmpty) ...[
-            const SizedBox(height: Spacing.m),
-            TrackerDetailsGroup(tracker: tracker, onSave: category.canEdit ? cubit.saveDetail : null),
+          if (state.includedInName case final String into)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Spacing.xl, 0, Spacing.xl, Spacing.m),
+              child: Row(
+                spacing: Spacing.s,
+                children: [
+                  Icon(CupertinoIcons.arrow_turn_down_right, size: 16, color: c.textSecondary),
+                  Expanded(child: AppText(l10n.trackerIncludedNote(into), style: (t) => t.footnote, color: c.textSecondary)),
+                ],
+              ),
+            ),
+          if (history != null) ...[
+            if (state.metrics.length > 1)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Spacing.l, 0, Spacing.l, Spacing.m),
+                child: AppSegmented<HistoryMetric>(
+                  value: history.metric,
+                  segments: {for (final m in state.metrics) m: m == HistoryMetric.cost ? l10n.metricCost : l10n.metricConsumption},
+                  onChanged: cubit.selectMetric,
+                ),
+              ),
+            Padding(
+              padding: Spacing.screen,
+              child: AppCard(
+                padding: const EdgeInsets.all(Spacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: Spacing.m,
+                  children: [
+                    AppText(
+                      (history.months.length < 12 ? l10n.trackerSince(context.monthYear(history.months.first.month)) : l10n.trackerLast12).toUpperCase(),
+                      style: (t) => t.footnoteEmphasized,
+                      color: c.textSecondary,
+                    ),
+                    if (history.hasData)
+                      HistoryChart(history: history, color: c.swatch(category.swatch), format: format)
+                    else
+                      AppText(l10n.trackerChartEmpty, style: (t) => t.subheadline, color: c.textSecondary),
+                    Divider(height: Spacing.s, color: c.separator),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _Stat(label: l10n.trackerThisYear('$now'), value: format(history.thisYear)),
+                        _Stat(label: l10n.trackerLastYear, value: history.lastYearToDate == null ? '–' : format(history.lastYearToDate!)),
+                        _Stat(label: l10n.homeForecastTitle('${now + 1}'), value: format(history.forecastNextYear)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
-          if (category.canEdit)
+          // Verbrauch da, Preise fehlen: Kosten gibt es erst mit Vertrag – das sagen wir gleich oben.
+          if (state.missingPrice && category.canEdit)
             Padding(
               padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.m, Spacing.l, 0),
-              child: AppButton(
-                label: l10n.contractChange,
-                variant: AppButtonVariant.tinted,
-                onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true),
+              child: AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: Spacing.s,
+                  children: [
+                    Row(
+                      spacing: Spacing.m,
+                      children: [
+                        AppIconTile(icon: CupertinoIcons.tag_fill, color: c.swatch(category.swatch)),
+                        Expanded(child: AppText(l10n.contractMissingTitle, style: (t) => t.headline)),
+                      ],
+                    ),
+                    AppText(l10n.contractMissingBody, style: (t) => t.subheadline, color: c.textSecondary),
+                    const SizedBox(height: Spacing.xs),
+                    AppButton(
+                      label: l10n.contractEnterPrices,
+                      variant: AppButtonVariant.tinted,
+                      onPressed: () => EntryFormPage.open(context, category: category, tracker: tracker, contract: true),
+                    ),
+                  ],
+                ),
               ),
             ),
-        ] else if (tracker.detailFields.isNotEmpty) ...[
-          SectionHeader(title: l10n.detailsTitle),
-          TrackerDetailsGroup(tracker: tracker, onSave: category.canEdit ? cubit.saveDetail : null),
-        ],
-        if (state.currentValues.isNotEmpty) ...[
-          SectionHeader(title: l10n.trackerCurrentValues),
-          AppListGroup(
-            dividerIndent: Spacing.l,
-            children: [
-              for (final v in state.currentValues)
-                AppListRow(
-                  title: v.field.name,
-                  subtitle: context.joinParts([
-                    l10n.trackerSince(context.shortDate(v.since)),
-                    if (v.upcoming case final Object next) l10n.trackerUpcoming(context.shortDate(v.upcomingFrom!), context.fieldValue(v.field, next)),
-                  ]),
-                  trailing: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: _valueWidth),
-                    child: AppText(context.fieldValue(v.field, v.value), style: (t) => t.numberM, maxLines: 1, align: TextAlign.end),
-                  ),
-                ),
-            ],
-          ),
-        ],
-        SectionHeader(title: l10n.trackerEntries),
-        if (entries.isEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Spacing.xxl, Spacing.l, Spacing.xxl, 0),
-            child: Column(
-              spacing: Spacing.s,
-              children: [
-                AppText(l10n.trackerNoEntriesTitle, style: (t) => t.title3, align: TextAlign.center),
-                AppText(l10n.trackerNoEntriesBody, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
-                if (canAdd) ...[
-                  const SizedBox(height: Spacing.s),
-                  AppButton(label: l10n.trackerAddEntry, icon: CupertinoIcons.plus, expand: false, onPressed: add),
-                ],
-              ],
-            ),
-          )
-        else
-          for (final MapEntry(key: year, value: list) in years.entries) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, Spacing.xs),
-              child: AppText('$year', style: (t) => t.footnoteEmphasized, color: c.textSecondary),
-            ),
+          if (state.currentValues.isNotEmpty && !tracker.isUtilityMeter) ...[
+            SectionHeader(title: l10n.trackerCurrentValues),
             AppListGroup(
               dividerIndent: Spacing.l,
               children: [
-                for (final e in list)
+                for (final v in state.currentValues)
                   AppListRow(
-                    title: tracker.isBill(e)
-                        ? l10n.entryPeriodRange(context.shortDate(e.periodStart!), context.shortDate(e.periodEnd!))
-                        : context.shortWeekdayDate(e.date),
+                    title: v.field.name,
                     subtitle: context.joinParts([
-                      if (category.sharedWith.where((m) => m.userId == e.createdBy).firstOrNull case final CategoryMember by) l10n.entryBy(by.name.isEmpty ? l10n.shareNoName : by.name),
-                      if (tracker.isBill(e)) l10n.entryKindBill,
-                      if (e.meterChange) l10n.trackerMeterChanged,
-                      for (final f in tracker.fields)
-                        if (!f.isDetail)
-                          if (e.values[f.id] case final Object v)
-                            tracker.isBill(e) && f.role == FieldRole.meterReading
-                                ? l10n.entryFieldValue(l10n.entryBillConsumption, context.amount((v as num).toDouble(), f.usageUnit))
-                                : l10n.entryFieldValue(f.name, context.fieldValue(f, v)),
-                      e.note,
+                      l10n.trackerSince(context.shortDate(v.since)),
+                      if (v.upcoming case final Object next) l10n.trackerUpcoming(context.shortDate(v.upcomingFrom!), context.fieldValue(v.field, next)),
                     ]),
-                    onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e) : null,
+                    trailing: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: _valueWidth),
+                      child: AppText(context.fieldValue(v.field, v.value), style: (t) => t.numberM, maxLines: 1, align: TextAlign.end),
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: Spacing.s),
           ],
-      ],
-    );
-  }
-}
-
-/// Preis im Vertrag: aktueller Wert seit …, eine eingetragene Änderung; ohne Wert „Eintragen“.
-class _ContractRow extends StatelessWidget {
-  const _ContractRow({required this.field, required this.value, required this.onTap});
-
-  /// Platz für den Wert rechts (längere werden gekürzt).
-  static const _valueWidth = 180.0;
-
-  final FieldDefinition field;
-  final CurrentValue? value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l10n = context.l10n;
-    final v = value;
-    return AppListRow(
-      title: field.name,
-      subtitle: v == null
-          ? null
-          : context.joinParts([
-              l10n.trackerSince(context.shortDate(v.since)),
-              if (v.upcoming case final Object next) l10n.trackerUpcoming(context.shortDate(v.upcomingFrom!), context.fieldValue(field, next)),
-            ]),
-      trailing: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _valueWidth),
-        child: v == null
-            ? AppText(l10n.contractSet, style: (t) => t.body, color: c.accent)
-            : AppText(context.fieldValue(field, v.value), style: (t) => t.numberM, maxLines: 1, align: TextAlign.end),
+          SectionHeader(
+            title: l10n.trackerEntries,
+            action: entries.length > _recent ? l10n.trackerAllEntries(entries.length) : null,
+            onAction: () => EntriesPage.open(context, categoryId: category.id, trackerId: tracker.id),
+          ),
+          if (entries.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Spacing.xxl, Spacing.s, Spacing.xxl, 0),
+              child: Column(
+                spacing: Spacing.s,
+                children: [
+                  AppText(l10n.trackerNoEntriesTitle, style: (t) => t.title3, align: TextAlign.center),
+                  AppText(category.canEdit ? l10n.trackerNoEntriesBody : l10n.trackerNoEntriesViewer, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
+                ],
+              ),
+            )
+          else
+            AppListGroup(
+              dividerIndent: Spacing.l,
+              children: [
+                for (final e in entries.take(_recent)) EntryRow(category: category, tracker: tracker, entry: e, onTap: category.canEdit ? () => open(e) : null),
+              ],
+            ),
+          // Einstellungen: Vertrag (Preise mit Verlauf und Details) bzw. Details.
+          if (tracker.isUtilityMeter) ...[
+            SectionHeader(title: l10n.contractTitle),
+            ContractGroup(category: category, tracker: tracker, contract: state.contract, missingPrice: state.missingPrice, onSaveDetail: cubit.saveDetail),
+          ] else if (tracker.detailFields.isNotEmpty) ...[
+            SectionHeader(title: l10n.detailsTitle),
+            TrackerDetailsGroup(tracker: tracker, onSave: category.canEdit ? cubit.saveDetail : null),
+          ],
+        ],
       ),
-      onTap: onTap,
     );
   }
 }

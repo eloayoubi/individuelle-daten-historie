@@ -272,4 +272,57 @@ void main() {
     expect(form(tracker: empty, contract: true).state.date, DateTime.utc(2026, 10, 22));
     expect(form(contract: true).state.date, DateTime.utc(2026, 10, 22));
   });
+
+  group('Feinschliff', () {
+    final empty = strom.trackers.single.copyWith(entries: []);
+
+    test('Vorbelegung der Rechnung am Monatsende läuft nicht über', () {
+      final cubit = EntryFormCubit(repo, EntryFormArgs(category: strom, tracker: empty), now: () => DateTime(2026, 8, 31, 10));
+      expect(cubit.state.periodStart, DateTime.utc(2026, 2, 28));
+      final october = EntryFormCubit(repo, EntryFormArgs(category: strom, tracker: empty), now: () => DateTime(2026, 10, 31, 10));
+      expect(october.state.periodStart, DateTime.utc(2026, 4, 30));
+    });
+
+    test('Moduswechsel leert den Zählerwert und behält den eigenen Zeitraum', () {
+      final cubit = form(tracker: empty)
+        ..setText(meter.id, '508')
+        ..setPeriodStart(DateTime(2026, 1, 1))
+        ..setMode(EntryFormMode.reading);
+      expect(cubit.state.valueOf(meter), isNull);
+      cubit
+        ..setText(meter.id, '47000')
+        ..setMode(EntryFormMode.bill);
+      expect(cubit.state.valueOf(meter), isNull);
+      expect(cubit.state.periodStart, DateTime.utc(2026, 1, 1));
+    });
+
+    test('Werte von Feldern, die der Modus nicht zeigt, bleiben beim Speichern', () {
+      final mixed = Entry(id: 'm', date: DateTime.utc(2026, 1, 1), values: {meter.id: 1000, 'f-strom-gp': 12});
+      final cubit = form(tracker: empty.copyWith(entries: [mixed]), entry: mixed)..setText(meter.id, '1001');
+      expect(cubit.state.mode, EntryFormMode.reading);
+      expect(cubit.state.toEntry().values, {meter.id: 1001, 'f-strom-gp': 12});
+    });
+
+    test('neueste mögliche Daten: Rechnung und Stand bis heute, Preise auch später', () {
+      expect(form().state.latestDate, DateTime.utc(2026, 10, 22));
+      expect(form(contract: true).state.latestDate, isNull);
+    });
+  });
+
+  test('aus dem Preisverlauf: gemischter Eintrag öffnet im Vertragsmodus, der Stand bleibt', () {
+    final mixed = Entry(id: 'm', date: DateTime.utc(2026, 1, 1), values: {meter.id: 1000, 'f-strom-ap': 0.3});
+    final t = strom.trackers.single.copyWith(entries: [mixed]);
+    final cubit = form(tracker: t, entry: mixed, contract: true)..setText('f-strom-ap', '0,31');
+    expect(cubit.state.mode, EntryFormMode.contract);
+    expect(cubit.state.toEntry().values, {meter.id: 1000, 'f-strom-ap': 0.31});
+  });
+
+  test('Löschen im Vertragsmodus entfernt nur die Preise eines gemischten Eintrags', () async {
+    final mixed = Entry(id: 'm-del', date: DateTime.utc(2026, 1, 1), values: {meter.id: 1000, 'f-strom-ap': 0.3});
+    await repo.saveEntry('t-strom', mixed);
+    final t = (await repo.loadCategory('c-strom'))!.trackers.single;
+    await form(tracker: t, entry: mixed, contract: true).delete();
+    final after = (await repo.loadCategory('c-strom'))!.trackers.single.entries.firstWhere((e) => e.id == 'm-del');
+    expect(after.values, {meter.id: 1000});
+  });
 }
