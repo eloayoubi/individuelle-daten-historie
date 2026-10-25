@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:kostenkurve/core/models/tracking.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -126,5 +127,25 @@ void main() {
       act: (cubit) => cubit.load(),
       expect: () => [const RemindersState(loaded: true, denied: true)],
     );
+  });
+
+  test('keine Ablese-Mitteilung bei Rechnungen', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'kWh');
+    const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.currency, role: FieldRole.unitPrice);
+    final category = Category(
+      id: 'c',
+      name: 'Strom',
+      icon: CategoryIcon.bolt,
+      swatch: CategorySwatch.orange,
+      trackers: [
+        Tracker(
+          id: 't',
+          name: 'Zähler',
+          fields: const [meter, price],
+          entries: [Entry(id: 'b', date: DateTime.utc(2026, 8, 23), values: const {'stand': 508}, periodStart: DateTime.utc(2026, 2, 23), periodEnd: DateTime.utc(2026, 8, 23))],
+        ),
+      ],
+    );
+    expect(ReminderPlanner.plan([category], now, l10n).where((r) => r.title.endsWith('ablesen')), isEmpty);
   });
 }

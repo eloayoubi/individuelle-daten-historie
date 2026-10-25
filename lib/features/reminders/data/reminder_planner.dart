@@ -38,7 +38,8 @@ abstract final class ReminderPlanner {
     for (final category in categories) {
       if (category.isArchived || !category.canEdit) continue;
       for (final tracker in category.trackers) {
-        if (tracker.firstWithRole(FieldRole.meterReading) case final FieldDefinition meter) {
+        // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung.
+        if (tracker.meter case final FieldDefinition meter when !tracker.readsFromBills) {
           final last = _latest(tracker, meter.id)?.date;
           if (last != null) {
             var at = DateTime(last.year, last.month, last.day + readAfterDays, readHour);

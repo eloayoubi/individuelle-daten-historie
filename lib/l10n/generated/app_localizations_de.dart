@@ -423,6 +423,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fieldArchive => 'Feld entfernen';
 
   @override
+  String get fieldKeepsBills =>
+      'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.';
+
+  @override
   String fieldArchiveTitle(String name) {
     return '„$name“ entfernen?';
   }
@@ -817,7 +821,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get trackerNoEntriesBody =>
-      'Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.';
+      'Trag den ersten Wert ein – ab einer Rechnung oder dem zweiten Zählerstand entsteht der Verlauf.';
 
   @override
   String get trackerAddEntry => 'Wert eintragen';
@@ -1426,6 +1430,70 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get entryPeriodInvalid => 'Das Ende liegt vor dem Anfang.';
+
+  @override
+  String get entryKindBill => 'Rechnung';
+
+  @override
+  String get entryKindReading => 'Zählerstand';
+
+  @override
+  String get entryBillConsumption => 'Verbrauch';
+
+  @override
+  String entryBillPerMonth(String amount) {
+    return '≈ $amount im Monat';
+  }
+
+  @override
+  String get entryBillHint =>
+      'Zeitraum und Verbrauch stehen auf deiner Rechnung.';
+
+  @override
+  String get entryBillOverlap =>
+      'Überschneidet sich mit einer anderen Rechnung – an diesen Tagen zählt die später endende.';
+
+  @override
+  String get contractChange => 'Preise ändern';
+
+  @override
+  String get contractEdit => 'Preisänderung';
+
+  @override
+  String contractDeleteTitle(String date) {
+    return 'Preisänderung vom $date löschen?';
+  }
+
+  @override
+  String contractDeleteBody(String prices) {
+    return '$prices verschwinden aus Vertrag, Kosten und Prognose.';
+  }
+
+  @override
+  String get contractTitle => 'Vertrag';
+
+  @override
+  String get contractSet => 'Eintragen';
+
+  @override
+  String get contractMissingPrice =>
+      'Ohne Arbeitspreis rechnet die App noch keine Kosten.';
+
+  @override
+  String priceHistoryFrom(String date) {
+    return 'ab $date';
+  }
+
+  @override
+  String get priceHistoryPlanned => 'geplant';
+
+  @override
+  String get priceHistoryEmpty => 'Noch kein Preis eingetragen.';
+
+  @override
+  String entryPeriodRange(String from, String to) {
+    return '$from – $to';
+  }
 
   @override
   String get exportCategory => 'Kategorie';

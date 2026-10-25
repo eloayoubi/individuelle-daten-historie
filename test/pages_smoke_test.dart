@@ -22,6 +22,7 @@ import 'package:kostenkurve/features/categories/view/tracker_setup_page.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
 import 'package:kostenkurve/features/entries/view/entry_form_page.dart';
+import 'package:kostenkurve/features/entries/view/price_history_page.dart';
 import 'package:kostenkurve/features/entries/view/tracker_page.dart';
 import 'package:kostenkurve/features/home/view/home_page.dart';
 import 'package:kostenkurve/features/insights/view/insights_page.dart';
@@ -92,10 +93,19 @@ void main() {
     ('entry form new', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single))),
     ('entry form edit', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single, entry: strom.trackers.single.entries[1]))),
     ('entry form car', EntryFormPage(args: EntryFormArgs(category: auto, tracker: auto.trackers.single))),
+    ('entry form bill', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single.copyWith(entries: [])))),
+    ('entry form contract', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single, contract: true))),
     ('tracker meter', const TrackerPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom'))),
     ('tracker water', const TrackerPage(args: TrackerArgs(categoryId: 'c-wasser', trackerId: 't-wasser'))),
     ('tracker contract', const TrackerPage(args: TrackerArgs(categoryId: 'c-internet', trackerId: 't-glasfaser'))),
     ('tracker missing', const TrackerPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 'weg'))),
+    (
+      'price history',
+      BlocProvider(
+        create: (_) => lookup<TrackerCubit>(param1: const TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom'))..load(),
+        child: const PriceHistoryPage(fieldId: 'f-strom-ap'),
+      ),
+    ),
     ('tracker car with formula', const TrackerPage(args: TrackerArgs(categoryId: 'c-auto', trackerId: 't-golf'))),
     ('tracker water included', const TrackerPage(args: TrackerArgs(categoryId: 'c-wasser', trackerId: 't-wasser'))),
     ('insights', const InsightsPage()),

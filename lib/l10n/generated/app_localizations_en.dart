@@ -420,6 +420,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldArchive => 'Remove field';
 
   @override
+  String get fieldKeepsBills =>
+      'Your bills need this unit price – it stays a price per unit and can\'t be archived.';
+
+  @override
   String fieldArchiveTitle(String name) {
     return 'Remove “$name”?';
   }
@@ -811,7 +815,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackerNoEntriesBody =>
-      'Enter the first value – the history starts with the second meter reading.';
+      'Add your first value – a bill or a second meter reading starts the history.';
 
   @override
   String get trackerAddEntry => 'Add value';
@@ -1419,6 +1423,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entryPeriodInvalid => 'The end is before the start.';
+
+  @override
+  String get entryKindBill => 'Bill';
+
+  @override
+  String get entryKindReading => 'Meter reading';
+
+  @override
+  String get entryBillConsumption => 'Consumption';
+
+  @override
+  String entryBillPerMonth(String amount) {
+    return '≈ $amount per month';
+  }
+
+  @override
+  String get entryBillHint => 'Period and consumption are on your bill.';
+
+  @override
+  String get entryBillOverlap =>
+      'Overlaps another bill – on those days the one ending later counts.';
+
+  @override
+  String get contractChange => 'Change prices';
+
+  @override
+  String get contractEdit => 'Price change';
+
+  @override
+  String contractDeleteTitle(String date) {
+    return 'Delete price change from $date?';
+  }
+
+  @override
+  String contractDeleteBody(String prices) {
+    return '$prices will be removed from contract, costs and forecast.';
+  }
+
+  @override
+  String get contractTitle => 'Contract';
+
+  @override
+  String get contractSet => 'Add';
+
+  @override
+  String get contractMissingPrice =>
+      'Without a unit price the app can\'t calculate costs yet.';
+
+  @override
+  String priceHistoryFrom(String date) {
+    return 'from $date';
+  }
+
+  @override
+  String get priceHistoryPlanned => 'planned';
+
+  @override
+  String get priceHistoryEmpty => 'No price entered yet.';
+
+  @override
+  String entryPeriodRange(String from, String to) {
+    return '$from – $to';
+  }
 
   @override
   String get exportCategory => 'Category';

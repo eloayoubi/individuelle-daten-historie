@@ -14,6 +14,7 @@ class FieldEditorState extends Equatable {
     required this.isNew,
     required this.originalKind,
     required this.hasValues,
+    this.keepsBills = false,
     this.tracker,
     required this.name,
     required this.kind,
@@ -32,6 +33,7 @@ class FieldEditorState extends Equatable {
     isNew: field == null,
     originalKind: field?.kind,
     hasValues: hasValues,
+    keepsBills: field != null && tracker != null && _carriesBills(tracker, field),
     tracker: tracker,
     formula: field?.formula ?? '',
     name: field?.name ?? '',
@@ -44,6 +46,11 @@ class FieldEditorState extends Equatable {
     choices: field?.choices ?? const [],
   );
 
+  /// Letzter Arbeitspreis eines Versorgungszählers mit Rechnungen: Ohne ihn wären die Rechnungen
+  /// keine mehr (siehe [Tracker.isBill]).
+  static bool _carriesBills(Tracker tracker, FieldDefinition field) =>
+      field.role == FieldRole.unitPrice && tracker.withRole(FieldRole.unitPrice).length == 1 && tracker.entries.any(tracker.isBill);
+
   /// Grenzen wie in der Datenbank.
   static const maxName = 60;
   static const maxUnit = 20;
@@ -52,6 +59,10 @@ class FieldEditorState extends Equatable {
   final bool isNew;
   final FieldKind? originalKind;
   final bool hasValues;
+
+  /// Das Feld trägt die Rechnungen des Zählers: Es bleibt ein Arbeitspreis und lässt sich nicht
+  /// archivieren.
+  final bool keepsBills;
 
   /// Für Formeln: welche Namen es gibt und wie die Vorschau rechnet.
   final Tracker? tracker;
@@ -90,7 +101,10 @@ class FieldEditorState extends Equatable {
       name.trim().isNotEmpty &&
       factorValid &&
       (kind != FieldKind.choice || choices.isNotEmpty) &&
-      (kind != FieldKind.formula || formulaCheck.isValid);
+      (kind != FieldKind.formula || formulaCheck.isValid) &&
+      (!keepsBills || role == FieldRole.unitPrice);
+
+  bool get canArchive => !isNew && !keepsBills;
 
   FieldDraft get draft {
     final meter = role == FieldRole.meterReading;
@@ -128,6 +142,7 @@ class FieldEditorState extends Equatable {
     isNew: isNew,
     originalKind: originalKind,
     hasValues: hasValues,
+    keepsBills: keepsBills,
     tracker: tracker,
     formula: formula ?? this.formula,
     name: name ?? this.name,
@@ -143,5 +158,5 @@ class FieldEditorState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [isNew, originalKind, hasValues, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, saving, event];
+  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, saving, event];
 }

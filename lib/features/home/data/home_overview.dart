@@ -168,7 +168,9 @@ class HomeOverview extends Equatable {
             usage = engine.consumption(yearStart, tomorrow);
             usageUnit = meter.usageUnit;
           }
-          final unread = today.difference(engine.lastReading!).inDays;
+          // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung.
+          final lastRead = tracker.readsFromBills ? null : _lastReading(tracker);
+          final unread = lastRead == null ? 0 : today.difference(lastRead).inDays;
           if (unread >= readMeterAfterDays) {
             reminders.add(Reminder(kind: ReminderKind.readMeter, category: category, trackerId: tracker.id, trackerName: tracker.name, days: unread));
           }
@@ -225,6 +227,15 @@ class HomeOverview extends Equatable {
   static double? _ratio(double now, double before) => before.abs() < 0.01 ? null : (now - before) / before;
 
   static int _daysInMonth(DateTime d) => DateTime.utc(d.year, d.month + 1, 0).day;
+
+  /// Tag des letzten Zählerstands (ohne Rechnungen), `null` ohne Stand.
+  static DateTime? _lastReading(Tracker tracker) {
+    DateTime? last;
+    for (final e in tracker.entries) {
+      if (tracker.isReading(e) && (last == null || e.date.isAfter(last))) last = CostEngine.day(e.date);
+    }
+    return last;
+  }
 
   static DateTime? _firstEntry(Tracker tracker) {
     DateTime? first;

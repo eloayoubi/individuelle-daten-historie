@@ -13,10 +13,12 @@ void main() {
   late MockCategoriesRepository repo;
   setUp(() => repo = MockCategoriesRepository());
 
-  EntryFormCubit form({Category? category, Entry? entry}) {
+  EntryFormCubit form({Category? category, Tracker? tracker, Entry? entry, bool contract = false}) {
     final c = category ?? strom;
-    return EntryFormCubit(repo, EntryFormArgs(category: c, tracker: c.trackers.single, entry: entry), now: now);
+    return EntryFormCubit(repo, EntryFormArgs(category: c, tracker: tracker ?? c.trackers.single, entry: entry, contract: contract), now: now);
   }
+
+  Entry bill(DateTime from, DateTime to, num value) => Entry(id: 'b$from', date: to, values: {meter.id: value}, periodStart: from, periodEnd: to);
 
   test('neuer Eintrag: heute, neue Id, noch nicht speicherbar', () {
     final s = form().state;
@@ -53,22 +55,22 @@ void main() {
   });
 
   test('ungültige Zahl blockiert das Speichern', () {
-    final cubit = form()
-      ..setText(meter.id, '47100')
-      ..setText(strom.trackers.single.fields[1].id, 'teuer');
-    expect(cubit.state.invalid, {strom.trackers.single.fields[1].id});
+    final cubit = form(contract: true)
+      ..setText('f-strom-gp', '12')
+      ..setText('f-strom-ap', 'teuer');
+    expect(cubit.state.invalid, {'f-strom-ap'});
     expect(cubit.state.canSave, isFalse);
   });
 
-  test('Details (Anbieter, Vertragsende) gehören nicht ins Formular', () {
+  test('Strom startet als Zählerstand, weil zuletzt abgelesen wurde: nur der Stand, keine Preise und Details', () {
     final s = form().state;
-    expect(s.fields.map((f) => f.id), isNot(contains('f-strom-anbieter')));
-    expect(s.fields.map((f) => f.id), isNot(contains('f-strom-ende')));
-    expect(s.fields.map((f) => f.id), containsAll(['f-strom-stand', 'f-strom-ap', 'f-strom-gp']));
+    expect(s.mode, EntryFormMode.reading);
+    expect(s.fields.map((f) => f.id), ['f-strom-stand']);
+    expect(s.canSwitchMode, isTrue);
   });
 
   test('nimmt nur gefüllte Felder in den Eintrag', () {
-    final cubit = form()
+    final cubit = form(contract: true)
       ..setText('f-strom-ap', ' 0,35 ')
       ..setText('f-strom-gp', '')
       ..setNote('  ')
@@ -80,9 +82,11 @@ void main() {
     expect(entry.meterChange, isFalse);
   });
 
-  test('vorhandener Eintrag: Werte vorbelegt, mit Komma; alte Details bleiben beim Speichern', () {
+  test('vorhandene Preisänderung: Vertragsmodus, Werte vorbelegt mit Komma', () {
     final price = strom.trackers.single.entries.firstWhere((e) => e.id == 'e-strom-p2');
     final cubit = form(entry: price);
+    expect(cubit.state.mode, EntryFormMode.contract);
+    expect(cubit.state.canSwitchMode, isFalse);
     expect(cubit.state.isNew, isFalse);
     expect(cubit.state.entryId, 'e-strom-p2');
     expect(cubit.state.inputs['f-strom-ap'], '0,329');
@@ -115,6 +119,101 @@ void main() {
       expect(entries.firstWhere((e) => e.id == cubit.state.entryId).values, {meter.id: 47250});
     },
   );
+
+  group('Rechnung', () {
+    final empty = strom.trackers.single.copyWith(entries: []);
+
+    test('ohne Zählereinträge startet die Rechnung mit Vorbelegung', () {
+      final cubit = form(tracker: empty);
+      expect(cubit.state.mode, EntryFormMode.bill);
+      expect(cubit.state.fields.map((f) => f.id), ['f-strom-stand']);
+      expect(cubit.state.periodStart, DateTime.utc(2026, 4, 22));
+      expect(cubit.state.periodEnd, DateTime.utc(2026, 10, 22));
+      expect(cubit.state.canSave, isFalse);
+      cubit.setText(meter.id, '508');
+      expect(cubit.state.canSave, isTrue);
+      final entry = cubit.state.toEntry();
+      expect(entry.date, DateTime.utc(2026, 10, 22));
+      expect(entry.periodStart, DateTime.utc(2026, 4, 22));
+      expect(entry.periodEnd, DateTime.utc(2026, 10, 22));
+      expect(entry.values, {meter.id: 508});
+      expect(empty.isBill(entry), isTrue);
+    });
+
+    test('nächste Rechnung beginnt nach der letzten', () {
+      final cubit = form(tracker: empty.copyWith(entries: [bill(DateTime.utc(2025, 10), DateTime.utc(2026, 3, 31), 900)]));
+      expect(cubit.state.mode, EntryFormMode.bill);
+      expect(cubit.state.periodStart, DateTime.utc(2026, 4));
+      expect(cubit.state.periodEnd, DateTime.utc(2026, 10, 22));
+    });
+
+    test('Verbrauch je Monat und Überschneidung', () {
+      final cubit = form(tracker: empty.copyWith(entries: [bill(DateTime.utc(2026, 9), DateTime.utc(2026, 12, 31), 400)]))
+        ..setPeriodStart(DateTime(2026, 4))
+        ..setPeriodEnd(DateTime(2026, 9, 30))
+        ..setText(meter.id, '508');
+      expect(cubit.state.billPerMonth, closeTo(508 / 183 * 365 / 12, 1e-9));
+      expect(cubit.state.billOverlaps, isTrue);
+      cubit.setPeriodEnd(DateTime(2026, 8, 31));
+      expect(cubit.state.billOverlaps, isFalse);
+    });
+
+    test('Zählerstand nach Rechnung vergleicht mit dem letzten Stand', () {
+      final t = empty.copyWith(entries: [Entry(id: 'r', date: DateTime.utc(2026), values: {meter.id: 1000}), bill(DateTime.utc(2026, 1, 2), DateTime.utc(2026, 6, 30), 500)]);
+      final cubit = form(tracker: t)..setMode(EntryFormMode.reading);
+      expect(cubit.state.previous(meter), (DateTime.utc(2026), 1000));
+    });
+
+    test('Umschalten auf Zählerstand nimmt den Zeitraum weg, zurück setzt ihn neu', () {
+      final cubit = form(tracker: empty)
+        ..setText(meter.id, '508')
+        ..setMode(EntryFormMode.reading);
+      expect(cubit.state.mode, EntryFormMode.reading);
+      expect(cubit.state.toEntry().hasPeriod, isFalse);
+      expect(cubit.state.toEntry().date, DateTime.utc(2026, 10, 22));
+      cubit.setMode(EntryFormMode.bill);
+      expect(cubit.state.periodStart, DateTime.utc(2026, 4, 22));
+    });
+
+    test('vorhandene Rechnung öffnet als Rechnung mit ihrem Zeitraum', () {
+      final b = bill(DateTime.utc(2026, 4), DateTime.utc(2026, 9, 30), 508);
+      final cubit = form(tracker: empty.copyWith(entries: [b]), entry: b);
+      expect(cubit.state.mode, EntryFormMode.bill);
+      expect(cubit.state.canSwitchMode, isFalse);
+      expect(cubit.state.periodStart, DateTime.utc(2026, 4));
+      expect(cubit.state.toEntry().periodEnd, DateTime.utc(2026, 9, 30));
+    });
+  });
+
+  group('Vertrag', () {
+    test('Vertragsmodus: nur Preise, Gilt ab', () {
+      final cubit = form(contract: true);
+      expect(cubit.state.mode, EntryFormMode.contract);
+      expect(cubit.state.fields.map((f) => f.id), ['f-strom-ap', 'f-strom-gp', 'f-strom-abschlag']);
+      expect(cubit.state.validFrom, isTrue);
+      expect(cubit.state.hasMeter, isFalse);
+      cubit.setText('f-strom-ap', '0,35');
+      final entry = cubit.state.toEntry();
+      expect(entry.values, {'f-strom-ap': 0.35});
+      expect(entry.hasPeriod, isFalse);
+      expect(entry.meterChange, isFalse);
+    });
+
+    test('Preisänderung bearbeiten: geleertes Feld fällt weg', () {
+      final price = strom.trackers.single.entries.firstWhere((e) => e.id == 'e-strom-p2');
+      final cubit = form(entry: price)..setText('f-strom-gp', '');
+      expect(cubit.state.toEntry().values.keys, isNot(contains('f-strom-gp')));
+      expect(cubit.state.toEntry().values['f-strom-ap'], 0.329);
+    });
+
+    test('Auto bleibt im Standardformular', () {
+      final auto = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-auto');
+      final s = form(category: auto).state;
+      expect(s.mode, EntryFormMode.standard);
+      expect(s.canSwitchMode, isFalse);
+      expect(s.hasOneOff, isTrue);
+    });
+  });
 
   group('Abrechnungszeitraum', () {
     final miete = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-miete');
@@ -165,4 +264,12 @@ void main() {
       expect(entries.map((e) => e.id), isNot(contains(strom.trackers.single.entries.last.id)));
     },
   );
+
+  test('erster Vertrag gilt ab dem ersten bekannten Verbrauch, spätere ab heute', () {
+    final empty = strom.trackers.single.copyWith(entries: []);
+    final withBill = empty.copyWith(entries: [bill(DateTime.utc(2025, 10), DateTime.utc(2026, 9, 30), 3000)]);
+    expect(form(tracker: withBill, contract: true).state.date, DateTime.utc(2025, 10));
+    expect(form(tracker: empty, contract: true).state.date, DateTime.utc(2026, 10, 22));
+    expect(form(contract: true).state.date, DateTime.utc(2026, 10, 22));
+  });
 }

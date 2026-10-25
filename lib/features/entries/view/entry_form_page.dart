@@ -15,14 +15,16 @@ class EntryFormPage extends StatelessWidget {
 
   final EntryFormArgs args;
 
-  /// Öffnet das Formular; die Zahleneingabe folgt der App-Sprache.
-  static Future<void> open(BuildContext context, {required Category category, required Tracker tracker, Entry? entry}) => Navigator.of(context).push(
-    CupertinoPageRoute<void>(
-      builder: (_) => EntryFormPage(
-        args: EntryFormArgs(category: category, tracker: tracker, entry: entry, decimalSeparator: context.decimalSeparator),
-      ),
-    ),
-  );
+  /// Öffnet das Formular; die Zahleneingabe folgt der App-Sprache. [contract] öffnet eine neue
+  /// Preisänderung im Vertrag eines Versorgungszählers.
+  static Future<void> open(BuildContext context, {required Category category, required Tracker tracker, Entry? entry, bool contract = false}) =>
+      Navigator.of(context).push(
+        CupertinoPageRoute<void>(
+          builder: (_) => EntryFormPage(
+            args: EntryFormArgs(category: category, tracker: tracker, entry: entry, contract: contract, decimalSeparator: context.decimalSeparator),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +43,9 @@ class _FormView extends StatefulWidget {
 
 class _FormViewState extends State<_FormView> {
   late final EntryFormState _initial = context.read<EntryFormCubit>().state;
+  // Für alle Felder mit Verlauf: Beim Wechsel zwischen Rechnung und Zählerstand bleibt die Eingabe.
   late final _controllers = {
-    for (final f in _initial.fields)
+    for (final f in _initial.tracker.entryFields)
       if (f.kind.storage == FieldStorage.number || f.kind == FieldKind.text) f.id: TextEditingController(text: _initial.inputs[f.id] as String? ?? ''),
   };
   late final _note = TextEditingController(text: _initial.note);
@@ -79,12 +82,14 @@ class _FormViewState extends State<_FormView> {
     if (picked != null) onPicked(picked);
   }
 
-  Future<void> _delete(BuildContext context, EntryFormCubit cubit, DateTime date) async {
+  Future<void> _delete(BuildContext context, EntryFormCubit cubit, EntryFormState s) async {
     final l10n = context.l10n;
+    final contract = s.mode == EntryFormMode.contract;
+    final prices = [for (final f in s.fields) if (s.originalValues.containsKey(f.id)) f.name].join(', ');
     final confirmed = await AppDialog.confirm(
       context,
-      title: l10n.entryDeleteTitle(context.shortDate(date)),
-      message: l10n.entryDeleteBody,
+      title: contract ? l10n.contractDeleteTitle(context.shortDate(s.date)) : l10n.entryDeleteTitle(context.shortDate(s.date)),
+      message: contract ? l10n.contractDeleteBody(prices) : l10n.entryDeleteBody,
       confirmLabel: l10n.actionDelete,
       destructive: true,
     );
@@ -106,18 +111,61 @@ class _FormViewState extends State<_FormView> {
           builder: (context, s) => ListView(
             padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + Spacing.xxl),
             children: [
-              AppHeader(title: s.tracker.name, overline: s.isNew ? l10n.entryNew : l10n.entryEdit, onBack: () => Navigator.of(context).pop()),
-              AppListGroup(
-                children: [
-                  AppListRow(
-                    leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
-                    title: s.validFrom ? l10n.entryValidFrom : l10n.entryDate,
-                    trailing: AppText(context.shortDate(s.date), style: (t) => t.body, color: c.accent),
-                    chevron: false,
-                    onTap: () => _pickDate(context, s.date, cubit.setDate),
-                  ),
-                ],
+              AppHeader(
+                title: s.tracker.name,
+                overline: switch ((s.mode, s.isNew)) {
+                  (EntryFormMode.contract, true) => l10n.contractChange,
+                  (EntryFormMode.contract, false) => l10n.contractEdit,
+                  (_, true) => l10n.entryNew,
+                  (_, false) => l10n.entryEdit,
+                },
+                onBack: () => Navigator.of(context).pop(),
               ),
+              if (s.canSwitchMode)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(Spacing.l, 0, Spacing.l, Spacing.m),
+                  child: AppSegmented<EntryFormMode>(
+                    value: s.mode,
+                    segments: {EntryFormMode.bill: l10n.entryKindBill, EntryFormMode.reading: l10n.entryKindReading},
+                    onChanged: cubit.setMode,
+                  ),
+                ),
+              if (s.isBill)
+                AppListGroup(
+                  footer: s.periodInvalid
+                      ? l10n.entryPeriodInvalid
+                      : s.billOverlaps
+                      ? l10n.entryBillOverlap
+                      : l10n.entryBillHint,
+                  children: [
+                    AppListRow(
+                      leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
+                      title: l10n.entryPeriodFrom,
+                      trailing: AppText(context.shortDate(s.periodStart!), style: (t) => t.body, color: c.accent),
+                      chevron: false,
+                      onTap: () => _pickDate(context, s.periodStart!, cubit.setPeriodStart),
+                    ),
+                    AppListRow(
+                      leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
+                      title: l10n.entryPeriodTo,
+                      trailing: AppText(context.shortDate(s.periodEnd!), style: (t) => t.body, color: s.periodInvalid ? c.danger : c.accent),
+                      chevron: false,
+                      onTap: () => _pickDate(context, s.periodEnd!, cubit.setPeriodEnd),
+                    ),
+                  ],
+                )
+              else
+                AppListGroup(
+                  children: [
+                    AppListRow(
+                      leading: AppIconTile(icon: CupertinoIcons.calendar, color: swatch),
+                      title: s.validFrom ? l10n.entryValidFrom : l10n.entryDate,
+                      trailing: AppText(context.shortDate(s.date), style: (t) => t.body, color: c.accent),
+                      chevron: false,
+                      onTap: () => _pickDate(context, s.date, cubit.setDate),
+                    ),
+                  ],
+                ),
               if (s.fields.isEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.xl, Spacing.xl, 0),
@@ -195,7 +243,7 @@ class _FormViewState extends State<_FormView> {
                   child: AppButton(
                     label: l10n.entryDelete,
                     variant: AppButtonVariant.destructive,
-                    onPressed: s.saving ? null : () => _delete(context, cubit, s.date),
+                    onPressed: s.saving ? null : () => _delete(context, cubit, s),
                   ),
                 ),
             ],
@@ -223,7 +271,7 @@ class _FieldInput extends StatelessWidget {
     final input = switch (field.kind) {
       FieldKind.number || FieldKind.currency || FieldKind.percent || FieldKind.text => AppTextField(
         controller: controller,
-        label: field.name,
+        label: _consumption ? context.l10n.entryBillConsumption : field.name,
         maxLength: field.kind == FieldKind.text ? EntryFormState.maxText : 24,
         keyboardType: switch (field.kind) {
           FieldKind.text => TextInputType.text,
@@ -231,7 +279,7 @@ class _FieldInput extends StatelessWidget {
           _ when field.role == FieldRole.oneOffCost => const TextInputType.numberWithOptions(decimal: true, signed: true),
           _ => const TextInputType.numberWithOptions(decimal: true),
         },
-        suffix: field.kind == FieldKind.text || _unit(field).isEmpty ? null : AppText(_unit(field), style: (t) => t.body, color: c.textSecondary),
+        suffix: field.kind == FieldKind.text || _unit.isEmpty ? null : AppText(_unit, style: (t) => t.body, color: c.textSecondary),
         onChanged: (text) => cubit.setText(field.id, text),
       ),
       FieldKind.toggle => AppCard(
@@ -296,9 +344,13 @@ class _FieldInput extends StatelessWidget {
     );
   }
 
-  static String _unit(FieldDefinition f) => switch (f.kind) {
+  /// Verbrauch einer Rechnung statt Zählerstand: in der Verbrauchseinheit (Gas: kWh statt m³).
+  bool get _consumption => state.isBill && field.role == FieldRole.meterReading;
+
+  String get _unit => switch (field.kind) {
+    _ when _consumption => field.usageUnit,
     FieldKind.percent => '%',
-    _ => f.unit ?? '',
+    _ => field.unit ?? '',
   };
 
   /// Fehler zuerst, dann Hinweis auf einen Zählerwechsel, dann Verbrauch seitdem bzw. letzter Wert.
@@ -306,6 +358,10 @@ class _FieldInput extends StatelessWidget {
     final c = context.colors;
     final l10n = context.l10n;
     if (state.invalid.contains(field.id)) return (l10n.entryInvalidNumber, c.danger);
+    if (_consumption) {
+      final perMonth = state.billPerMonth;
+      return perMonth == null ? null : (l10n.entryBillPerMonth(context.amount(perMonth, field.usageUnit)), c.textSecondary);
+    }
     final previous = state.previous(field);
     if (previous == null) return null;
     final (date, value) = previous;

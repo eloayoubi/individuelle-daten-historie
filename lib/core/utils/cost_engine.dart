@@ -29,6 +29,10 @@ class CostParts {
 ///   Stand (bis heute und in der Zukunft) gilt der Verbrauch desselben Tages im Vorjahr – so hat
 ///   die Prognose eine Saison –, ohne Vorjahr der Tagesdurchschnitt der letzten 365 Tage.
 ///   Vor dem ersten Stand ist nichts bekannt, dort zählt nichts.
+/// - **Rechnungen** ([Tracker.isBill]): Der Verbrauch im Zeitraum verteilt sich gleichmäßig auf
+///   dessen Tage (ohne Umrechnungsfaktor, er steht schon in der Verbrauchseinheit). Eine Rechnung
+///   hat Vorrang vor Zählerständen, bei Überschneidung gilt die später endende. Lücken zwischen
+///   bekannten Tagen bekommen den Tagesverbrauch davor.
 /// - **Arbeitspreis** ([FieldRole.unitPrice]) und **wiederkehrende Beträge**
 ///   ([FieldRole.recurringCost]) gelten ab ihrem Datum bis zur nächsten Änderung. Im Voraus
 ///   eingetragene Erhöhungen fließen so von selbst in die Prognose ein.
@@ -44,7 +48,7 @@ class CostParts {
 class CostEngine {
   CostEngine(Tracker source, {required DateTime today}) : _today = day(today) {
     final tracker = Formulas.apply(source);
-    _prepareReadings(tracker);
+    _prepareConsumption(tracker);
     for (final field in tracker.fields) {
       final timeline = _timeline(tracker, field);
       if (timeline.isEmpty) continue;
@@ -84,9 +88,9 @@ class CostEngine {
 
   final DateTime _today;
 
-  /// Stände als (Tag, Wert) und je Abschnitt zwischen zwei Ständen der Tagesverbrauch.
-  final _readings = <(DateTime, double)>[];
-  final _rates = <double>[];
+  /// Erster bekannter Tag und ab dort je Tag der Verbrauch – aus Zählerständen und Rechnungen.
+  DateTime? _first;
+  final _daily = <double>[];
   double _trailingRate = 0;
 
   double? _trend;
@@ -100,9 +104,12 @@ class CostEngine {
   /// Datum ohne Uhrzeit in UTC – so verschiebt keine Zeitumstellung die Tage.
   static DateTime day(DateTime d) => DateTime.utc(d.year, d.month, d.day);
 
-  DateTime? get lastReading => _readings.isEmpty ? null : _readings.last.$1;
+  /// Erster Tag nach dem bekannten Verbrauch: Tag des letzten Stands bzw. Tag nach dem Ende der
+  /// letzten Rechnung; `null` ohne bekannten Verbrauch.
+  DateTime? get lastReading => _first?.add(Duration(days: _daily.length));
 
-  bool get hasMeter => _readings.length >= 2;
+  /// Verbrauch bekannt: ab zwei Zählerständen oder einer Rechnung.
+  bool get hasMeter => _daily.isNotEmpty;
 
   bool get hasInstalment => _instalments.isNotEmpty;
 
@@ -170,79 +177,89 @@ class CostEngine {
   }
 
   double _rateOn(DateTime d) {
-    if (!hasMeter || d.isBefore(_readings.first.$1)) return 0;
-    if (!d.isBefore(_readings.last.$1)) {
-      // Nach dem letzten Stand: derselbe Tag ein (oder zwei …) Jahre früher, damit die Prognose
-      // die Saison abbildet (Heizung im Winter). Reicht der Verlauf nicht so weit: Durchschnitt.
+    if (!hasMeter || d.isBefore(_first!)) return 0;
+    final end = lastReading!;
+    if (!d.isBefore(end)) {
+      // Nach dem letzten bekannten Tag: derselbe Tag ein (oder zwei …) Jahre früher, damit die
+      // Prognose die Saison abbildet (Heizung im Winter). Reicht der Verlauf nicht so weit: Durchschnitt.
       var back = d.subtract(const Duration(days: 365));
-      while (!back.isBefore(_readings.last.$1)) {
+      while (!back.isBefore(end)) {
         back = back.subtract(const Duration(days: 365));
       }
-      return back.isBefore(_readings.first.$1) ? _trailingRate : _segmentRate(back) * (_trend ?? 1);
+      return back.isBefore(_first!) ? _trailingRate : _segmentRate(back) * (_trend ?? 1);
     }
     return _segmentRate(d);
   }
 
-  /// Tagesverbrauch des Abschnitts, in dem [d] liegt (zwischen erstem und letztem Stand).
-  double _segmentRate(DateTime d) {
-    // Letzter Stand am oder vor d.
-    var lo = 0, hi = _readings.length - 1;
-    while (lo < hi) {
-      final mid = (lo + hi + 1) ~/ 2;
-      if (_readings[mid].$1.isAfter(d)) {
-        hi = mid - 1;
-      } else {
-        lo = mid;
-      }
-    }
-    return _rates[lo];
-  }
+  /// Tagesverbrauch an [d] (zwischen erstem und letztem bekannten Tag).
+  double _segmentRate(DateTime d) => _daily[d.difference(_first!).inDays];
 
-  void _prepareReadings(Tracker tracker) {
-    final field = tracker.firstWithRole(FieldRole.meterReading);
+  void _prepareConsumption(Tracker tracker) {
+    final field = tracker.meter;
     if (field == null) return;
+    // Abschnitte [von, bis) mit festem Tagesverbrauch; später eingefügte überschreiben frühere.
+    final sections = <(DateTime, DateTime, double)>[];
+
+    // Zählerstände: linear zwischen zwei Ständen.
     final points = <(DateTime, double, bool)>[
       for (final e in tracker.entries)
-        if (e.number(field.id) case final num v) (day(e.date), v.toDouble(), e.meterChange),
+        if (tracker.isReading(e))
+          if (e.number(field.id) case final num v) (day(e.date), v.toDouble(), e.meterChange),
     ]..sort((a, b) => a.$1.compareTo(b.$1));
+    final readings = <(DateTime, double)>[];
     for (final (date, value, _) in points) {
-      if (_readings.isNotEmpty && _readings.last.$1 == date) _readings.removeLast();
-      _readings.add((date, value));
+      if (readings.isNotEmpty && readings.last.$1 == date) readings.removeLast();
+      readings.add((date, value));
     }
     final changes = {for (final (date, _, change) in points) if (change) date};
     final rates = <double?>[];
-    for (var i = 1; i < _readings.length; i++) {
-      final (from, a) = _readings[i - 1];
-      final (to, b) = _readings[i];
+    for (var i = 1; i < readings.length; i++) {
+      final (from, a) = readings[i - 1];
+      final (to, b) = readings[i];
       // Zählerwechsel: Verbrauch bis zum Ausbau unbekannt, später mit dem Nachbarabschnitt füllen.
       rates.add(changes.contains(to) || b < a ? null : (b - a) * field.factor / to.difference(from).inDays);
     }
     for (var i = 0; i < rates.length; i++) {
-      _rates.add(rates[i] ?? _neighbour(rates, i));
+      sections.add((readings[i].$1, readings[i + 1].$1, rates[i] ?? _neighbour(rates, i)));
     }
-    if (_rates.isEmpty) return;
-    // Durchschnitt der letzten 365 Tage vor dem letzten Stand (oder des ganzen Verlaufs, wenn kürzer).
-    final end = _readings.last.$1;
-    final start = end.subtract(const Duration(days: 365));
-    var used = 0, total = 0.0;
-    for (var i = 0; i < _rates.length; i++) {
-      final from = _readings[i].$1.isBefore(start) ? start : _readings[i].$1;
-      final to = _readings[i + 1].$1;
-      if (!to.isAfter(from)) continue;
-      final days = to.difference(from).inDays;
-      used += days;
-      total += _rates[i] * days;
+
+    // Rechnungen: gleichmäßig auf ihre Tage, die später endende zuletzt – sie gewinnt.
+    final bills = [
+      for (final e in tracker.entries)
+        if (tracker.isBill(e))
+          if (e.number(field.id) case final num v) (day(e.periodStart!), day(e.periodEnd!).add(const Duration(days: 1)), v.toDouble()),
+    ]..sort((a, b) => a.$2.compareTo(b.$2));
+    for (final (from, to, value) in bills) {
+      sections.add((from, to, value / to.difference(from).inDays));
     }
-    _trailingRate = used == 0 ? 0 : total / used;
+    if (sections.isEmpty) return;
+
+    final first = sections.map((s) => s.$1).reduce((a, b) => a.isBefore(b) ? a : b);
+    final end = sections.map((s) => s.$2).reduce((a, b) => a.isAfter(b) ? a : b);
+    final daily = List<double?>.filled(end.difference(first).inDays, null);
+    for (final (from, to, rate) in sections) {
+      for (var i = from.difference(first).inDays; i < to.difference(first).inDays; i++) {
+        daily[i] = rate;
+      }
+    }
+    // Lücken (z. B. zwischen zwei Rechnungen): Tagesverbrauch davor. Der erste Tag ist immer bekannt.
+    for (var i = 0; i < daily.length; i++) {
+      _daily.add(daily[i] ?? _daily[i - 1]);
+    }
+    _first = first;
+
+    // Durchschnitt der letzten 365 bekannten Tage (oder aller, wenn es weniger sind).
+    final last = _daily.skip(math.max(0, _daily.length - 365));
+    _trailingRate = last.fold(0.0, (sum, v) => sum + v) / last.length;
     _trend = _computeTrend();
   }
 
-  /// Letzte 365 Tage vor dem letzten Stand gegen die 365 davor – nur mit echten Ständen.
+  /// Letzte 365 bekannte Tage gegen die 365 davor – nur mit zwei vollen Jahren Verlauf.
   double? _computeTrend() {
-    final end = _readings.last.$1;
+    final end = lastReading!;
     final middle = end.subtract(const Duration(days: 365));
     final start = end.subtract(const Duration(days: 730));
-    if (_readings.first.$1.isAfter(start)) return null;
+    if (_first!.isAfter(start)) return null;
     double actual(DateTime from, DateTime to) {
       var sum = 0.0;
       for (var d = from; d.isBefore(to); d = d.add(const Duration(days: 1))) {

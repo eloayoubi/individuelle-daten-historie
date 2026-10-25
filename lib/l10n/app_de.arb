@@ -274,6 +274,7 @@
   },
   "fieldChoicesEmpty": "Mindestens einen Wert hinzufügen.",
   "fieldArchive": "Feld entfernen",
+  "fieldKeepsBills": "Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.",
   "fieldArchiveTitle": "„{name}“ entfernen?",
   "@fieldArchiveTitle": {
     "placeholders": {
@@ -475,7 +476,7 @@
   "trackerCurrentValues": "Aktuelle Werte",
   "trackerEntries": "Einträge",
   "trackerNoEntriesTitle": "Noch keine Einträge",
-  "trackerNoEntriesBody": "Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.",
+  "trackerNoEntriesBody": "Trag den ersten Wert ein – ab einer Rechnung oder dem zweiten Zählerstand entsteht der Verlauf.",
   "trackerAddEntry": "Wert eintragen",
   "trackerMeterChanged": "Neuer Zähler",
   "homeSyncPending": "{count, plural, =1{1 Eintrag wartet auf Verbindung} other{{count} Einträge warten auf Verbindung}}",
@@ -920,6 +921,61 @@
   "entryPeriodTo": "Bis",
   "entryPeriodHint": "Nachzahlung oder Guthaben für einen Zeitraum: Der Betrag verteilt sich auf dessen Tage statt auf den Stichtag.",
   "entryPeriodInvalid": "Das Ende liegt vor dem Anfang.",
+  "entryKindBill": "Rechnung",
+  "entryKindReading": "Zählerstand",
+  "entryBillConsumption": "Verbrauch",
+  "entryBillPerMonth": "≈ {amount} im Monat",
+  "@entryBillPerMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "entryBillHint": "Zeitraum und Verbrauch stehen auf deiner Rechnung.",
+  "entryBillOverlap": "Überschneidet sich mit einer anderen Rechnung – an diesen Tagen zählt die später endende.",
+  "contractChange": "Preise ändern",
+  "contractEdit": "Preisänderung",
+  "contractDeleteTitle": "Preisänderung vom {date} löschen?",
+  "@contractDeleteTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "contractDeleteBody": "{prices} verschwinden aus Vertrag, Kosten und Prognose.",
+  "@contractDeleteBody": {
+    "placeholders": {
+      "prices": {
+        "type": "String"
+      }
+    }
+  },
+  "contractTitle": "Vertrag",
+  "contractSet": "Eintragen",
+  "contractMissingPrice": "Ohne Arbeitspreis rechnet die App noch keine Kosten.",
+  "priceHistoryFrom": "ab {date}",
+  "@priceHistoryFrom": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "priceHistoryPlanned": "geplant",
+  "priceHistoryEmpty": "Noch kein Preis eingetragen.",
+  "entryPeriodRange": "{from} – {to}",
+  "@entryPeriodRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
   "exportCategory": "Kategorie",
   "exportTracker": "Tracker",
   "exportField": "Feld",

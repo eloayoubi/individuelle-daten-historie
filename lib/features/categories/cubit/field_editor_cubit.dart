@@ -80,7 +80,7 @@ class FieldEditorCubit extends Cubit<FieldEditorState> {
 
   Future<void> archive() async {
     final field = args.field;
-    if (field == null) return;
+    if (field == null || !state.canArchive) return;
     emit(state.copyWith(saving: true));
     try {
       await _repository.archiveField(field.id);

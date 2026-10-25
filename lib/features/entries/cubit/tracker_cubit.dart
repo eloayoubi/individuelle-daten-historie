@@ -59,6 +59,8 @@ class TrackerCubit extends Cubit<TrackerState> {
           metric: metric,
           history: metric == null ? null : TrackerHistory.build(raw, _now(), metric),
           currentValues: TrackerHistory.currentValuesOf(tracker, _now()),
+          contract: TrackerHistory.contractOf(tracker, _now()),
+          missingPrice: _missingPrice(raw, metrics),
           includedInName: into?.name,
         ),
       );
@@ -77,6 +79,13 @@ class TrackerCubit extends Cubit<TrackerState> {
     } catch (_) {
       if (!isClosed) emit(state.copyWith(event: TrackerEvent(TrackerEventKind.failed)));
     }
+  }
+
+  /// Versorgungszähler mit Verbrauch, aber ohne Arbeitspreis: Kosten gibt es erst mit Vertrag.
+  static bool _missingPrice(Tracker tracker, List<HistoryMetric> metrics) {
+    if (!tracker.isUtilityMeter || !metrics.contains(HistoryMetric.consumption)) return false;
+    final price = tracker.firstWithRole(FieldRole.unitPrice)!;
+    return !tracker.entries.any((e) => e.values.containsKey(price.id));
   }
 
   void selectMetric(HistoryMetric metric) {

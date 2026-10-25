@@ -149,28 +149,38 @@ abstract final class Formulas {
         }
         continue;
       }
+      // Rechnung: Der Wert im Zählerfeld ist der Verbrauch im Zeitraum, kein Stand.
+      final bill = tracker.isBill(e);
+      bool own(FieldDefinition f) => !(bill && f.id == meter?.id);
       final vars = <String, double>{};
       for (final f in numeric) {
-        final own = e.values[f.id];
-        if (own is num) {
-          vars[keys[f.id]!] = own.toDouble();
+        final value = e.values[f.id];
+        if (value is num && own(f)) {
+          vars[keys[f.id]!] = value.toDouble();
         } else if (f.role != FieldRole.oneOffCost && last.containsKey(f.id)) {
           vars[keys[f.id]!] = last[f.id]!;
         }
       }
-      final reading = meter == null ? null : e.values[meter.id];
-      final since = reading is num && lastReading != null ? lastReading.$1 : lastDate;
-      if (since != null) {
-        final d = e.date.difference(since).inDays.toDouble();
+      final reading = meter == null || bill ? null : e.values[meter.id];
+      if (bill) {
+        final d = e.periodEnd!.difference(e.periodStart!).inDays + 1.0;
         vars[days] = vars[_english[days]!] = d;
         vars[months] = vars[_english[months]!] = d / _daysPerMonth;
-      }
-      if (meter != null && reading is num && lastReading != null && !e.meterChange) {
-        vars[consumption] = vars[_english[consumption]!] = (reading - lastReading.$2) * meter.factor;
+        vars[consumption] = vars[_english[consumption]!] = e.number(meter!.id)!.toDouble();
+      } else {
+        final since = reading is num && lastReading != null ? lastReading.$1 : lastDate;
+        if (since != null) {
+          final d = e.date.difference(since).inDays.toDouble();
+          vars[days] = vars[_english[days]!] = d;
+          vars[months] = vars[_english[months]!] = d / _daysPerMonth;
+        }
+        if (meter != null && reading is num && lastReading != null && !e.meterChange) {
+          vars[consumption] = vars[_english[consumption]!] = (reading - lastReading.$2) * meter.factor;
+        }
       }
       result[e.id] = vars;
       for (final f in numeric) {
-        if (e.values[f.id] case final num v) last[f.id] = v.toDouble();
+        if (e.values[f.id] case final num v when own(f)) last[f.id] = v.toDouble();
       }
       if (reading is num) lastReading = (e.date, reading.toDouble());
       lastDate = e.date;

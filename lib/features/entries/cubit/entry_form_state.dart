@@ -2,6 +2,22 @@ part of 'entry_form_cubit.dart';
 
 enum EntryFormEventKind { saved, savedOffline, deleted, failed }
 
+/// Was das Formular erfasst. Versorgungszähler ([Tracker.isUtilityMeter]) kennen Rechnung,
+/// Zählerstand und Vertrag; alle anderen Tracker haben das eine Formular mit allen Feldern.
+enum EntryFormMode {
+  /// Alle Felder mit Verlauf (Auto, Miete, Abos …).
+  standard,
+
+  /// Rechnung: Zeitraum und Verbrauch darin.
+  bill,
+
+  /// Zählerstand an einem Tag, ohne Preise.
+  reading,
+
+  /// Preisänderung: nur Preise und Beträge, gültig ab dem Datum.
+  contract,
+}
+
 /// Einmaliges Ereignis für Toast und Zurück. Bewusst nicht `const`.
 class EntryFormEvent {
   EntryFormEvent(this.kind);
@@ -16,6 +32,7 @@ class EntryFormState extends Equatable {
     required this.isNew,
     required this.date,
     required this.decimalSeparator,
+    this.mode = EntryFormMode.standard,
     this.inputs = const {},
     this.originalValues = const {},
     this.note = '',
@@ -28,22 +45,65 @@ class EntryFormState extends Equatable {
 
   factory EntryFormState.initial(EntryFormArgs args, DateTime now) {
     final entry = args.entry;
+    final tracker = args.tracker;
+    final mode = _modeFor(tracker, entry, contract: args.contract);
+    final period = entry == null && mode == EntryFormMode.bill ? billPeriod(tracker, now) : null;
     return EntryFormState(
-      tracker: args.tracker,
+      tracker: tracker,
       entryId: entry?.id ?? newId(),
       isNew: entry == null,
-      date: CostEngine.day(entry?.date ?? now),
+      date: CostEngine.day(entry?.date ?? (mode == EntryFormMode.contract ? _firstContractDay(tracker, now) : now)),
       decimalSeparator: args.decimalSeparator,
+      mode: mode,
       note: entry?.note ?? '',
       meterChange: entry?.meterChange ?? false,
-      periodStart: entry?.periodStart,
-      periodEnd: entry?.periodEnd,
+      periodStart: period?.start ?? entry?.periodStart,
+      periodEnd: period?.end ?? entry?.periodEnd,
       originalValues: entry?.values ?? const {},
       inputs: {
         for (final MapEntry(:key, :value) in (entry?.values ?? const <String, Object>{}).entries)
           key: value is num ? formatNumberInput(value, decimalSeparator: args.decimalSeparator) : value,
       },
     );
+  }
+
+  /// Vorhandener Eintrag: nach seiner Art. Neu: wie zuletzt erfasst, ohne Zählereintrag die Rechnung.
+  static EntryFormMode _modeFor(Tracker tracker, Entry? entry, {required bool contract}) {
+    if (!tracker.isUtilityMeter) return EntryFormMode.standard;
+    if (entry == null) {
+      if (contract) return EntryFormMode.contract;
+      final meter = tracker.meter!;
+      final hasMeterEntry = tracker.entries.any((e) => e.values.containsKey(meter.id));
+      return !hasMeterEntry || tracker.readsFromBills ? EntryFormMode.bill : EntryFormMode.reading;
+    }
+    if (tracker.isBill(entry)) return EntryFormMode.bill;
+    if (tracker.isPriceChange(entry)) return EntryFormMode.contract;
+    return EntryFormMode.reading;
+  }
+
+  /// Der erste Vertrag gilt ab dem ersten bekannten Verbrauch, damit Grundpreis und Abschlag auch
+  /// für schon eingetragene Rechnungen und Stände zählen. Gibt es schon Preise: ab heute.
+  static DateTime _firstContractDay(Tracker tracker, DateTime now) {
+    final rates = {for (final f in tracker.rateFields) f.id};
+    if (tracker.entries.any((e) => e.values.keys.any(rates.contains))) return now;
+    var first = now;
+    for (final e in tracker.entries) {
+      final start = tracker.isBill(e) ? e.periodStart! : (tracker.isReading(e) ? e.date : null);
+      if (start != null && start.isBefore(first)) first = start;
+    }
+    return first;
+  }
+
+  /// Vorbelegung einer neuen Rechnung: ab dem Tag nach der letzten Rechnung, ohne Rechnung die
+  /// letzten sechs Monate; bis heute.
+  static ({DateTime start, DateTime end}) billPeriod(Tracker tracker, DateTime now) {
+    final today = CostEngine.day(now);
+    DateTime? lastEnd;
+    for (final e in tracker.entries) {
+      if (tracker.isBill(e) && (lastEnd == null || e.periodEnd!.isAfter(lastEnd))) lastEnd = CostEngine.day(e.periodEnd!);
+    }
+    final start = lastEnd?.add(const Duration(days: 1)) ?? DateTime.utc(today.year, today.month - 6, today.day);
+    return (start: start, end: start.isAfter(today) ? start : today);
   }
 
   static const maxNote = 1000;
@@ -53,9 +113,10 @@ class EntryFormState extends Equatable {
   final String entryId;
   final bool isNew;
 
-  /// Stichtag des Eintrags (UTC-Mitternacht).
+  /// Stichtag des Eintrags (UTC-Mitternacht). Bei einer Rechnung zählt stattdessen [periodEnd].
   final DateTime date;
   final String decimalSeparator;
+  final EntryFormMode mode;
 
   /// Eingaben je Feld: `String` bei Zahlen und Text, `String?` bei Auswahl, `bool?` bei Ja/Nein,
   /// `DateTime?` bei Datum.
@@ -66,19 +127,29 @@ class EntryFormState extends Equatable {
   final String note;
   final bool meterChange;
 
-  /// Abrechnungszeitraum einer Einmalzahlung (z. B. Nachzahlung für 2025): Die Kosten verteilen
-  /// sich über diese Tage statt auf den Stichtag. Beide `null` = kein Zeitraum.
+  /// Zeitraum einer Rechnung bzw. Abrechnungszeitraum einer Einmalzahlung (z. B. Nachzahlung für
+  /// 2025): Verbrauch und Kosten verteilen sich über diese Tage. Beide `null` = kein Zeitraum.
   final DateTime? periodStart;
   final DateTime? periodEnd;
   final bool saving;
   final EntryFormEvent? event;
 
-  /// Nur Felder mit Verlauf: Details (Anbieter, Vertragsende) legt man einmal fest, nicht je
+  bool get isBill => mode == EntryFormMode.bill;
+
+  /// Felder, die der Modus erfasst. Details (Anbieter, Vertragsende) legt man einmal fest, nicht je
   /// Eintrag; Formeln rechnet die App.
-  List<FieldDefinition> get fields => tracker.entryFields;
+  List<FieldDefinition> get fields => switch (mode) {
+    EntryFormMode.standard => tracker.entryFields,
+    EntryFormMode.bill => [for (final f in tracker.entryFields) if (f.role == FieldRole.meterReading || f.role == FieldRole.oneOffCost) f],
+    EntryFormMode.reading => [for (final f in tracker.entryFields) if (!f.isRate) f],
+    EntryFormMode.contract => tracker.rateFields,
+  };
+
+  /// Rechnung und Zählerstand lassen sich bei einem neuen Eintrag wechseln.
+  bool get canSwitchMode => isNew && (mode == EntryFormMode.bill || mode == EntryFormMode.reading);
 
   /// Datum heißt „Gilt ab“, wenn der Eintrag nur Preise und Beträge ändert (Preiserhöhung, Miete).
-  bool get validFrom => fields.isNotEmpty && fields.every((f) => f.isRate);
+  bool get validFrom => mode == EntryFormMode.contract || (mode == EntryFormMode.standard && fields.isNotEmpty && fields.every((f) => f.isRate));
 
   /// Details, die ein älterer Eintrag noch selbst trägt: Das Formular zeigt sie nicht, beim
   /// Speichern bleiben sie erhalten.
@@ -87,10 +158,12 @@ class EntryFormState extends Equatable {
       if (originalValues[f.id] case final Object v) f.id: v,
   };
 
-  bool get hasMeter => tracker.firstWithRole(FieldRole.meterReading) != null;
+  /// Schalter „Neuer Zähler“: nur bei einem Zählerstand.
+  bool get hasMeter => (mode == EntryFormMode.standard || mode == EntryFormMode.reading) && tracker.meter != null;
 
-  /// Nur mit Einmalkosten-Feld gibt es einen Abrechnungszeitraum.
-  bool get hasOneOff => tracker.firstWithRole(FieldRole.oneOffCost) != null;
+  /// Schalter für einen Abrechnungszeitraum: nur im Standardformular mit Einmalkosten-Feld (eine
+  /// Rechnung hat ihren Zeitraum immer).
+  bool get hasOneOff => mode == EntryFormMode.standard && tracker.firstWithRole(FieldRole.oneOffCost) != null;
 
   bool get hasPeriod => periodStart != null && periodEnd != null;
 
@@ -116,13 +189,17 @@ class EntryFormState extends Equatable {
       if (valueOf(f) case final Object v) f.id: v,
   };
 
-  bool get canSave => !saving && values.isNotEmpty && invalid.isEmpty && !periodInvalid;
+  /// Eine Rechnung braucht Zeitraum und Verbrauch, sonst reicht ein beliebiger Wert.
+  bool get canSave =>
+      !saving && values.isNotEmpty && invalid.isEmpty && !periodInvalid && (!isBill || (hasPeriod && values.containsKey(tracker.meter!.id)));
 
-  /// Letzter Wert des Felds vor diesem Datum (ohne diesen Eintrag).
+  /// Letzter Wert des Felds vor diesem Datum (ohne diesen Eintrag). Beim Zählerstand zählen nur
+  /// Stände, keine Rechnungen.
   (DateTime, Object)? previous(FieldDefinition f) {
     (DateTime, Object)? last;
     for (final e in tracker.entries) {
       if (e.id == entryId || !e.date.isBefore(date)) continue;
+      if (f.role == FieldRole.meterReading && tracker.isBill(e)) continue;
       final value = e.values[f.id];
       if (value != null && (last == null || e.date.isAfter(last.$1))) last = (e.date, value);
     }
@@ -132,29 +209,43 @@ class EntryFormState extends Equatable {
   /// Verbrauch seit dem letzten Stand (in der Verbrauchseinheit), `null` ohne beide Werte.
   double? meterDelta(FieldDefinition f) {
     final now = valueOf(f), before = previous(f)?.$2;
-    if (now is! num || before is! num || meterChange) return null;
+    if (isBill || now is! num || before is! num || meterChange) return null;
     return (now - before) * f.factor;
   }
 
   /// Zählerstand kleiner als der letzte – Hinweis auf einen Zählerwechsel.
   bool meterBelow(FieldDefinition f) {
     final now = valueOf(f), before = previous(f)?.$2;
-    return f.role == FieldRole.meterReading && now is num && before is num && now < before && !meterChange;
+    return !isBill && f.role == FieldRole.meterReading && now is num && before is num && now < before && !meterChange;
   }
+
+  /// Verbrauch der Rechnung umgerechnet auf einen Monat, `null` ohne Verbrauch oder Zeitraum.
+  double? get billPerMonth {
+    final value = isBill ? values[tracker.meter!.id] : null;
+    if (value is! num || !hasPeriod || periodInvalid) return null;
+    return value / (periodEnd!.difference(periodStart!).inDays + 1) * 365 / 12;
+  }
+
+  /// Überschneidet sich der Zeitraum mit einer anderen Rechnung?
+  bool get billOverlaps =>
+      isBill &&
+      hasPeriod &&
+      tracker.entries.any((e) => e.id != entryId && tracker.isBill(e) && !e.periodStart!.isAfter(periodEnd!) && !e.periodEnd!.isBefore(periodStart!));
 
   Entry toEntry() => Entry(
     id: entryId,
-    date: date,
+    date: isBill ? periodEnd! : date,
     values: {...keptDetails, ...values},
     note: note.trim().isEmpty ? null : note.trim(),
     meterChange: hasMeter && meterChange,
-    periodStart: hasOneOff && hasPeriod ? periodStart : null,
-    periodEnd: hasOneOff && hasPeriod ? periodEnd : null,
+    periodStart: isBill || (hasOneOff && hasPeriod) ? periodStart : null,
+    periodEnd: isBill || (hasOneOff && hasPeriod) ? periodEnd : null,
   );
 
   /// [period] ersetzt beide Grenzen (auch durch `null`), ohne bleibt der Zeitraum.
   EntryFormState copyWith({
     DateTime? date,
+    EntryFormMode? mode,
     Map<String, Object?>? inputs,
     String? note,
     bool? meterChange,
@@ -167,6 +258,7 @@ class EntryFormState extends Equatable {
     isNew: isNew,
     date: date ?? this.date,
     decimalSeparator: decimalSeparator,
+    mode: mode ?? this.mode,
     inputs: inputs ?? this.inputs,
     originalValues: originalValues,
     note: note ?? this.note,
@@ -178,5 +270,5 @@ class EntryFormState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, inputs, originalValues, note, meterChange, periodStart, periodEnd, saving, event];
+  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, mode, inputs, originalValues, note, meterChange, periodStart, periodEnd, saving, event];
 }

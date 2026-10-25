@@ -157,4 +157,33 @@ void main() {
     ],
     verify: (_) async => expect((await tracker('t-strom')).fields.map((f) => f.name), isNot(contains('Anbieter'))),
   );
+
+  group('Rechnungen brauchen den Arbeitspreis', () {
+    const meter = FieldDefinition(id: 'stand', name: 'Zählerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'm³');
+    const price = FieldDefinition(id: 'preis', name: 'Preis', kind: FieldKind.currency, role: FieldRole.unitPrice, unit: '€/m³');
+    final bill = Entry(id: 'b', date: DateTime.utc(2025, 12, 31), values: const {'stand': 84}, periodStart: DateTime.utc(2025), periodEnd: DateTime.utc(2025, 12, 31));
+
+    FieldEditorCubit edit(List<Entry> entries) {
+      final t = Tracker(id: 't', name: 'Wasser', fields: const [meter, price], entries: entries);
+      return FieldEditorCubit(repo, FieldEditorArgs(trackerId: 't', tracker: t, field: price, hasValues: true));
+    }
+
+    test('mit Rechnungen: nicht archivierbar, Zeitverhalten bleibt', () async {
+      final cubit = edit([bill]);
+      expect(cubit.state.keepsBills, isTrue);
+      expect(cubit.state.canArchive, isFalse);
+      cubit.setRole(FieldRole.recurringCost);
+      expect(cubit.state.canSave, isFalse);
+      await cubit.archive();
+      expect(cubit.state.event, isNull);
+    });
+
+    test('ohne Rechnungen: wie bisher', () {
+      final cubit = edit([]);
+      expect(cubit.state.keepsBills, isFalse);
+      expect(cubit.state.canArchive, isTrue);
+      cubit.setRole(FieldRole.recurringCost);
+      expect(cubit.state.canSave, isTrue);
+    });
+  });
 }

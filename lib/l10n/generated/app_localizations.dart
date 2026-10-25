@@ -764,6 +764,12 @@ abstract class AppLocalizations {
   /// **'Feld entfernen'**
   String get fieldArchive;
 
+  /// No description provided for @fieldKeepsBills.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Rechnungen brauchen diesen Arbeitspreis – er bleibt ein Preis je Einheit und lässt sich nicht archivieren.'**
+  String get fieldKeepsBills;
+
   /// No description provided for @fieldArchiveTitle.
   ///
   /// In de, this message translates to:
@@ -1481,7 +1487,7 @@ abstract class AppLocalizations {
   /// No description provided for @trackerNoEntriesBody.
   ///
   /// In de, this message translates to:
-  /// **'Trag den ersten Wert ein – ab dem zweiten Zählerstand entsteht der Verlauf.'**
+  /// **'Trag den ersten Wert ein – ab einer Rechnung oder dem zweiten Zählerstand entsteht der Verlauf.'**
   String get trackerNoEntriesBody;
 
   /// No description provided for @trackerAddEntry.
@@ -2449,6 +2455,108 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Das Ende liegt vor dem Anfang.'**
   String get entryPeriodInvalid;
+
+  /// No description provided for @entryKindBill.
+  ///
+  /// In de, this message translates to:
+  /// **'Rechnung'**
+  String get entryKindBill;
+
+  /// No description provided for @entryKindReading.
+  ///
+  /// In de, this message translates to:
+  /// **'Zählerstand'**
+  String get entryKindReading;
+
+  /// No description provided for @entryBillConsumption.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbrauch'**
+  String get entryBillConsumption;
+
+  /// No description provided for @entryBillPerMonth.
+  ///
+  /// In de, this message translates to:
+  /// **'≈ {amount} im Monat'**
+  String entryBillPerMonth(String amount);
+
+  /// No description provided for @entryBillHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Zeitraum und Verbrauch stehen auf deiner Rechnung.'**
+  String get entryBillHint;
+
+  /// No description provided for @entryBillOverlap.
+  ///
+  /// In de, this message translates to:
+  /// **'Überschneidet sich mit einer anderen Rechnung – an diesen Tagen zählt die später endende.'**
+  String get entryBillOverlap;
+
+  /// No description provided for @contractChange.
+  ///
+  /// In de, this message translates to:
+  /// **'Preise ändern'**
+  String get contractChange;
+
+  /// No description provided for @contractEdit.
+  ///
+  /// In de, this message translates to:
+  /// **'Preisänderung'**
+  String get contractEdit;
+
+  /// No description provided for @contractDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Preisänderung vom {date} löschen?'**
+  String contractDeleteTitle(String date);
+
+  /// No description provided for @contractDeleteBody.
+  ///
+  /// In de, this message translates to:
+  /// **'{prices} verschwinden aus Vertrag, Kosten und Prognose.'**
+  String contractDeleteBody(String prices);
+
+  /// No description provided for @contractTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Vertrag'**
+  String get contractTitle;
+
+  /// No description provided for @contractSet.
+  ///
+  /// In de, this message translates to:
+  /// **'Eintragen'**
+  String get contractSet;
+
+  /// No description provided for @contractMissingPrice.
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Arbeitspreis rechnet die App noch keine Kosten.'**
+  String get contractMissingPrice;
+
+  /// No description provided for @priceHistoryFrom.
+  ///
+  /// In de, this message translates to:
+  /// **'ab {date}'**
+  String priceHistoryFrom(String date);
+
+  /// No description provided for @priceHistoryPlanned.
+  ///
+  /// In de, this message translates to:
+  /// **'geplant'**
+  String get priceHistoryPlanned;
+
+  /// No description provided for @priceHistoryEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Preis eingetragen.'**
+  String get priceHistoryEmpty;
+
+  /// No description provided for @entryPeriodRange.
+  ///
+  /// In de, this message translates to:
+  /// **'{from} – {to}'**
+  String entryPeriodRange(String from, String to);
 
   /// No description provided for @exportCategory.
   ///

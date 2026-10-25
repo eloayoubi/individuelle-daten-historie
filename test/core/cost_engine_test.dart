@@ -9,6 +9,8 @@ const price = FieldDefinition(id: 'ap', name: 'Arbeitspreis', kind: FieldKind.cu
 
 Entry reading(DateTime date, num value, {bool change = false}) => Entry(id: 'r$date', date: date, values: {'stand': value}, meterChange: change);
 
+Entry bill(DateTime from, DateTime to, num value) => Entry(id: 'b$from$to', date: to, values: {'stand': value}, periodStart: from, periodEnd: to);
+
 void main() {
   group('Zählerstände', () {
     test('verteilt den Verbrauch linear über den Jahreswechsel', () {
@@ -131,6 +133,95 @@ void main() {
       final engine = CostEngine(t, today: d(2026, 10, 22));
       expect(engine.cost(d(2026, 1, 1), d(2026, 10, 23)), closeTo(100, 1e-9));
       expect(engine.costInYear(2027), closeTo(100, 1e-9));
+    });
+  });
+
+  group('Rechnungen', () {
+    Tracker strom(List<Entry> entries) => Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: entries);
+
+    test('verteilt den Verbrauch der Rechnung auf ihre Tage', () {
+      // 01.04.–30.09.: 183 Tage.
+      final engine = CostEngine(strom([bill(d(2026, 4, 1), d(2026, 9, 30), 508)]), today: d(2026, 10, 25));
+      expect(engine.consumption(d(2026, 4, 1), d(2026, 10, 1)), closeTo(508, 1e-9));
+      expect(engine.consumption(d(2026, 4, 1), d(2026, 5, 1)), closeTo(508 / 183 * 30, 1e-9));
+      expect(engine.hasMeter, isTrue);
+      expect(engine.lastReading, d(2026, 10, 1));
+    });
+
+    test('teilt eine Rechnung über den Jahreswechsel tagesgenau', () {
+      // 92 Tage 2025, 90 Tage 2026 – 10 pro Tag.
+      final engine = CostEngine(strom([bill(d(2025, 10, 1), d(2026, 3, 31), 1820)]), today: d(2026, 4, 1));
+      expect(engine.consumption(d(2025, 10, 1), d(2026, 1, 1)), closeTo(920, 1e-9));
+      expect(engine.consumption(d(2026, 1, 1), d(2026, 4, 1)), closeTo(900, 1e-9));
+    });
+
+    test('Rechnung über einen Tag', () {
+      final engine = CostEngine(strom([bill(d(2026, 5, 10), d(2026, 5, 10), 12)]), today: d(2026, 5, 11));
+      expect(engine.consumption(d(2026, 5, 10), d(2026, 5, 11)), closeTo(12, 1e-9));
+    });
+
+    test('füllt die Lücke zwischen zwei Rechnungen mit der vorigen', () {
+      final engine = CostEngine(
+        strom([bill(d(2026, 1, 1), d(2026, 1, 10), 100), bill(d(2026, 1, 21), d(2026, 1, 30), 200)]),
+        today: d(2026, 2, 1),
+      );
+      expect(engine.consumption(d(2026, 1, 11), d(2026, 1, 21)), closeTo(100, 1e-9));
+    });
+
+    test('Rechnung hat Vorrang vor Zählerständen', () {
+      // Stände: 60 Tage, 10 pro Tag. Rechnung für Februar: 2 pro Tag.
+      final engine = CostEngine(
+        strom([reading(d(2026, 1, 1), 0), reading(d(2026, 3, 2), 600), bill(d(2026, 2, 1), d(2026, 2, 28), 56)]),
+        today: d(2026, 3, 2),
+      );
+      expect(engine.consumption(d(2026, 2, 1), d(2026, 3, 1)), closeTo(56, 1e-9));
+      expect(engine.consumption(d(2026, 1, 1), d(2026, 2, 1)), closeTo(310, 1e-9));
+    });
+
+    test('bei überlappenden Rechnungen gilt die später endende', () {
+      final engine = CostEngine(
+        strom([bill(d(2026, 1, 16), d(2026, 2, 14), 60), bill(d(2026, 1, 1), d(2026, 1, 31), 310)]),
+        today: d(2026, 2, 15),
+      );
+      expect(engine.consumption(d(2026, 1, 16), d(2026, 2, 1)), closeTo(32, 1e-9));
+    });
+
+    test('Rechnung beim Gas ohne Umrechnungsfaktor', () {
+      const gas = FieldDefinition(id: 'stand', name: 'Gas', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'm³', consumptionUnit: 'kWh', factor: 10);
+      final t = Tracker(id: 't', name: 'Gas', fields: const [gas, price], entries: [bill(d(2026, 1, 1), d(2026, 1, 10), 1000)]);
+      expect(CostEngine(t, today: d(2026, 1, 11)).consumption(d(2026, 1, 1), d(2026, 1, 11)), closeTo(1000, 1e-9));
+    });
+
+    test('Prognose nach der letzten Rechnung mit dem Schnitt', () {
+      final engine = CostEngine(strom([bill(d(2026, 4, 1), d(2026, 9, 30), 508)]), today: d(2026, 10, 25));
+      expect(engine.consumption(d(2027, 1, 1), d(2027, 1, 2)), closeTo(508 / 183, 1e-9));
+    });
+
+    test('Preisänderung mitten in der Rechnung', () {
+      final engine = CostEngine(
+        strom([
+          bill(d(2026, 1, 1), d(2026, 1, 10), 100),
+          Entry(id: 'p1', date: d(2025, 1, 1), values: const {'ap': 0.30}),
+          Entry(id: 'p2', date: d(2026, 1, 6), values: const {'ap': 0.40}),
+        ]),
+        today: d(2026, 1, 11),
+      );
+      expect(engine.cost(d(2026, 1, 1), d(2026, 1, 11)), closeTo(50 * 0.30 + 50 * 0.40, 1e-9));
+    });
+
+    test('Auto: Stand mit Zeitraum bleibt Stand', () {
+      const km = FieldDefinition(id: 'stand', name: 'Kilometerstand', kind: FieldKind.number, role: FieldRole.meterReading, unit: 'km');
+      const tank = FieldDefinition(id: 'tank', name: 'Tanken', kind: FieldKind.currency, role: FieldRole.oneOffCost);
+      final t = Tracker(
+        id: 't',
+        name: 'Auto',
+        fields: const [km, tank],
+        entries: [
+          reading(d(2026, 1, 1), 1000),
+          Entry(id: 'r2', date: d(2026, 1, 11), values: const {'stand': 1500, 'tank': 60}, periodStart: d(2025, 12, 1), periodEnd: d(2025, 12, 31)),
+        ],
+      );
+      expect(CostEngine(t, today: d(2026, 1, 11)).consumption(d(2026, 1, 1), d(2026, 1, 11)), closeTo(500, 1e-9));
     });
   });
 }
