@@ -23,6 +23,18 @@ void main() {
     });
   });
 
+  group('Einladung annehmen', () {
+    test('Eigentümer ohne Cloud-Abo (P0064): cloud_required', () {
+      final error = SupabaseCategoriesRepository.inviteError(const PostgrestException(message: 'cloud_required', code: 'P0064'));
+      expect(error.message, WriteRejected.cloudRequired);
+    });
+
+    test('alles andere: Code ungültig', () {
+      final error = SupabaseCategoriesRepository.inviteError(const PostgrestException(message: 'Einladung ungültig oder abgelaufen', code: 'P0002'));
+      expect(error.message, isNot(WriteRejected.cloudRequired));
+    });
+  });
+
   group('Löschen, das RLS still verhindert', () {
     test('nichts gelöscht, Zeile noch da: abgelehnt', () async {
       await expectLater(SupabaseCategoriesRepository.confirmDeleted(const [], () async => true), throwsA(isA<WriteRejected>()));

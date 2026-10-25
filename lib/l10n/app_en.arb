@@ -363,6 +363,7 @@
   "joinRowHint": "Join a partner's category",
   "joinDone": "Joined",
   "joinInvalid": "Code unknown, expired or already used.",
+  "joinOwnerNoCloud": "The person who shared this category has no cloud subscription right now. The code stays valid – try again later.",
   "joinBody": "Enter the code from the invite. Afterwards you see the category and, depending on your role, record along.",
   "joinHint": "Code, e.g. K7Q2M9X4TA",
   "joinAction": "Join",

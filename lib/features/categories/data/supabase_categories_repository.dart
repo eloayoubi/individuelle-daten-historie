@@ -172,9 +172,14 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     try {
       return await _api.rpc<String>('accept_category_invite', params: {'p_code': code.trim()});
     } on PostgrestException catch (e) {
-      throw WriteRejected(e.message);
+      throw inviteError(e);
     }
   });
+
+  /// Eigentümer ohne Cloud-Abo (P0064): Der Code bleibt gültig, Beitreten geht erst wieder mit Abo.
+  /// Alles andere heißt: Code unbekannt, abgelaufen oder schon benutzt.
+  @visibleForTesting
+  static WriteRejected inviteError(PostgrestException e) => WriteRejected(e.code == 'P0064' ? WriteRejected.cloudRequired : e.message);
 
   @override
   Future<void> setMemberRole(String categoryId, String userId, MemberRole role) =>

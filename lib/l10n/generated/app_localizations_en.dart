@@ -1301,6 +1301,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinInvalid => 'Code unknown, expired or already used.';
 
   @override
+  String get joinOwnerNoCloud =>
+      'The person who shared this category has no cloud subscription right now. The code stays valid – try again later.';
+
+  @override
   String get joinBody =>
       'Enter the code from the invite. Afterwards you see the category and, depending on your role, record along.';
 

@@ -2234,6 +2234,12 @@ abstract class AppLocalizations {
   /// **'Code unbekannt, abgelaufen oder schon benutzt.'**
   String get joinInvalid;
 
+  /// No description provided for @joinOwnerNoCloud.
+  ///
+  /// In de, this message translates to:
+  /// **'Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.'**
+  String get joinOwnerNoCloud;
+
   /// No description provided for @joinBody.
   ///
   /// In de, this message translates to:

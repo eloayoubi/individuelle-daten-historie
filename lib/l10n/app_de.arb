@@ -877,6 +877,7 @@
   "joinRowHint": "Kategorie eines Partners beitreten",
   "joinDone": "Beigetreten",
   "joinInvalid": "Code unbekannt, abgelaufen oder schon benutzt.",
+  "joinOwnerNoCloud": "Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.",
   "joinBody": "Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.",
   "joinHint": "Code, z. B. K7Q2M9X4TA",
   "joinAction": "Beitreten",

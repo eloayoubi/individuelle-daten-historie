@@ -1308,6 +1308,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get joinInvalid => 'Code unbekannt, abgelaufen oder schon benutzt.';
 
   @override
+  String get joinOwnerNoCloud =>
+      'Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.';
+
+  @override
   String get joinBody =>
       'Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.';
 

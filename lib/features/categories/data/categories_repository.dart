@@ -87,6 +87,10 @@ class CategoryDraft extends Equatable {
 class WriteRejected implements Exception {
   const WriteRejected(this.message);
 
+  /// Geht nur mit Cloud: lokal (Teilen, Einladungen) oder weil der Eigentümer einer geteilten
+  /// Kategorie gerade kein Cloud-Abo hat (Beitreten, Server-Fehler P0064).
+  static const cloudRequired = 'cloud_required';
+
   final String message;
 
   @override
