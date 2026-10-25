@@ -153,12 +153,14 @@ class TrackerHistory extends Equatable {
     ];
   }
 
-  static CurrentValue? _current(List<Entry> sorted, FieldDefinition field, DateTime today) {
+  /// Tagesgenau: Eine Änderung von heute gilt ab Mitternacht, egal zu welcher Uhrzeit [now] ist.
+  static CurrentValue? _current(List<Entry> sorted, FieldDefinition field, DateTime now) {
+    final today = CostEngine.day(now);
     Entry? current;
     Entry? upcoming;
     for (final e in sorted) {
       if (!e.values.containsKey(field.id)) continue;
-      if (e.date.isAfter(today)) {
+      if (CostEngine.day(e.date).isAfter(today)) {
         upcoming ??= e;
       } else {
         current = e;

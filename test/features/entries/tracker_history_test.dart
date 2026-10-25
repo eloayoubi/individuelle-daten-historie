@@ -106,6 +106,26 @@ void main() {
       expect(TrackerHistory.metricsFor(Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: [bill])), [HistoryMetric.cost, HistoryMetric.consumption]);
     });
 
+    test('Preisänderung von heute gilt schon kurz nach Mitternacht, nicht erst später', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Strom',
+        fields: const [meter, price],
+        entries: [Entry(id: 'p1', date: DateTime.utc(2026), values: const {'ap': 0.3}), Entry(id: 'p2', date: DateTime.utc(2026, 10, 25), values: const {'ap': 0.35})],
+      );
+      final contract = TrackerHistory.contractOf(t, DateTime(2026, 10, 25, 0, 30)).single;
+      expect((contract.value, contract.upcoming), (0.35, null));
+      const rent = FieldDefinition(id: 'miete', name: 'Miete', kind: FieldKind.currency, role: FieldRole.recurringCost);
+      final wohnung = Tracker(
+        id: 'w',
+        name: 'Miete',
+        fields: const [rent],
+        entries: [Entry(id: 'm1', date: DateTime.utc(2026), values: const {'miete': 900}), Entry(id: 'm2', date: DateTime(2026, 10, 25, 12), values: const {'miete': 950})],
+      );
+      final value = TrackerHistory.currentValuesOf(wohnung, DateTime(2026, 10, 25, 8)).single;
+      expect((value.value, value.upcoming), (950, null));
+    });
+
     test('Versorgungszähler: aktuelle Werte ohne Preise, Zählerstand ohne Rechnungen', () {
       expect(TrackerHistory.currentValuesOf(tracker('c-strom'), now).where((v) => v.field.isRate), isEmpty);
       final onlyBill = Tracker(id: 't', name: 'Strom', fields: const [meter, price], entries: [bill, Entry(id: 'p', date: DateTime.utc(2026), values: const {'ap': 0.3})]);
