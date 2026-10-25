@@ -153,7 +153,14 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   );
 
   @override
-  Future<void> deleteEntry(String trackerId, String entryId) => _write(() => _rejectable(() => _api.table('entries').delete().eq('id', entryId)));
+  Future<void> deleteEntry(String trackerId, String entryId) => _write(
+    () => _rejectable(
+      () async => confirmDeleted(
+        await _api.table('entries').delete().eq('id', entryId).select('id'),
+        () async => await _api.table('entries').select('id').eq('id', entryId).maybeSingle() != null,
+      ),
+    ),
+  );
 
   @override
   Future<String> createInvite(String categoryId, MemberRole role) => _write(
@@ -174,8 +181,12 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       _write(() => _api.table('category_members').update({'role': role.name}).eq('category_id', categoryId).eq('user_id', userId));
 
   @override
-  Future<void> removeMember(String categoryId, String userId) =>
-      _write(() => _api.table('category_members').delete().eq('category_id', categoryId).eq('user_id', userId));
+  Future<void> removeMember(String categoryId, String userId) => _write(
+    () async => confirmDeleted(
+      await _api.table('category_members').delete().eq('category_id', categoryId).eq('user_id', userId).select('user_id'),
+      () async => await _api.table('category_members').select('user_id').eq('category_id', categoryId).eq('user_id', userId).maybeSingle() != null,
+    ),
+  );
 
   @override
   Future<void> leaveCategory(String categoryId) => removeMember(categoryId, _auth.userId ?? '');
@@ -216,6 +227,13 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     } on PostgrestException catch (e) {
       throw entryWriteError(e) ?? e;
     }
+  }
+
+  /// RLS lässt verbotenes Löschen nicht scheitern, es trifft nur keine Zeile. Ist nichts gelöscht
+  /// und die Zeile noch da ([stillThere]), war es nicht erlaubt; ist sie schon weg, ist es erledigt.
+  @visibleForTesting
+  static Future<void> confirmDeleted(List<Object?> deleted, Future<bool> Function() stillThere) async {
+    if (deleted.isEmpty && await stillThere()) throw const WriteRejected('delete_not_allowed');
   }
 
   static String _isoDay(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

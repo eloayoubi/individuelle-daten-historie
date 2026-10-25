@@ -22,4 +22,20 @@ void main() {
       expect(classify(null), isNull);
     });
   });
+
+  group('Löschen, das RLS still verhindert', () {
+    test('nichts gelöscht, Zeile noch da: abgelehnt', () async {
+      await expectLater(SupabaseCategoriesRepository.confirmDeleted(const [], () async => true), throwsA(isA<WriteRejected>()));
+    });
+
+    test('nichts gelöscht, Zeile schon weg: erledigt', () async {
+      await expectLater(SupabaseCategoriesRepository.confirmDeleted(const [], () async => false), completes);
+    });
+
+    test('gelöscht: ohne weitere Abfrage erledigt', () async {
+      var asked = false;
+      await SupabaseCategoriesRepository.confirmDeleted(const [{'id': 'e1'}], () async => asked = true);
+      expect(asked, isFalse);
+    });
+  });
 }
