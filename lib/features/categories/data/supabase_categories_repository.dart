@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/network/supabase_api.dart';
+import '../../attachments/data/attachments_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import 'categories_repository.dart';
 
@@ -155,9 +156,15 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   @override
   Future<void> deleteEntry(String trackerId, String entryId) => _write(
     () => _rejectable(
-      () async => confirmDeleted(
-        await _api.table('entries').delete().eq('id', entryId).select('id'),
-        () async => await _api.table('entries').select('id').eq('id', entryId).maybeSingle() != null,
+      () => deleteWithFiles(
+        files: () async => [
+          for (final row in await _api.table('attachments').select('storage_path').eq('entry_id', entryId)) row['storage_path'] as String,
+        ],
+        delete: () async => confirmDeleted(
+          await _api.table('entries').delete().eq('id', entryId).select('id'),
+          () async => await _api.table('entries').select('id').eq('id', entryId).maybeSingle() != null,
+        ),
+        remove: (paths) => _api.remove(AttachmentsRepository.bucket, paths),
       ),
     ),
   );
@@ -232,6 +239,20 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     } on PostgrestException catch (e) {
       throw entryWriteError(e) ?? e;
     }
+  }
+
+  /// Belege hängen am Eintrag: Ihre Zeilen verschwinden per Cascade, die Dateien im Bucket nicht –
+  /// sie blieben für alle Mitglieder lesbar. Darum vorher die Pfade lesen ([files]) und nach dem
+  /// Löschen die Dateien entfernen; scheitert nur das, gilt der Eintrag trotzdem als gelöscht.
+  @visibleForTesting
+  static Future<void> deleteWithFiles({
+    required Future<List<String>> Function() files,
+    required Future<void> Function() delete,
+    required Future<void> Function(List<String> paths) remove,
+  }) async {
+    final paths = await files();
+    await delete();
+    if (paths.isNotEmpty) await remove(paths).catchError((Object _) {});
   }
 
   /// RLS lässt verbotenes Löschen nicht scheitern, es trifft nur keine Zeile. Ist nichts gelöscht

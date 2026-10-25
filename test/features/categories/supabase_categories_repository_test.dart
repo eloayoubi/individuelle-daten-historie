@@ -50,4 +50,42 @@ void main() {
       expect(asked, isFalse);
     });
   });
+
+  group('Eintrag löschen mit Belegen', () {
+    test('Pfade vorher lesen, Dateien nach dem Löschen entfernen', () async {
+      final steps = <String>[];
+      await SupabaseCategoriesRepository.deleteWithFiles(
+        files: () async => (steps..add('lesen')).isEmpty ? const [] : const ['c/e/a.jpg'],
+        delete: () async => steps.add('löschen'),
+        remove: (paths) async => steps.add('entfernen $paths'),
+      );
+      expect(steps, ['lesen', 'löschen', 'entfernen [c/e/a.jpg]']);
+    });
+
+    test('Löschen scheitert: Dateien bleiben', () async {
+      var removed = false;
+      await expectLater(
+        SupabaseCategoriesRepository.deleteWithFiles(
+          files: () async => const ['c/e/a.jpg'],
+          delete: () async => throw const WriteRejected('delete_not_allowed'),
+          remove: (_) async => removed = true,
+        ),
+        throwsA(isA<WriteRejected>()),
+      );
+      expect(removed, isFalse);
+    });
+
+    test('Dateien entfernen scheitert: der Eintrag gilt trotzdem als gelöscht', () async {
+      await expectLater(
+        SupabaseCategoriesRepository.deleteWithFiles(files: () async => const ['c/e/a.jpg'], delete: () async {}, remove: (_) async => throw Exception('offline')),
+        completes,
+      );
+    });
+
+    test('ohne Belege: nichts zu entfernen', () async {
+      var removed = false;
+      await SupabaseCategoriesRepository.deleteWithFiles(files: () async => const [], delete: () async {}, remove: (_) async => removed = true);
+      expect(removed, isFalse);
+    });
+  });
 }
