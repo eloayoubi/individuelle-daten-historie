@@ -19,8 +19,9 @@ import 'widgets/meter_sheet.dart';
 /// Eine Kategorie mit ihren Trackern – oben die Übersicht (Kennzahlen im gewählten Zeitraum), je
 /// Tracker der Verlauf mit der Kennzahl des Jahres und die Einstellungen (Vertrag bzw. Details). Die
 /// Hauptaktion „Wert eintragen“ steht fest unten, bei mehreren Trackern fragt sie, wofür; darunter
-/// „Tracker hinzufügen“, bis es weggeklickt wird (dann über den Stift oben). Der Aufbau (Felder)
-/// liegt eine Ebene tiefer unter „Bearbeiten“. owner und editor bearbeiten, viewer lesen nur.
+/// „Tracker hinzufügen“, bis es weggeklickt wird. Der Stift oben bündelt das Bearbeiten: Darstellung,
+/// Felder und Einstellungen je Tracker (auch über „Bearbeiten“ am Tracker), Tracker hinzufügen,
+/// Archivieren und Löschen. owner und editor bearbeiten, viewer lesen nur.
 class CategoryDetailPage extends StatelessWidget {
   const CategoryDetailPage({super.key, required this.categoryId});
 
@@ -91,17 +92,30 @@ class _Content extends StatelessWidget {
 
   Map<String, YearToDate> get yearToDate => state.yearToDate;
 
+  /// Stift oben: Menü „Kategorie bearbeiten“, die Auswahl führt diese Seite aus.
   Future<void> _edit(BuildContext context) async {
-    final cubit = context.read<CategoryDetailCubit>();
-    final result = await CategoryEditSheet.show(context, category, canAddTracker: true);
+    final choice = await CategoryMenuSheet.show(context, category);
     if (!context.mounted) return;
-    switch (result) {
-      case CategoryEdited(:final name, :final icon, :final swatch):
-        await cubit.updateAppearance(name: name, icon: icon, swatch: swatch);
-      case CategoryAddTracker():
+    switch (choice) {
+      case CategoryMenuAppearance():
+        await _editAppearance(context);
+      case CategoryMenuTrackerSetup(:final trackerId):
+        await TrackerSetupPage.open(context, categoryId: category.id, trackerId: trackerId);
+      case CategoryMenuAddTracker():
         await _addTracker(context);
+      case CategoryMenuArchive():
+        await _archive(context);
+      case CategoryMenuDelete():
+        await _delete(context);
       case null:
         break;
+    }
+  }
+
+  Future<void> _editAppearance(BuildContext context) async {
+    final cubit = context.read<CategoryDetailCubit>();
+    if (await CategoryEditSheet.show(context, category) case CategoryEdited(:final name, :final icon, :final swatch)) {
+      await cubit.updateAppearance(name: name, icon: icon, swatch: swatch);
     }
   }
 
@@ -268,25 +282,15 @@ class _Content extends StatelessWidget {
               ),
             ],
           ],
-          // Archivieren behält alles (nur ausgeblendet), Löschen ist endgültig.
-          if (category.isOwner)
+          // Archivieren und Löschen stehen im Menü hinter dem Stift, Wiederherstellen hier sichtbar.
+          if (category.isOwner && category.isArchived)
             Padding(
               padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: Spacing.s,
-                children: [
-                  if (category.isArchived)
-                    AppButton(
-                      label: l10n.categoriesRestore,
-                      icon: CupertinoIcons.arrow_counterclockwise,
-                      variant: AppButtonVariant.tinted,
-                      onPressed: context.read<CategoryDetailCubit>().restore,
-                    )
-                  else
-                    AppButton(label: l10n.detailArchive, variant: AppButtonVariant.destructive, onPressed: () => _archive(context)),
-                  AppButton(label: l10n.detailDelete, variant: AppButtonVariant.destructive, onPressed: () => _delete(context)),
-                ],
+              child: AppButton(
+                label: l10n.categoriesRestore,
+                icon: CupertinoIcons.arrow_counterclockwise,
+                variant: AppButtonVariant.tinted,
+                onPressed: context.read<CategoryDetailCubit>().restore,
               ),
             ),
         ],

@@ -70,6 +70,8 @@
   "setupCustomHint": "Next, add trackers – e.g. a meter, a contract or a car – and give them their own fields.",
   "setupCreate": "Create category",
   "setupCreated": "{name} has been created.",
+  "detailAppearance": "Appearance",
+  "detailAppearanceHint": "Name, icon and colour",
   "detailEditCategory": "Edit category",
   "detailAddTracker": "Add tracker",
   "detailAddField": "Add field",
