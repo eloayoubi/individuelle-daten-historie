@@ -85,7 +85,7 @@ class InstalmentCheck extends Equatable {
   /// Aktueller Abschlag je Monat (heute, in früheren Jahren am 31. Dezember).
   final double monthly;
 
-  /// Monate mit Abschlag in diesem Jahr (angefangene anteilig).
+  /// Monate mit Abschlag in diesem Jahr (je Monatserstem einer).
   final double months;
 
   /// Positiv = Guthaben, negativ = Nachzahlung.
@@ -180,11 +180,11 @@ class Insights extends Equatable {
     return first == null || first.year != year ? 0 : first.month - 1;
   }
 
-  /// Monate in `[from, to)`, angefangene anteilig nach Tagen.
+  /// Monatserste in `[from, to)` – so viele Abschläge und Monatsbeträge fallen in den Zeitraum.
   static double _months(DateTime from, DateTime to) {
     var months = 0.0;
-    for (var d = from; d.isBefore(to); d = d.add(const Duration(days: 1))) {
-      months += 1 / DateTime.utc(d.year, d.month + 1, 0).day;
+    for (var d = DateTime.utc(from.year, from.month + (from.day == 1 ? 0 : 1)); d.isBefore(to); d = DateTime.utc(d.year, d.month + 1)) {
+      months++;
     }
     return months;
   }

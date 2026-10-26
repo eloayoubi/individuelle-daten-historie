@@ -72,10 +72,12 @@ void main() {
       expect(DashboardFigures.fieldValue(t, fuel, marchApril), closeTo(130, 1e-9));
     });
 
-    test('Summe eines wiederkehrenden Betrags zählt anteilig je Tag', () {
-      // März und April voll: 2 × 12 €; halber Juni: 6 €.
+    test('Summe eines wiederkehrenden Betrags zählt je Monatserstem voll', () {
+      // März und April: 2 × 12 €; Juni bis heute (15.): 12 €; 16. Juni bis 15. Juli: der Juli.
       expect(DashboardFigures.fieldValue(strom(), base, marchApril), closeTo(24, 1e-9));
-      expect(DashboardFigures.fieldValue(strom(), base, DateSpan(d(2026, 6, 1), d(2026, 6, 16))), closeTo(6, 1e-9));
+      expect(DashboardFigures.fieldValue(strom(), base, DateSpan(d(2026, 6, 1), d(2026, 6, 16))), closeTo(12, 1e-9));
+      expect(DashboardFigures.fieldValue(strom(), base, DateSpan(d(2026, 6, 16), d(2026, 7, 16))), closeTo(12, 1e-9));
+      expect(DashboardFigures.fieldValue(strom(), base, DateSpan(d(2026, 6, 2), d(2026, 7, 1))), 0);
     });
 
     test('Durchschnitt, kleinster und größter Wert über die Einträge im Zeitraum', () {

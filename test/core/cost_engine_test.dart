@@ -135,6 +135,25 @@ void main() {
       expect(engine.costInYear(2025), 0);
     });
 
+    test('zählen voll für den Monat, in dem sie eingetragen werden – auch bis heute', () {
+      final t = Tracker(
+        id: 't',
+        name: 'Wohnung',
+        fields: const [FieldDefinition(id: 'miete', name: 'Miete', kind: FieldKind.currency, role: FieldRole.recurringCost)],
+        entries: [
+          Entry(id: 'm', date: d(2026, 10, 26), values: const {'miete': 1400}),
+          // Zwei Änderungen in einem Monat: die letzte gilt für den ganzen Monat.
+          Entry(id: 'm2', date: d(2026, 12, 10), values: const {'miete': 1450}),
+          Entry(id: 'm3', date: d(2026, 12, 20), values: const {'miete': 1500}),
+        ],
+      );
+      final engine = CostEngine(t, today: d(2026, 10, 26));
+      expect(engine.cost(d(2026, 10, 1), d(2026, 10, 27)), closeTo(1400, 1e-9));
+      expect(engine.costInMonth(2026, 9), 0);
+      expect(engine.costInMonth(2026, 12), closeTo(1500, 1e-9));
+      expect(engine.costInYear(2026), closeTo(2 * 1400 + 1500, 1e-9));
+    });
+
     test('einmalige Beträge zählen am Tag, ab morgen mit dem Tagesdurchschnitt', () {
       final t = Tracker(
         id: 't',

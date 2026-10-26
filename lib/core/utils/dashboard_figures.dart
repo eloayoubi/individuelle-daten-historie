@@ -57,8 +57,9 @@ class DashboardFigure extends Equatable {
 /// - **Kosten** rechnet die [CostEngine] wie überall in der App; die der ganzen Kategorie lassen
 ///   Tracker aus, deren Kosten schon in einer anderen (aktiven) Kategorie stecken.
 /// - **Felder** fassen ihre Werte nach [FieldDefinition.effectiveSummary] zusammen:
-///   - `sum` addiert die Werte im Zeitraum; wiederkehrende Beträge und Abschläge zählen anteilig je
-///     Tag (12 €/Monat über 15 Tage im Juni = 6 €).
+///   - `sum` addiert die Werte im Zeitraum; wiederkehrende Beträge und Abschläge zählen je
+///     Monatserstem im Zeitraum voll (12 €/Monat vom 1. bis 15. Juni = 12 €, vom 16. Juni bis
+///     15. Juli = 12 € für Juli).
 ///   - `difference` ist neuer minus alter Wert: Wert am Ende minus Wert am Anfang, zwischen zwei
 ///     Einträgen linear verteilt, vor dem ersten und nach dem letzten gilt der nächste bekannte
 ///     Wert. Beim (ersten) Zählerstand ist das der Verbrauch der [CostEngine] – mit Umrechnung,
@@ -163,7 +164,7 @@ abstract final class DashboardFigures {
     ];
     switch (summary) {
       case FieldSummary.sum:
-        if (field.role == FieldRole.recurringCost || field.role == FieldRole.instalment) return _prorated(points, field, span);
+        if (field.role == FieldRole.recurringCost || field.role == FieldRole.instalment) return _monthly(points, field, span);
         return inSpan.fold<double>(0, (a, b) => a + b);
       case FieldSummary.difference:
         if (field.role == FieldRole.meterReading && tracker.firstWithRole(FieldRole.meterReading)?.id == field.id) {
@@ -227,18 +228,20 @@ abstract final class DashboardFigures {
 
   static bool _hasCost(Tracker t) => t.fields.any((f) => f.role == FieldRole.unitPrice || f.role == FieldRole.recurringCost || f.role == FieldRole.oneOffCost);
 
-  /// Wiederkehrende Beträge anteilig je Tag: Betrag je Intervall, auf die Tage des Monats verteilt.
-  static double _prorated(List<(DateTime, double)> points, FieldDefinition field, DateSpan span) {
+  /// Wiederkehrende Beträge je Monat wie in der [CostEngine]: voll an jedem Monatsersten im
+  /// Zeitraum (Betrag je Intervall geteilt durch dessen Monate); ein Wert gilt ab dem Monat seines
+  /// Datums, mehrere in einem Monat: der letzte.
+  static double _monthly(List<(DateTime, double)> points, FieldDefinition field, DateSpan span) {
     final months = field.intervalMonths < 1 || field.role == FieldRole.instalment ? 1 : field.intervalMonths;
     var total = 0.0;
     var i = 0;
     double? current;
-    for (var d = span.from; d.isBefore(span.to); d = d.add(const Duration(days: 1))) {
-      while (i < points.length && !points[i].$1.isAfter(d)) {
+    for (var d = DateTime.utc(span.from.year, span.from.month + (span.from.day == 1 ? 0 : 1)); d.isBefore(span.to); d = DateTime.utc(d.year, d.month + 1)) {
+      while (i < points.length && !DateTime.utc(points[i].$1.year, points[i].$1.month).isAfter(d)) {
         current = points[i].$2;
         i++;
       }
-      if (current != null) total += current / months / DateTime.utc(d.year, d.month + 1, 0).day;
+      if (current != null) total += current / months;
     }
     return total;
   }

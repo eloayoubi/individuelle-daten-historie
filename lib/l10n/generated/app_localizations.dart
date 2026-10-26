@@ -3665,7 +3665,7 @@ abstract class AppLocalizations {
   /// No description provided for @summarySumHint.
   ///
   /// In de, this message translates to:
-  /// **'Werte im Zeitraum addiert – wiederkehrende Beträge anteilig je Tag'**
+  /// **'Werte im Zeitraum addiert – wiederkehrende Beträge voll je Monat'**
   String get summarySumHint;
 
   /// No description provided for @summaryDifference.

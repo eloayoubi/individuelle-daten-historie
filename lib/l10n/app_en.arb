@@ -601,7 +601,7 @@
   "fieldSummary": "Summary",
   "fieldSummaryFooter": "How the category overview sums up a period – e.g. consumption as the new minus the old meter reading.",
   "summarySum": "Sum",
-  "summarySumHint": "Values in the period added up – recurring amounts prorated per day",
+  "summarySumHint": "Values in the period added up – recurring amounts in full per month",
   "summaryDifference": "Difference",
   "summaryDifferenceHint": "New minus old value, e.g. consumption from meter readings",
   "summaryAverage": "Average",

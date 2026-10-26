@@ -38,9 +38,12 @@ class CostParts {
 ///   Verbrauchs zu gleichen Teilen (Differenz minus Rechnungsverbrauch, mindestens 0).
 /// - **Lücken** zwischen bekannten Tagen (zwischen zwei Rechnungen, Zählerwechsel ohne Endstand):
 ///   die erste Hälfte mit dem Tagesverbrauch davor, die zweite mit dem danach.
-/// - **Arbeitspreis** ([FieldRole.unitPrice]) und **wiederkehrende Beträge**
-///   ([FieldRole.recurringCost]) gelten ab ihrem Datum bis zur nächsten Änderung. Im Voraus
-///   eingetragene Erhöhungen fließen so von selbst in die Prognose ein.
+/// - **Arbeitspreis** ([FieldRole.unitPrice]) gilt ab seinem Datum bis zur nächsten Änderung. Im
+///   Voraus eingetragene Erhöhungen fließen so von selbst in die Prognose ein.
+/// - **Wiederkehrende Beträge** ([FieldRole.recurringCost]) sind fällig je Monat: Sie zählen voll am
+///   Monatsersten (Betrag je Intervall geteilt durch dessen Monate), ein Wert gilt ab dem Monat seines
+///   Datums – die am 26. eingetragene Miete zählt also schon für den ganzen Monat. Mehrere Werte in
+///   einem Monat: der letzte gilt.
 /// - **Einmalige Beträge** ([FieldRole.oneOffCost]) zählen an ihrem Tag – mit Abrechnungszeitraum
 ///   bis heute verteilt auf dessen Tage; ab morgen gilt der Tagesdurchschnitt dessen, was in den
 ///   letzten 365 Tagen gezahlt wurde (nach Datum des Eintrags; Tanken, Nachzahlungen …), dazu im
@@ -65,7 +68,7 @@ class CostEngine {
         case FieldRole.unitPrice:
           _unitPrices.addAll(timeline);
         case FieldRole.recurringCost:
-          _recurring.add((timeline, field.intervalMonths < 1 ? 1 : field.intervalMonths));
+          _recurring.add((_byMonth(timeline), field.intervalMonths < 1 ? 1 : field.intervalMonths));
         case FieldRole.oneOffCost:
           for (final e in tracker.entries) {
             final value = e.number(field.id)?.toDouble();
@@ -90,7 +93,7 @@ class CostEngine {
             }
           }
         case FieldRole.instalment:
-          _instalments.add((timeline, field.intervalMonths < 1 ? 1 : field.intervalMonths));
+          _instalments.add((_byMonth(timeline), field.intervalMonths < 1 ? 1 : field.intervalMonths));
         case FieldRole.info || FieldRole.snapshot || FieldRole.meterReading || FieldRole.deadline:
           break;
       }
@@ -194,14 +197,21 @@ class CostEngine {
     d.isAfter(_today) ? _oneOffDaily + (_oneOffAhead[d] ?? 0) : _oneOff[d] ?? 0,
   );
 
-  /// Tagesanteil wiederkehrender Beträge (Betrag je Intervall, auf die Tage des Monats verteilt).
+  /// Wiederkehrende Beträge an [d]: am Monatsersten der Monatsanteil (Betrag je Intervall geteilt
+  /// durch dessen Monate), an allen anderen Tagen nichts.
   static double _monthly(List<(List<(DateTime, double)>, int)> series, DateTime d) {
+    if (d.day != 1) return 0;
     var total = 0.0;
     for (final (timeline, months) in series) {
-      total += _valueAt(timeline, d) / months / _daysInMonth(d);
+      total += _valueAt(timeline, d) / months;
     }
     return total;
   }
+
+  /// [timeline] mit jedem Datum auf den Ersten seines Monats – so gilt ein Wert für den ganzen Monat.
+  static List<(DateTime, double)> _byMonth(List<(DateTime, double)> timeline) => [
+    for (final (date, v) in timeline) (DateTime.utc(date.year, date.month), v),
+  ];
 
   double _rateOn(DateTime d) {
     if (!hasMeter || d.isBefore(_first!)) return 0;
@@ -346,5 +356,4 @@ class CostEngine {
     return value;
   }
 
-  static int _daysInMonth(DateTime d) => DateTime.utc(d.year, d.month + 1, 0).day;
 }

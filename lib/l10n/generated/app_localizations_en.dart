@@ -2171,7 +2171,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get summarySumHint =>
-      'Values in the period added up – recurring amounts prorated per day';
+      'Values in the period added up – recurring amounts in full per month';
 
   @override
   String get summaryDifference => 'Difference';
