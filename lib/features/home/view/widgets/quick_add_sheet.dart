@@ -1,14 +1,31 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../../../../core/core.dart';
 
-/// Schnellerfassung: Wofür soll ein Wert eingetragen werden? Liefert die Tracker-Id zurück.
+/// Was in der Schnellerfassung gewählt wurde.
+sealed class QuickAddChoice {
+  const QuickAddChoice();
+}
+
+/// Ein Wert für diesen Tracker.
+final class QuickAddTracker extends QuickAddChoice {
+  const QuickAddTracker(this.trackerId);
+
+  final String trackerId;
+}
+
+/// Noch keine passende Kategorie: neue anlegen.
+final class QuickAddCategory extends QuickAddChoice {
+  const QuickAddCategory();
+}
+
+/// Schnellerfassung: Wofür soll ein Wert eingetragen werden? Darunter eine neue Kategorie anlegen.
 class QuickAddSheet extends StatelessWidget {
   const QuickAddSheet({super.key, required this.categories});
 
   final List<Category> categories;
 
-  static Future<String?> show(BuildContext context, List<Category> categories) => AppSheet.show<String>(
+  static Future<QuickAddChoice?> show(BuildContext context, List<Category> categories) => AppSheet.show<QuickAddChoice>(
     context,
     title: context.l10n.quickAddTitle,
     child: QuickAddSheet(categories: categories),
@@ -31,8 +48,19 @@ class QuickAddSheet extends StatelessWidget {
                     leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
                     title: tracker.name,
                     subtitle: category.name,
-                    onTap: () => Navigator.of(context).pop(tracker.id),
+                    onTap: () => Navigator.of(context).pop(QuickAddTracker(tracker.id)),
                   ),
+          ],
+        ),
+        const SizedBox(height: Spacing.m),
+        AppListGroup(
+          color: c.surfaceRaised,
+          children: [
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.plus, color: c.accent),
+              title: context.l10n.categoriesAdd,
+              onTap: () => Navigator.of(context).pop(const QuickAddCategory()),
+            ),
           ],
         ),
       ],

@@ -50,11 +50,18 @@ class _Content extends StatelessWidget {
   final HomeOverview overview;
   final SyncState sync;
 
-  /// Schnellerfassung: Tracker wählen, dann direkt ins Formular.
+  /// Schnellerfassung: Tracker wählen, dann direkt ins Formular – oder eine neue Kategorie anlegen.
   Future<void> _quickAdd(BuildContext context) async {
     final editable = [for (final s in overview.categories) if (s.category.canEdit) s.category];
-    final trackerId = await QuickAddSheet.show(context, editable);
-    if (trackerId != null && context.mounted) _openForm(context, trackerId);
+    final choice = await QuickAddSheet.show(context, editable);
+    if (!context.mounted) return;
+    switch (choice) {
+      case QuickAddTracker(:final trackerId):
+        _openForm(context, trackerId);
+      case QuickAddCategory():
+        await CategorySetupPage.start(context);
+      case null:
+    }
   }
 
   void _openForm(BuildContext context, String trackerId) {
