@@ -204,6 +204,11 @@ abstract final class MetricLabel {
     final several = category.trackers.length > 1;
     final tracker = category.trackers.where((t) => t.id == metric.trackerId).firstOrNull;
     if (metric.isCost) return (l10n.dashboardCost, tracker?.name ?? (several ? l10n.metricsCostAll : null));
+    if (metric.isMeters) {
+      final count = DashboardFigures.metersOf(category, metric).length;
+      final name = metric.label ?? metric.group;
+      return (name ?? l10n.dashboardConsumption, name == null ? l10n.metersAll(count) : l10n.metersCount(count));
+    }
     final field = tracker?.fields.where((f) => f.id == metric.fieldId).firstOrNull;
     if (tracker == null || field == null) return ('', null);
     final summary = field.effectiveSummary;
@@ -234,6 +239,21 @@ class MetricsSheet extends StatefulWidget {
 class _MetricsSheetState extends State<MetricsSheet> {
   late final _selected = [...DashboardFigures.shown(widget.category)];
 
+  /// Eigene Summen: gewählte und hier neu angelegte.
+  late final _custom = [
+    for (final m in _selected)
+      if (m.isCustom) m,
+  ];
+
+  Future<void> _addCustom() async {
+    final metric = await CustomSumSheet.show(context, widget.category);
+    if (metric == null || !mounted) return;
+    setState(() {
+      _custom.add(metric);
+      _selected.add(metric);
+    });
+  }
+
   void _toggle(DashboardMetric metric, bool on) => setState(() {
     _selected.remove(metric);
     if (on) _selected.add(metric);
@@ -251,7 +271,7 @@ class _MetricsSheetState extends State<MetricsSheet> {
           color: c.surfaceRaised,
           dividerIndent: Spacing.l,
           children: [
-            for (final metric in DashboardFigures.options(widget.category))
+            for (final metric in [...DashboardFigures.options(widget.category), ..._custom])
               if (MetricLabel.of(context, widget.category, metric) case (final title, final subtitle))
                 AppListRow(
                   title: title,
@@ -260,6 +280,13 @@ class _MetricsSheetState extends State<MetricsSheet> {
                   trailing: AppSwitch(value: _selected.contains(metric), semanticLabel: title, onChanged: (on) => _toggle(metric, on)),
                   onTap: () => _toggle(metric, !_selected.contains(metric)),
                 ),
+            if (DashboardFigures.allMeters(widget.category).length > 1)
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.add, color: c.accent),
+                title: l10n.metricsCustomAdd,
+                subtitle: l10n.metricsCustomAddHint,
+                onTap: _addCustom,
+              ),
           ],
         ),
         Padding(
@@ -275,6 +302,95 @@ class _MetricsSheetState extends State<MetricsSheet> {
               if (widget.category.dashboard.metrics != null)
                 AppButton(label: l10n.metricsReset, variant: AppButtonVariant.plain, onPressed: () => Navigator.of(context).pop((metrics: null))),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Eigene Summe: Zähler wählen, deren Verbrauch zusammen eine Karte bildet, und ihr einen Namen
+/// geben (z. B. „Bad“ aus Bad kalt und Bad warm). Liefert die Kennzahl oder `null`.
+class CustomSumSheet extends StatefulWidget {
+  const CustomSumSheet({super.key, required this.category});
+
+  final Category category;
+
+  static Future<DashboardMetric?> show(BuildContext context, Category category) => AppSheet.show<DashboardMetric>(
+    context,
+    title: context.l10n.metricsCustomTitle,
+    child: CustomSumSheet(category: category),
+  );
+
+  @override
+  State<CustomSumSheet> createState() => _CustomSumSheetState();
+}
+
+class _CustomSumSheetState extends State<CustomSumSheet> {
+  final _name = TextEditingController();
+  final _chosen = <String>{};
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  bool get _valid => _name.text.trim().isNotEmpty && _chosen.isNotEmpty;
+
+  void _toggle(String id) => setState(() => _chosen.contains(id) ? _chosen.remove(id) : _chosen.add(id));
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = context.colors;
+    final meters = DashboardFigures.allMeters(widget.category);
+    final several = widget.category.trackers.length > 1;
+    // Nur Zähler mit derselben Verbrauchseinheit wie der erste gewählte lassen sich addieren.
+    final unit = meters.where((m) => _chosen.contains(m.$2.id)).firstOrNull?.$2.usageUnit;
+    return ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, Spacing.xl),
+      children: [
+        Padding(
+          padding: Spacing.screen,
+          child: AppTextField(controller: _name, hint: l10n.metricsCustomNameHint, maxLength: 40, color: c.surfaceRaised, onChanged: (_) => setState(() {})),
+        ),
+        const SizedBox(height: Spacing.m),
+        AppListGroup(
+          color: c.surfaceRaised,
+          dividerIndent: Spacing.l,
+          children: [
+            for (final (tracker, meter) in meters)
+              if (unit == null || meter.usageUnit == unit || _chosen.contains(meter.id))
+                AppListRow(
+                  title: meter.name,
+                  subtitle: context.joinParts([if (several) tracker.name, meter.meterGroup]),
+                  chevron: false,
+                  trailing: AppSwitch(value: _chosen.contains(meter.id), semanticLabel: meter.name, onChanged: (_) => _toggle(meter.id)),
+                  onTap: () => _toggle(meter.id),
+                ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, Spacing.l),
+          child: AppText(l10n.metricsCustomFooter, style: (t) => t.footnote, color: c.textSecondary),
+        ),
+        Padding(
+          padding: Spacing.screen,
+          child: AppButton(
+            label: l10n.actionSave,
+            onPressed: _valid
+                ? () => Navigator.of(context).pop(
+                    DashboardMetric.meters(
+                      fieldIds: [
+                        for (final (_, m) in meters)
+                          if (_chosen.contains(m.id)) m.id,
+                      ],
+                      label: _name.text.trim(),
+                    ),
+                  )
+                : null,
           ),
         ),
       ],

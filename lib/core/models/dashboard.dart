@@ -23,22 +23,46 @@ enum FieldSummary {
   max,
 }
 
-/// Eine Kennzahl im Dashboard: Kosten (der ganzen Kategorie oder eines Trackers) oder ein Feld,
-/// zusammengefasst nach seiner Einstellung ([FieldSummary]).
+/// Eine Kennzahl im Dashboard: Kosten (der ganzen Kategorie oder eines Trackers), ein Feld,
+/// zusammengefasst nach seiner Einstellung ([FieldSummary]), oder der Verbrauch mehrerer Zähler
+/// zusammen.
 class DashboardMetric extends Equatable {
   /// Kosten – ohne [trackerId] die der ganzen Kategorie.
-  const DashboardMetric.cost({this.trackerId}) : fieldId = null;
+  const DashboardMetric.cost({this.trackerId}) : fieldId = null, isMeters = false, group = null, fieldIds = null, label = null;
 
-  const DashboardMetric.field({required String this.trackerId, required String this.fieldId});
+  const DashboardMetric.field({required String this.trackerId, required String this.fieldId}) : isMeters = false, group = null, fieldIds = null, label = null;
+
+  /// Verbrauch mehrerer Zähler zusammen: ohne Angabe alle Zähler der Kategorie, mit [group] die
+  /// Zähler dieser Gruppe (Kaltwasser), mit [fieldIds] eine eigene Auswahl namens [label].
+  const DashboardMetric.meters({this.group, this.fieldIds, this.label}) : trackerId = null, fieldId = null, isMeters = true;
 
   final String? trackerId;
   final String? fieldId;
+  final bool isMeters;
+  final String? group;
+  final List<String>? fieldIds;
+  final String? label;
 
-  bool get isCost => fieldId == null;
+  bool get isCost => fieldId == null && !isMeters;
 
-  Map<String, Object?> toJson() => {'tracker': trackerId, if (fieldId != null) 'field': fieldId};
+  /// Eigene Summe aus gewählten Zählern.
+  bool get isCustom => fieldIds != null;
+
+  Map<String, Object?> toJson() => isMeters
+      ? {
+          'meters': {'group': ?group, 'fields': ?fieldIds, 'label': ?label},
+        }
+      : {'tracker': trackerId, if (fieldId != null) 'field': fieldId};
 
   static DashboardMetric? fromJson(Object? json) => switch (json) {
+    {'meters': final Map meters} => DashboardMetric.meters(
+      group: meters['group'] as String?,
+      fieldIds: switch (meters['fields']) {
+        final List list => [for (final id in list) id as String],
+        _ => null,
+      },
+      label: meters['label'] as String?,
+    ),
     {'tracker': final String tracker, 'field': final String field} => DashboardMetric.field(trackerId: tracker, fieldId: field),
     {'field': _} => null,
     {'tracker': final String? tracker} => DashboardMetric.cost(trackerId: tracker),
@@ -47,6 +71,11 @@ class DashboardMetric extends Equatable {
 
   /// Gleiche Kennzahl mit neuen Ids (Umzug zwischen Gerät und Cloud); `null`, wenn es sie dort nicht gibt.
   DashboardMetric? remap(Map<String, String> trackers, Map<String, String> fields) {
+    if (isMeters) {
+      if (fieldIds == null) return this;
+      final ids = [for (final id in fieldIds!) ?fields[id]];
+      return ids.isEmpty ? null : DashboardMetric.meters(group: group, fieldIds: ids, label: label);
+    }
     final tracker = trackerId == null ? null : trackers[trackerId];
     if (trackerId != null && tracker == null) return null;
     if (fieldId == null) return DashboardMetric.cost(trackerId: tracker);
@@ -55,14 +84,15 @@ class DashboardMetric extends Equatable {
   }
 
   @override
-  List<Object?> get props => [trackerId, fieldId];
+  List<Object?> get props => [trackerId, fieldId, isMeters, group, fieldIds, label];
 }
 
 /// Aufbau der Übersicht einer Kategorie – gilt für alle Mitglieder.
 class CategoryDashboard extends Equatable {
   const CategoryDashboard({this.metrics, this.showAddTracker = true});
 
-  /// Gewählte Kennzahlen in Reihenfolge; `null` = die App wählt (Kosten, Verbrauch je Zähler).
+  /// Gewählte Kennzahlen in Reihenfolge; `null` = die App wählt (Kosten, Verbrauch je Gruppe von
+  /// Zählern bzw. je Zähler).
   final List<DashboardMetric>? metrics;
 
   /// „Tracker hinzufügen“ unter „Wert eintragen“ zeigen; weggeklickt geht es über „Bearbeiten“.

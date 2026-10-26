@@ -3889,6 +3889,204 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Weiteren Tracker hinzufügen'**
   String get detailAddAnotherTracker;
+
+  /// No description provided for @meterAdd.
+  ///
+  /// In de, this message translates to:
+  /// **'Zähler hinzufügen'**
+  String get meterAdd;
+
+  /// No description provided for @meterEdit.
+  ///
+  /// In de, this message translates to:
+  /// **'Zähler bearbeiten'**
+  String get meterEdit;
+
+  /// No description provided for @meterAddHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Weitere Zähler, z. B. Bad und WC oder Kalt- und Warmwasser – ihr Verbrauch zählt zusammen.'**
+  String get meterAddHint;
+
+  /// No description provided for @meterPlace.
+  ///
+  /// In de, this message translates to:
+  /// **'Ort'**
+  String get meterPlace;
+
+  /// No description provided for @meterPlaceBath.
+  ///
+  /// In de, this message translates to:
+  /// **'Bad'**
+  String get meterPlaceBath;
+
+  /// No description provided for @meterPlaceKitchen.
+  ///
+  /// In de, this message translates to:
+  /// **'Küche'**
+  String get meterPlaceKitchen;
+
+  /// No description provided for @meterPlaceToilet.
+  ///
+  /// In de, this message translates to:
+  /// **'WC'**
+  String get meterPlaceToilet;
+
+  /// No description provided for @meterPlaceGuestToilet.
+  ///
+  /// In de, this message translates to:
+  /// **'Gäste-WC'**
+  String get meterPlaceGuestToilet;
+
+  /// No description provided for @meterPlaceBasement.
+  ///
+  /// In de, this message translates to:
+  /// **'Keller'**
+  String get meterPlaceBasement;
+
+  /// No description provided for @meterPlaceGarden.
+  ///
+  /// In de, this message translates to:
+  /// **'Garten'**
+  String get meterPlaceGarden;
+
+  /// No description provided for @meterPlaceFlat.
+  ///
+  /// In de, this message translates to:
+  /// **'Wohnung'**
+  String get meterPlaceFlat;
+
+  /// No description provided for @meterPlaceGarage.
+  ///
+  /// In de, this message translates to:
+  /// **'Garage'**
+  String get meterPlaceGarage;
+
+  /// No description provided for @meterGroup.
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe'**
+  String get meterGroup;
+
+  /// No description provided for @meterGroupNone.
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne'**
+  String get meterGroupNone;
+
+  /// No description provided for @meterGroupCold.
+  ///
+  /// In de, this message translates to:
+  /// **'Kaltwasser'**
+  String get meterGroupCold;
+
+  /// No description provided for @meterGroupWarm.
+  ///
+  /// In de, this message translates to:
+  /// **'Warmwasser'**
+  String get meterGroupWarm;
+
+  /// No description provided for @meterGroupHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Gruppe'**
+  String get meterGroupHint;
+
+  /// No description provided for @meterGroupFieldHint.
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. Kaltwasser'**
+  String get meterGroupFieldHint;
+
+  /// No description provided for @meterGroupFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Zähler einer Gruppe erscheinen in der Übersicht als eine Karte, z. B. Kalt- und Warmwasser getrennt. Unter „Anpassen“ lässt sich auch der Verbrauch aller Zähler zusammen zeigen.'**
+  String get meterGroupFooter;
+
+  /// No description provided for @meterShortCold.
+  ///
+  /// In de, this message translates to:
+  /// **'kalt'**
+  String get meterShortCold;
+
+  /// No description provided for @meterShortWarm.
+  ///
+  /// In de, this message translates to:
+  /// **'warm'**
+  String get meterShortWarm;
+
+  /// No description provided for @meterName.
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get meterName;
+
+  /// No description provided for @meterNameHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Name, z. B. Bad warm'**
+  String get meterNameHint;
+
+  /// No description provided for @meterFirstTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Bisheriger Zähler'**
+  String get meterFirstTitle;
+
+  /// No description provided for @meterFirstBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Gib auch „{name}“ eine Gruppe und einen Namen, damit die Übersicht beide auseinanderhält.'**
+  String meterFirstBody(String name);
+
+  /// No description provided for @detailMeterAdded.
+  ///
+  /// In de, this message translates to:
+  /// **'Zähler hinzugefügt.'**
+  String get detailMeterAdded;
+
+  /// No description provided for @metersAll.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Zähler} =2{Beide Zähler} other{Alle {count} Zähler}}'**
+  String metersAll(int count);
+
+  /// No description provided for @metersCount.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Zähler} other{{count} Zähler}}'**
+  String metersCount(int count);
+
+  /// No description provided for @metricsCustomAdd.
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Summe'**
+  String get metricsCustomAdd;
+
+  /// No description provided for @metricsCustomAddHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbrauch ausgewählter Zähler zusammen, z. B. alles im Bad'**
+  String get metricsCustomAddHint;
+
+  /// No description provided for @metricsCustomTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Summe'**
+  String get metricsCustomTitle;
+
+  /// No description provided for @metricsCustomNameHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Name, z. B. Bad'**
+  String get metricsCustomNameHint;
+
+  /// No description provided for @metricsCustomFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Verbrauch der gewählten Zähler wird addiert. Zusammen zählen nur Zähler mit derselben Einheit.'**
+  String get metricsCustomFooter;
 }
 
 class _AppLocalizationsDelegate
