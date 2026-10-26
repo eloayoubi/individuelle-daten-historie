@@ -2348,6 +2348,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meterAdd => 'Zähler hinzufügen';
 
   @override
+  String get meterAddAnother => 'Weiteren Zähler hinzufügen';
+
+  @override
+  String get meterSetupTitle => 'Welchen Zähler liest du ab?';
+
+  @override
+  String get meterSetupBody =>
+      'Leg zuerst deinen Zähler an, z. B. Wohnung oder Bad kalt. Danach trägst du Stände und Preise ein und kannst weitere Zähler hinzufügen.';
+
+  @override
+  String get meterSetupHint => 'Zuerst den Zähler anlegen, dann eintragen.';
+
+  @override
   String get meterEdit => 'Zähler bearbeiten';
 
   @override

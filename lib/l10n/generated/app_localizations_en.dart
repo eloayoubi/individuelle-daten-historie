@@ -2332,6 +2332,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meterAdd => 'Add meter';
 
   @override
+  String get meterAddAnother => 'Add another meter';
+
+  @override
+  String get meterSetupTitle => 'Which meter do you read?';
+
+  @override
+  String get meterSetupBody =>
+      'Add your meter first, e.g. flat or bathroom cold. Then enter readings and prices and add more meters.';
+
+  @override
+  String get meterSetupHint => 'Add the meter first, then enter readings.';
+
+  @override
   String get meterEdit => 'Edit meter';
 
   @override

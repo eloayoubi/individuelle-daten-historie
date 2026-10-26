@@ -22,19 +22,38 @@ class MeterSheetResult {
 /// Zähler hinzufügen ([meter] `null`) oder Name und Gruppe ändern. Beim Hinzufügen führt die Wahl
 /// von Ort und Gruppe zum Namen („Bad“ + „Warmwasser“ → „Bad warm“). Hat der Tracker bisher nur
 /// einen Zähler ohne Gruppe, lässt er sich gleich mit benennen – so trennt die Übersicht beide.
+/// Mit [setup] wird der noch unbenannte Zähler aus der Vorlage zum ersten Zähler – wie beim
+/// Hinzufügen, nur ohne neues Feld.
 class MeterSheet extends StatefulWidget {
-  const MeterSheet({super.key, required this.category, required this.tracker, this.meter});
+  const MeterSheet({super.key, required this.category, required this.tracker, this.meter, this.setup = false});
 
   final Category category;
   final Tracker tracker;
   final FieldDefinition? meter;
+  final bool setup;
 
-  static Future<MeterSheetResult?> show(BuildContext context, {required Category category, required Tracker tracker, FieldDefinition? meter}) =>
-      AppSheet.show<MeterSheetResult>(
-        context,
-        title: meter == null ? context.l10n.meterAdd : context.l10n.meterEdit,
-        child: MeterSheet(category: category, tracker: tracker, meter: meter),
-      );
+  static Future<MeterSheetResult?> show(
+    BuildContext context, {
+    required Category category,
+    required Tracker tracker,
+    FieldDefinition? meter,
+    bool setup = false,
+  }) => AppSheet.show<MeterSheetResult>(
+    context,
+    title: meter == null || setup ? context.l10n.meterAdd : context.l10n.meterEdit,
+    child: MeterSheet(category: category, tracker: tracker, meter: meter, setup: setup),
+  );
+
+  /// Versorgungszähler, dessen einziger Zähler noch so heißt wie in der Vorlage und noch keinen
+  /// Stand hat: Erst wird der Zähler angelegt, dann eingetragen.
+  static bool needsSetup(BuildContext context, Tracker tracker) {
+    final meter = tracker.meter;
+    return tracker.isUtilityMeter &&
+        tracker.meters.length == 1 &&
+        meter!.meterGroup == null &&
+        meter.name == context.l10n.tplFieldReading &&
+        !tracker.entries.any((e) => e.values.containsKey(meter.id));
+  }
 
   /// Wasser: Vorlage „Wasser“ oder Kubikmeter ohne Umrechnung (Gas rechnet in kWh um).
   static bool isWater(Category category, Tracker tracker) {
@@ -47,7 +66,10 @@ class MeterSheet extends StatefulWidget {
 }
 
 class _MeterSheetState extends State<MeterSheet> {
-  late final _name = TextEditingController(text: widget.meter?.name ?? '');
+  /// Neuer Zähler: Ort wählen, Name daraus vorschlagen.
+  bool get _adding => widget.meter == null || widget.setup;
+
+  late final _name = TextEditingController(text: _adding ? '' : widget.meter!.name);
   late final _group = TextEditingController(text: widget.meter?.meterGroup ?? '');
 
   /// Bisheriger erster Zähler ohne Gruppe – nur beim Hinzufügen des zweiten.
@@ -76,7 +98,7 @@ class _MeterSheetState extends State<MeterSheet> {
   List<String> _places(BuildContext context) {
     final l10n = context.l10n;
     return _water
-        ? [l10n.meterPlaceBath, l10n.meterPlaceKitchen, l10n.meterPlaceToilet, l10n.meterPlaceGuestToilet, l10n.meterPlaceBasement, l10n.meterPlaceGarden]
+        ? [if (widget.setup) l10n.meterPlaceFlat, l10n.meterPlaceBath, l10n.meterPlaceKitchen, l10n.meterPlaceToilet, l10n.meterPlaceGuestToilet, l10n.meterPlaceBasement, l10n.meterPlaceGarden]
         : [l10n.meterPlaceFlat, l10n.meterPlaceBasement, l10n.meterPlaceGarage, l10n.meterPlaceGarden];
   }
 
@@ -98,7 +120,7 @@ class _MeterSheetState extends State<MeterSheet> {
   }
 
   void _suggestName(BuildContext context) {
-    if (widget.meter != null || _nameTyped || _place == null) return;
+    if (!_adding || _nameTyped || _place == null) return;
     setState(() => _name.text = [_place!, ?_short(context, _group.text.trim())].join(' '));
   }
 
@@ -171,7 +193,7 @@ class _MeterSheetState extends State<MeterSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: Spacing.m,
         children: [
-          if (widget.meter == null) ...[
+          if (_adding) ...[
             label(l10n.meterPlace),
             Wrap(
               spacing: Spacing.s,
@@ -223,7 +245,7 @@ class _MeterSheetState extends State<MeterSheet> {
                 ],
               ),
             ),
-          AppButton(label: widget.meter == null ? l10n.meterAdd : l10n.actionSave, onPressed: _valid ? _save : null),
+          AppButton(label: _adding ? l10n.meterAdd : l10n.actionSave, onPressed: _valid ? _save : null),
         ],
       ),
     );

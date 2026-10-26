@@ -3944,6 +3944,30 @@ abstract class AppLocalizations {
   /// **'Zähler hinzufügen'**
   String get meterAdd;
 
+  /// No description provided for @meterAddAnother.
+  ///
+  /// In de, this message translates to:
+  /// **'Weiteren Zähler hinzufügen'**
+  String get meterAddAnother;
+
+  /// No description provided for @meterSetupTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Welchen Zähler liest du ab?'**
+  String get meterSetupTitle;
+
+  /// No description provided for @meterSetupBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Leg zuerst deinen Zähler an, z. B. Wohnung oder Bad kalt. Danach trägst du Stände und Preise ein und kannst weitere Zähler hinzufügen.'**
+  String get meterSetupBody;
+
+  /// No description provided for @meterSetupHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Zuerst den Zähler anlegen, dann eintragen.'**
+  String get meterSetupHint;
+
   /// No description provided for @meterEdit.
   ///
   /// In de, this message translates to:
