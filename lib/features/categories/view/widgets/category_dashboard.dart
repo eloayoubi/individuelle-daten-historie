@@ -41,7 +41,8 @@ class CategoryDashboardSection extends StatelessWidget {
     cubit.setPeriod(DashboardPeriod.custom, from: DateTime.utc(from.year, from.month, from.day), to: DateTime.utc(to.year, to.month, to.day));
   }
 
-  /// Kosten der ganzen Kategorie gehören zu mehreren Trackern – dann erst den Tracker wählen.
+  /// Kosten der ganzen Kategorie (und Summen über Zähler mehrerer Tracker) gehören zu mehreren
+  /// Trackern – dann erst den Tracker wählen.
   Future<void> _open(BuildContext context, DashboardFigure figure) async {
     final metric = figure.metric.isCost
         ? HistoryMetric.cost
@@ -51,13 +52,14 @@ class CategoryDashboardSection extends StatelessWidget {
     final candidates = switch (figure.tracker) {
       final Tracker t => [t],
       null when figure.metric.isCost => [for (final t in category.trackers) if (TrackerHistory.metricsFor(t).contains(HistoryMetric.cost)) t],
+      null when figure.metric.isMeters => {for (final (t, _) in DashboardFigures.metersOf(category, figure.metric)) t.id: t}.values.toList(),
       null => const <Tracker>[],
     };
     final tracker = candidates.length <= 1
         ? candidates.firstOrNull
         : await AppSheet.show<Tracker>(
             context,
-            title: context.l10n.dashboardCost,
+            title: figure.metric.isCost ? context.l10n.dashboardCost : context.l10n.dashboardConsumption,
             child: AppListGroup(
               children: [
                 for (final t in candidates) AppListRow(title: t.name, onTap: () => Navigator.of(context).pop(t)),
