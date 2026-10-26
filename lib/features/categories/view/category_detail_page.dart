@@ -157,13 +157,17 @@ class _Content extends StatelessWidget {
     final c = context.colors;
     final l10n = context.l10n;
     final editable = category.canEdit;
-    final addable = [for (final t in category.trackers) if (t.entryFields.isNotEmpty) t];
+    // Ein Zähler aus der Vorlage wird erst angelegt, dann eingetragen. Gilt das für alle Tracker,
+    // ist „Zähler hinzufügen“ die einzige Aktion – Übersicht, Verlauf und Preise kommen danach.
+    final setup = editable ? [for (final t in category.trackers) if (MeterSheet.needsSetup(context, t)) t] : const <Tracker>[];
+    final setupOnly = setup.isNotEmpty && setup.length == category.trackers.length;
+    final addable = [for (final t in category.trackers) if (t.entryFields.isNotEmpty && !setup.contains(t)) t];
     final today = DateTime.now();
     final canAddEntry = editable && addable.isNotEmpty;
     // Ohne Tracker ist „Tracker hinzufügen“ die Hauptaktion und lässt sich nicht wegklicken.
     final noTrackers = category.trackers.isEmpty;
-    final showAddTracker = editable && (noTrackers || category.dashboard.showAddTracker);
-    final hasAction = canAddEntry || showAddTracker;
+    final showAddTracker = editable && !setupOnly && (noTrackers || category.dashboard.showAddTracker);
+    final hasAction = canAddEntry || showAddTracker || setupOnly;
     return AppActionBar(
       action: hasAction
           ? Column(
@@ -171,6 +175,7 @@ class _Content extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: Spacing.s,
               children: [
+                if (setupOnly) AppButton(label: l10n.meterAdd, icon: CupertinoIcons.plus, onPressed: () => _setUpMeter(context, category, setup.first)),
                 if (canAddEntry) AppButton(label: l10n.trackerAddEntry, icon: CupertinoIcons.plus, onPressed: () => _addEntry(context, addable)),
                 if (showAddTracker)
                   Row(
@@ -228,22 +233,22 @@ class _Content extends StatelessWidget {
                 color: c.textSecondary,
               ),
             ),
-          if (category.trackers.isNotEmpty) ...[CategoryDashboardSection(category: category, state: state), const SizedBox(height: Spacing.s)],
-          if (category.trackers.isEmpty)
+          if (category.trackers.isNotEmpty && !setupOnly) ...[CategoryDashboardSection(category: category, state: state), const SizedBox(height: Spacing.s)],
+          if (category.trackers.isEmpty || setupOnly)
             Padding(
               padding: const EdgeInsets.fromLTRB(Spacing.xxl, Spacing.xxxl, Spacing.xxl, Spacing.l),
               child: Column(
                 spacing: Spacing.s,
                 children: [
-                  AppText(l10n.detailNoTrackersTitle, style: (t) => t.title3, align: TextAlign.center),
-                  AppText(l10n.detailNoTrackersBody, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
+                  AppText(setupOnly ? l10n.meterSetupTitle : l10n.detailNoTrackersTitle, style: (t) => t.title3, align: TextAlign.center),
+                  AppText(setupOnly ? l10n.meterSetupBody : l10n.detailNoTrackersBody, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
                 ],
               ),
             ),
-          for (final tracker in category.trackers) ...[
+          for (final tracker in setupOnly ? const <Tracker>[] : category.trackers) ...[
             SectionHeader(
               title: tracker.name,
-              action: editable ? l10n.actionEdit : null,
+              action: editable && !setup.contains(tracker) ? l10n.actionEdit : null,
               onAction: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
             ),
             _TrackerGroup(
@@ -252,7 +257,9 @@ class _Content extends StatelessWidget {
               yearToDate: yearToDate[tracker.id],
               includedIn: others.where((o) => o.id == tracker.includedIn).firstOrNull,
             ),
-            if (tracker.isUtilityMeter) ...[
+            if (setup.contains(tracker))
+              const SizedBox.shrink()
+            else if (tracker.isUtilityMeter) ...[
               const SizedBox(height: Spacing.m),
               ContractGroup(
                 category: category,
@@ -295,9 +302,18 @@ class _Content extends StatelessWidget {
   }
 }
 
+/// Ersten Zähler anlegen: Der Zähler aus der Vorlage bekommt Ort, Gruppe und Namen.
+Future<void> _setUpMeter(BuildContext context, Category category, Tracker tracker) async {
+  final cubit = context.read<CategoryDetailCubit>();
+  final meter = tracker.meter!;
+  final result = await MeterSheet.show(context, category: category, tracker: tracker, meter: meter, setup: true);
+  if (result != null) await cubit.setUpMeter(meter, name: result.meter.name, group: result.meter.group);
+}
+
 /// Daten eines Trackers: Verlauf (mit Kosten oder Verbrauch des Jahres), ohne Felder dazu „Felder
-/// festlegen“. Ein Versorgungszähler listet bei mehreren Zählern jeden mit seinem letzten Stand und
-/// bietet „Zähler hinzufügen“ an. Eingetragen wird über die Hauptaktion unten.
+/// festlegen“. Ein Versorgungszähler listet seine Zähler mit dem letzten Stand und bietet „Weiteren
+/// Zähler hinzufügen“ an – ist der erste noch nicht angelegt, nur „Zähler hinzufügen“. Eingetragen
+/// wird über die Hauptaktion unten.
 class _TrackerGroup extends StatelessWidget {
   const _TrackerGroup({required this.category, required this.tracker, this.yearToDate, this.includedIn});
 
@@ -314,6 +330,18 @@ class _TrackerGroup extends StatelessWidget {
     final c = context.colors;
     final l10n = context.l10n;
     final swatch = c.swatch(category.swatch);
+    if (category.canEdit && MeterSheet.needsSetup(context, tracker)) {
+      return AppListGroup(
+        children: [
+          AppListRow(
+            leading: AppIconTile(icon: CupertinoIcons.add, color: c.accent),
+            title: l10n.meterAdd,
+            subtitle: l10n.meterSetupHint,
+            onTap: () => _setUpMeter(context, category, tracker),
+          ),
+        ],
+      );
+    }
     final figure = switch (yearToDate) {
       final YearToDate y when y.value.abs() >= _minValue => y.metric == HistoryMetric.cost ? context.euros(y.value) : context.amount(y.value, y.unit),
       _ => null,
@@ -343,19 +371,18 @@ class _TrackerGroup extends StatelessWidget {
             onTap: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
           ),
         if (tracker.isUtilityMeter) ...[
-          if (tracker.meters.length > 1)
-            for (final meter in tracker.meters)
-              AppListRow(
-                leading: AppIconTile(icon: CupertinoIcons.gauge, color: swatch),
-                title: meter.name,
-                subtitle: context.joinParts([?meter.meterGroup, ?_lastReading(context, meter)]),
-                chevron: category.canEdit,
-                onTap: category.canEdit ? () => _editMeter(context, meter) : null,
-              ),
+          for (final meter in tracker.meters)
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.gauge, color: swatch),
+              title: meter.name,
+              subtitle: context.joinParts([?meter.meterGroup, ?_lastReading(context, meter)]),
+              chevron: category.canEdit,
+              onTap: category.canEdit ? () => _editMeter(context, meter) : null,
+            ),
           if (category.canEdit)
             AppListRow(
               leading: AppIconTile(icon: CupertinoIcons.add, color: c.accent),
-              title: l10n.meterAdd,
+              title: l10n.meterAddAnother,
               subtitle: tracker.meters.length == 1 ? l10n.meterAddHint : null,
               onTap: () => _addMeter(context),
             ),

@@ -106,6 +106,12 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
     await _repository.createField(tracker.id, draft, sort: tracker.fields.length);
   }, success: CategoryDetailEventKind.meterAdded);
 
+  /// Ersten Zähler anlegen: Der unbenannte Zähler aus der Vorlage bekommt Name und Gruppe.
+  Future<void> setUpMeter(FieldDefinition meter, {required String name, String? group}) => _run(
+    () => _repository.updateField(meter.id, FieldDraft.of(meter).asMeter(name: name, group: group)),
+    success: CategoryDetailEventKind.meterAdded,
+  );
+
   /// Name und Gruppe eines Zählers ändern.
   Future<void> updateMeter(FieldDefinition meter, {required String name, String? group}) =>
       _run(() => _repository.updateField(meter.id, FieldDraft.of(meter).asMeter(name: name, group: group)));

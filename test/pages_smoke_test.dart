@@ -11,6 +11,7 @@ import 'package:kostenkurve/features/auth/data/auth_repository.dart';
 import 'package:kostenkurve/features/auth/data/mock_auth_repository.dart';
 import 'package:kostenkurve/features/auth/view/auth_page.dart';
 import 'package:kostenkurve/features/categories/cubit/field_editor_cubit.dart';
+import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/category_templates.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/categories/view/add_category_sheet.dart';
@@ -19,6 +20,7 @@ import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
 import 'package:kostenkurve/features/categories/view/category_setup_page.dart';
 import 'package:kostenkurve/features/categories/view/field_editor_page.dart';
 import 'package:kostenkurve/features/categories/view/tracker_setup_page.dart';
+import 'package:kostenkurve/features/categories/view/widgets/category_dashboard.dart';
 import 'package:kostenkurve/features/categories/view/widgets/meter_sheet.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
@@ -439,7 +441,7 @@ void main() {
         final water = mode == 'hell';
         await pumpPage(t, CategoryDetailPage(categoryId: water ? 'c-wasser' : 'c-strom'), theme: theme, size: const Size(390, 2400));
         await t.pumpAndSettle();
-        await t.tap(find.text('Zähler hinzufügen'));
+        await t.tap(find.text('Weiteren Zähler hinzufügen'));
         await t.pumpAndSettle();
         expect(find.byType(MeterSheet), findsOneWidget);
         await t.tap(find.text(water ? 'Bad' : 'Keller'));
@@ -460,6 +462,35 @@ void main() {
         } else {
           expect(find.text('Beide Zähler'), findsOneWidget);
         }
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Neue Wasser-Kategorie: erst den Zähler anlegen, dann eintragen', (t) async {
+        final wasser = templates.firstWhere((tpl) => tpl.key == 'wasser');
+        final repo = lookup<CategoriesRepository>();
+        final id = await t.runAsync(
+          () => repo.createCategory(CategoryDraft(name: wasser.name, icon: wasser.icon, swatch: wasser.swatch, templateKey: wasser.key, trackers: wasser.trackers)),
+        );
+        addTearDown(() => repo.deleteCategory(id!));
+        await pumpPage(t, CategoryDetailPage(categoryId: id!), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        expect(find.text('Welchen Zähler liest du ab?'), findsOneWidget);
+        expect(find.byType(CategoryDashboardSection), findsNothing);
+        expect(find.text('Wert eintragen'), findsNothing);
+        expect(find.text('Tracker hinzufügen'), findsNothing);
+        await t.tap(find.widgetWithText(AppButton, 'Zähler hinzufügen'));
+        await t.pumpAndSettle();
+        expect(find.byType(MeterSheet), findsOneWidget);
+        await t.tap(find.text('Wohnung'));
+        await t.pumpAndSettle();
+        expect(find.widgetWithText(TextField, 'Wohnung'), findsOneWidget);
+        await t.tap(find.widgetWithText(AppButton, 'Zähler hinzufügen').last);
+        await t.pumpAndSettle();
+        expect(find.byType(MeterSheet), findsNothing);
+        expect(find.text('Welchen Zähler liest du ab?'), findsNothing);
+        expect(find.text('Wert eintragen'), findsOneWidget);
+        expect(find.text('Wohnung'), findsOneWidget);
+        expect(find.text('Weiteren Zähler hinzufügen'), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 
