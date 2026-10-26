@@ -50,6 +50,11 @@ class _DetailView extends StatelessWidget {
       case CategoryDetailEventKind.archived:
         AppToast.show(context, l10n.detailArchived(state.category?.name ?? ''), icon: CupertinoIcons.archivebox_fill);
         Navigator.of(context).pop();
+      case CategoryDetailEventKind.restored:
+        AppToast.show(context, l10n.categoriesRestored(state.category?.name ?? ''), icon: CupertinoIcons.arrow_counterclockwise);
+      case CategoryDetailEventKind.deleted:
+        AppToast.show(context, l10n.detailDeleted(state.category?.name ?? ''), icon: CupertinoIcons.trash_fill);
+        Navigator.of(context).pop();
       case CategoryDetailEventKind.addTrackerHidden:
         AppToast.show(context, l10n.detailAddTrackerHidden, icon: CupertinoIcons.pencil);
       case CategoryDetailEventKind.failed:
@@ -116,6 +121,19 @@ class _Content extends StatelessWidget {
       destructive: true,
     );
     if (confirmed) await cubit.archive();
+  }
+
+  Future<void> _delete(BuildContext context) async {
+    final cubit = context.read<CategoryDetailCubit>();
+    final l10n = context.l10n;
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: l10n.detailDeleteTitle(category.name),
+      message: category.isShared ? l10n.detailDeleteBodyShared : l10n.detailDeleteBody,
+      confirmLabel: l10n.actionDelete,
+      destructive: true,
+    );
+    if (confirmed) await cubit.delete();
   }
 
   /// Wert eintragen: direkt beim einzigen Tracker, sonst erst den Tracker wählen.
@@ -196,6 +214,11 @@ class _Content extends StatelessWidget {
               if (editable) AppIconButton(icon: CupertinoIcons.pencil, semanticLabel: l10n.detailEditCategory, onPressed: () => _edit(context)),
             ],
           ),
+          if (category.isArchived)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Spacing.xl, 0, Spacing.xl, Spacing.s),
+              child: AppText(l10n.detailArchivedNote, style: (t) => t.footnote, color: c.textSecondary),
+            ),
           if (!editable)
             Padding(
               padding: const EdgeInsets.fromLTRB(Spacing.xl, 0, Spacing.xl, Spacing.s),
@@ -245,10 +268,26 @@ class _Content extends StatelessWidget {
               ),
             ],
           ],
-          if (category.isOwner && !category.isArchived)
+          // Archivieren behält alles (nur ausgeblendet), Löschen ist endgültig.
+          if (category.isOwner)
             Padding(
               padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xxl, Spacing.l, 0),
-              child: AppButton(label: l10n.detailArchive, variant: AppButtonVariant.destructive, onPressed: () => _archive(context)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: Spacing.s,
+                children: [
+                  if (category.isArchived)
+                    AppButton(
+                      label: l10n.categoriesRestore,
+                      icon: CupertinoIcons.arrow_counterclockwise,
+                      variant: AppButtonVariant.tinted,
+                      onPressed: context.read<CategoryDetailCubit>().restore,
+                    )
+                  else
+                    AppButton(label: l10n.detailArchive, variant: AppButtonVariant.destructive, onPressed: () => _archive(context)),
+                  AppButton(label: l10n.detailDelete, variant: AppButtonVariant.destructive, onPressed: () => _delete(context)),
+                ],
+              ),
             ),
         ],
       ),

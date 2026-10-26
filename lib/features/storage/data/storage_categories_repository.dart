@@ -58,6 +58,9 @@ class StorageCategoriesRepository implements CategoriesRepository {
   Future<void> setCategoryArchived(String id, {required bool archived}) => _active.setCategoryArchived(id, archived: archived);
 
   @override
+  Future<void> deleteCategory(String id) => _active.deleteCategory(id);
+
+  @override
   Future<void> reorderCategories(List<String> ids) => _active.reorderCategories(ids);
 
   @override

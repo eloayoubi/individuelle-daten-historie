@@ -175,6 +175,10 @@ abstract interface class CategoriesRepository {
   /// Archivieren und Wiederherstellen (nur owner).
   Future<void> setCategoryArchived(String id, {required bool archived});
 
+  /// Löscht die Kategorie mit Trackern, Einträgen und Belegen endgültig – auch für alle, mit denen
+  /// sie geteilt ist (nur owner).
+  Future<void> deleteCategory(String id);
+
   /// Meine Reihenfolge der (nicht archivierten) Kategorien.
   Future<void> reorderCategories(List<String> ids);
 

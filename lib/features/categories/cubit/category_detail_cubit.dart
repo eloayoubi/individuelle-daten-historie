@@ -12,7 +12,7 @@ part 'category_detail_state.dart';
 
 /// Eine Kategorie mit ihren Trackern: Kennzahlen der Übersicht im gewählten Zeitraum, Kennzahl des
 /// Jahres je Tracker, Details setzen, Aussehen und Übersicht ändern, Tracker anlegen, umbenennen,
-/// archivieren, Kategorie archivieren. Lädt bei jeder
+/// archivieren, Kategorie archivieren, wiederherstellen und löschen. Lädt bei jeder
 /// Änderung im Repository neu. Auch die Felder-Seite eines Trackers nutzt diesen Cubit.
 class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   CategoryDetailCubit(this._repository, this.categoryId, {DateTime Function()? now}) : _now = now ?? DateTime.now, super(const CategoryDetailState()) {
@@ -24,7 +24,11 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   final DateTime Function() _now;
   late final StreamSubscription<void> _subscription;
 
+  /// Während des Löschens nicht neu laden – die Seite zeigte sonst kurz „gibt es nicht mehr“.
+  var _deleting = false;
+
   Future<void> load() async {
+    if (_deleting) return;
     try {
       final category = await _repository.loadCategory(categoryId);
       final others = [for (final c in await _repository.loadCategories()) if (c.id != categoryId && !c.isArchived) c];
@@ -120,6 +124,17 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   Future<void> archiveTracker(String trackerId) => _run(() => _repository.archiveTracker(trackerId), success: CategoryDetailEventKind.trackerArchived);
 
   Future<void> archive() => _run(() => _repository.setCategoryArchived(categoryId, archived: true), success: CategoryDetailEventKind.archived);
+
+  Future<void> restore() => _run(() => _repository.setCategoryArchived(categoryId, archived: false), success: CategoryDetailEventKind.restored);
+
+  Future<void> delete() async {
+    _deleting = true;
+    await _run(() => _repository.deleteCategory(categoryId), success: CategoryDetailEventKind.deleted);
+    if (!isClosed && state.event?.kind != CategoryDetailEventKind.deleted) {
+      _deleting = false;
+      await load();
+    }
+  }
 
   Future<void> _run(Future<void> Function() write, {CategoryDetailEventKind? success}) async {
     try {

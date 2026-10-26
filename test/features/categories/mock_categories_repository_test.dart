@@ -42,6 +42,15 @@ void main() {
     expect((await repo.loadCategory('c-strom'))!.isArchived, isFalse);
   });
 
+  test('löscht eine Kategorie; was darin steckte, zählt wieder selbst', () async {
+    await repo.deleteCategory('c-miete');
+    await pumpEventQueue();
+    expect(await repo.loadCategory('c-miete'), isNull);
+    final wasser = (await repo.loadCategory('c-wasser'))!.trackers.firstWhere((t) => t.id == 't-wasser');
+    expect(wasser.includedIn, isNull);
+    expect(changes, 1);
+  });
+
   test('sortiert nach der übergebenen Reihenfolge', () async {
     await repo.reorderCategories(['c-auto', 'c-strom']);
     final ids = [for (final c in await repo.loadCategories()) c.id];

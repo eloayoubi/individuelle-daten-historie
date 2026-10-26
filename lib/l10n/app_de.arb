@@ -223,6 +223,26 @@
       }
     }
   },
+  "detailDelete": "Kategorie löschen",
+  "detailDeleteTitle": "„{name}“ löschen?",
+  "@detailDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailDeleteBody": "Alle Einträge und Belege darin werden endgültig gelöscht. Das lässt sich nicht rückgängig machen – wenn du sie behalten willst, archiviere sie lieber.",
+  "detailDeleteBodyShared": "Alle Einträge und Belege darin werden endgültig gelöscht, auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen – wenn du sie behalten willst, archiviere sie lieber.",
+  "detailDeleted": "{name} ist gelöscht.",
+  "@detailDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailArchivedNote": "Archiviert – fehlt in Übersicht und Auswertung, bis du sie wiederherstellst.",
   "detailReadOnly": "Nur lesen – {name} hat diese Kategorie mit dir geteilt.",
   "@detailReadOnly": {
     "placeholders": {

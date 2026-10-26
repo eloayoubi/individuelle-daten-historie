@@ -323,6 +323,31 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get detailDelete => 'Kategorie löschen';
+
+  @override
+  String detailDeleteTitle(String name) {
+    return '„$name“ löschen?';
+  }
+
+  @override
+  String get detailDeleteBody =>
+      'Alle Einträge und Belege darin werden endgültig gelöscht. Das lässt sich nicht rückgängig machen – wenn du sie behalten willst, archiviere sie lieber.';
+
+  @override
+  String get detailDeleteBodyShared =>
+      'Alle Einträge und Belege darin werden endgültig gelöscht, auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen – wenn du sie behalten willst, archiviere sie lieber.';
+
+  @override
+  String detailDeleted(String name) {
+    return '$name ist gelöscht.';
+  }
+
+  @override
+  String get detailArchivedNote =>
+      'Archiviert – fehlt in Übersicht und Auswertung, bis du sie wiederherstellst.';
+
+  @override
   String detailReadOnly(String name) {
     return 'Nur lesen – $name hat diese Kategorie mit dir geteilt.';
   }

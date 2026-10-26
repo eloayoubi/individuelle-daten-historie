@@ -8,7 +8,8 @@ import 'category_detail_page.dart';
 import 'category_setup_page.dart';
 
 /// Kategorien-Tab: alle Kategorien in meiner Reihenfolge, neue aus Vorlagen, „Bearbeiten“ zum
-/// Umsortieren und unten die archivierten zum Wiederherstellen.
+/// Umsortieren und unten die archivierten – antippen öffnet sie (ansehen, löschen), „Wiederherstellen“
+/// holt sie zurück.
 class CategoriesPage extends StatelessWidget {
   const CategoriesPage({super.key});
 
@@ -103,7 +104,8 @@ class _List extends StatelessWidget {
                         child: AppListRow(
                           leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
                           title: category.name,
-                          chevron: false,
+                          chevron: !category.isOwner,
+                          onTap: () => CategoryDetailPage.open(context, category.id),
                           trailing: category.isOwner
                               ? AppButton(label: l10n.categoriesRestore, variant: AppButtonVariant.plain, expand: false, onPressed: () => cubit.restore(category))
                               : null,

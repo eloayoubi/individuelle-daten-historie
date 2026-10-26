@@ -92,6 +92,20 @@ class MemoryCategoriesRepository implements CategoriesRepository {
   }
 
   @override
+  Future<void> deleteCategory(String id) async {
+    await ready();
+    items.removeWhere((c) => c.id == id);
+    // Wie auf dem Server (on delete set null): Kosten, die darin steckten, zählen wieder selbst.
+    for (var i = 0; i < items.length; i++) {
+      final c = items[i];
+      if (c.trackers.any((t) => t.includedIn == id)) {
+        items[i] = c.copyWith(trackers: [for (final t in c.trackers) t.includedIn == id ? t.copyWith(includedIn: () => null) : t]);
+      }
+    }
+    changed();
+  }
+
+  @override
   Future<void> reorderCategories(List<String> ids) async {
     await ready();
     final byId = {for (final c in items) c.id: c};
