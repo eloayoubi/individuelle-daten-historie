@@ -155,6 +155,17 @@ void main() {
         expect(t.takeException(), isNull);
       });
 
+      testWidgets('Schnellerfassung: neue Kategorie anlegen öffnet die Auswahl', (t) async {
+        await pumpPage(t, const HomePage(), theme: theme, size: const Size(390, 1200));
+        await t.tap(find.bySemanticsLabel('Eintrag erfassen'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Kategorie hinzufügen'));
+        await t.pumpAndSettle();
+        expect(find.byType(QuickAddSheet), findsNothing);
+        expect(find.byType(AddCategorySheet), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
       testWidgets('Details: Anbieter in der Kategorie ändern, ohne Eintrag', (t) async {
         // Die Mock-Daten gelten für alle Tests: ein neuer Name je Durchlauf.
         final provider = 'Anbieter $mode';
