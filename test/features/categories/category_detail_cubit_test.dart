@@ -42,6 +42,33 @@ void main() {
   );
 
   blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'löscht die Kategorie und meldet es, ohne vorher „fehlt“ zu zeigen',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-strom'),
+    act: (cubit) async {
+      await cubit.load();
+      await cubit.delete();
+      await pumpEventQueue();
+    },
+    skip: 1,
+    expect: () => [isA<CategoryDetailState>().having((s) => s.event?.kind, 'event', CategoryDetailEventKind.deleted).having((s) => s.status, 'status', CategoryDetailStatus.ready)],
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'stellt eine archivierte Kategorie wieder her',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-strom'),
+    act: (cubit) async {
+      await cubit.archive();
+      await cubit.load();
+      expect(cubit.state.category!.isArchived, isTrue);
+      await cubit.restore();
+      await pumpEventQueue();
+    },
+    verify: (cubit) {
+      expect(cubit.state.category!.isArchived, isFalse);
+    },
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
     'meldet eine fehlende Kategorie',
     build: () => CategoryDetailCubit(MockCategoriesRepository(), 'gibt-es-nicht'),
     act: (cubit) => cubit.load(),

@@ -320,6 +320,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get detailDelete => 'Delete category';
+
+  @override
+  String detailDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get detailDeleteBody =>
+      'All entries and receipts in it are deleted permanently. This cannot be undone – if you want to keep them, archive the category instead.';
+
+  @override
+  String get detailDeleteBodyShared =>
+      'All entries and receipts in it are deleted permanently, also for everyone you share it with. This cannot be undone – if you want to keep them, archive the category instead.';
+
+  @override
+  String detailDeleted(String name) {
+    return '$name has been deleted.';
+  }
+
+  @override
+  String get detailArchivedNote =>
+      'Archived – missing from overview and insights until you restore it.';
+
+  @override
   String detailReadOnly(String name) {
     return 'Read only – $name shared this category with you.';
   }

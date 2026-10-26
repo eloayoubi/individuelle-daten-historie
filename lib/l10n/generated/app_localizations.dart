@@ -584,6 +584,42 @@ abstract class AppLocalizations {
   /// **'{name} ist archiviert.'**
   String detailArchived(String name);
 
+  /// No description provided for @detailDelete.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie löschen'**
+  String get detailDelete;
+
+  /// No description provided for @detailDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ löschen?'**
+  String detailDeleteTitle(String name);
+
+  /// No description provided for @detailDeleteBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Einträge und Belege darin werden endgültig gelöscht. Das lässt sich nicht rückgängig machen – wenn du sie behalten willst, archiviere sie lieber.'**
+  String get detailDeleteBody;
+
+  /// No description provided for @detailDeleteBodyShared.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Einträge und Belege darin werden endgültig gelöscht, auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen – wenn du sie behalten willst, archiviere sie lieber.'**
+  String get detailDeleteBodyShared;
+
+  /// No description provided for @detailDeleted.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} ist gelöscht.'**
+  String detailDeleted(String name);
+
+  /// No description provided for @detailArchivedNote.
+  ///
+  /// In de, this message translates to:
+  /// **'Archiviert – fehlt in Übersicht und Auswertung, bis du sie wiederherstellst.'**
+  String get detailArchivedNote;
+
   /// No description provided for @detailReadOnly.
   ///
   /// In de, this message translates to:

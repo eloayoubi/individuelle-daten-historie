@@ -95,6 +95,18 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     () => _api.table('categories').update({'archived_at': archived ? DateTime.now().toUtc().toIso8601String() : null}).eq('id', id),
   );
 
+  /// Belege zuerst: Ihre Dateien darf nur entfernen, wer die Kategorie bearbeiten kann – danach gibt
+  /// es sie nicht mehr. Zeilen von Trackern, Einträgen und Belegen gehen per Cascade mit.
+  @override
+  Future<void> deleteCategory(String id) => _write(() async {
+    final paths = [for (final row in await _api.table('attachments').select('storage_path').like('storage_path', '$id/%')) row['storage_path'] as String];
+    if (paths.isNotEmpty) await _api.remove(AttachmentsRepository.bucket, paths).catchError((Object _) {});
+    await confirmDeleted(
+      await _api.table('categories').delete().eq('id', id).select('id'),
+      () async => await _api.table('categories').select('id').eq('id', id).maybeSingle() != null,
+    );
+  });
+
   @override
   Future<void> reorderCategories(List<String> ids) => _write(() => _api.rpc<void>('reorder_categories', params: {'p_ids': ids}));
 

@@ -223,6 +223,23 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   @override
   Future<void> setCategoryArchived(String id, {required bool archived}) => _remote.setCategoryArchived(id, archived: archived);
 
+  /// Wartende Einträge der Kategorie gehen mit ihr – gesendet würden sie nur noch abgelehnt.
+  @override
+  Future<void> deleteCategory(String id) async {
+    await _restore();
+    final trackers = {for (final c in _cached ?? const <Category>[]) if (c.id == id) for (final t in c.trackers) t.id};
+    await _remote.deleteCategory(id);
+    if (_cached case final cached?) {
+      _cached = [for (final c in cached) if (c.id != id) c];
+      _quietly(_persistCache());
+    }
+    if (_pending.any((p) => trackers.contains(p.trackerId))) {
+      _pending = [for (final p in _pending) if (!trackers.contains(p.trackerId)) p];
+      await _persistQueue();
+      _changes.add(null);
+    }
+  }
+
   @override
   Future<void> reorderCategories(List<String> ids) => _remote.reorderCategories(ids);
 

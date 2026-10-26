@@ -99,6 +99,19 @@ void main() {
     expect((await queue.read())! as Map, containsPair('writes', hasLength(1)));
   });
 
+  test('wird eine Kategorie gelöscht, gehen ihre wartenden Einträge mit', () async {
+    await repo.loadCategories();
+    remote.online = false;
+    await repo.saveEntry('t-strom', reading);
+    await pumpEventQueue();
+    expect(repo.syncState, const SyncState(pending: 1));
+    remote.online = true;
+    await repo.deleteCategory('c-strom');
+    expect(repo.syncState, const SyncState());
+    expect((await queue.read())! as Map, containsPair('writes', isEmpty));
+    expect(await repo.loadCategory('c-strom'), isNull);
+  });
+
   test('mit Netz ist ein Eintrag nach dem Speichern schon auf dem Server', () async {
     await repo.loadCategories();
     await repo.saveEntry('t-strom', reading);
