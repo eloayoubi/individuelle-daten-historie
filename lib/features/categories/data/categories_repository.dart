@@ -17,6 +17,7 @@ class FieldDraft extends Equatable {
     this.choices = const [],
     this.formula,
     this.summary,
+    this.meterGroup,
   });
 
   factory FieldDraft.of(FieldDefinition f) => FieldDraft(
@@ -30,6 +31,7 @@ class FieldDraft extends Equatable {
     choices: f.choices,
     formula: f.formula,
     summary: f.summary,
+    meterGroup: f.meterGroup,
   );
 
   final String name;
@@ -42,6 +44,22 @@ class FieldDraft extends Equatable {
   final List<String> choices;
   final String? formula;
   final FieldSummary? summary;
+  final String? meterGroup;
+
+  /// Gleicher Zähler mit anderem Namen und anderer Gruppe (leer = ohne).
+  FieldDraft asMeter({required String name, String? group}) => FieldDraft(
+    name: name.trim(),
+    kind: kind,
+    role: role,
+    unit: unit,
+    consumptionUnit: consumptionUnit,
+    factor: factor,
+    intervalMonths: intervalMonths,
+    choices: choices,
+    formula: formula,
+    summary: summary,
+    meterGroup: group == null || group.trim().isEmpty ? null : group.trim(),
+  );
 
   FieldDefinition withId(String id) => FieldDefinition(
     id: id,
@@ -55,10 +73,11 @@ class FieldDraft extends Equatable {
     choices: choices,
     formula: formula,
     summary: summary,
+    meterGroup: meterGroup,
   );
 
   @override
-  List<Object?> get props => [name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary];
+  List<Object?> get props => [name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary, meterGroup];
 }
 
 /// Ein Tracker mit seinen Feldern, wie er angelegt wird.

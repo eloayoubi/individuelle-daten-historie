@@ -35,6 +35,7 @@ class _EditorViewState extends State<_EditorView> {
   late final _name = TextEditingController(text: _initial.name);
   late final _unit = TextEditingController(text: _initial.unit);
   late final _consumptionUnit = TextEditingController(text: _initial.consumptionUnit);
+  late final _meterGroup = TextEditingController(text: _initial.meterGroup);
   late final _factor = TextEditingController(text: _initial.factorText);
   final _choice = TextEditingController();
   late final _formula = TextEditingController(text: _initial.formula);
@@ -52,7 +53,7 @@ class _EditorViewState extends State<_EditorView> {
 
   @override
   void dispose() {
-    for (final c in [_name, _unit, _consumptionUnit, _factor, _choice, _formula]) {
+    for (final c in [_name, _unit, _consumptionUnit, _meterGroup, _factor, _choice, _formula]) {
       c.dispose();
     }
     super.dispose();
@@ -228,6 +229,17 @@ class _EditorViewState extends State<_EditorView> {
                           style: (t) => t.footnote,
                           color: s.factorValid ? c.textSecondary : c.danger,
                         ),
+                      ),
+                      AppTextField(
+                        controller: _meterGroup,
+                        label: l10n.meterGroup,
+                        hint: l10n.meterGroupFieldHint,
+                        maxLength: FieldEditorState.maxMeterGroup,
+                        onChanged: cubit.setMeterGroup,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: Spacing.l),
+                        child: AppText(l10n.meterGroupFooter, style: (t) => t.footnote, color: c.textSecondary),
                       ),
                     ],
                   ),

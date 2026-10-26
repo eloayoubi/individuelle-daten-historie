@@ -42,8 +42,9 @@ abstract final class ReminderPlanner {
       for (final tracker in category.trackers) {
         // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung. Wie die Übersicht
         // erst, wenn der Verbrauch bekannt ist ([CostEngine.hasMeter]).
-        if (tracker.meter case final FieldDefinition meter when !tracker.readsFromBills && CostEngine.measures(tracker)) {
-          final last = _latest(tracker, meter.id)?.date;
+        if (tracker.meter != null && !tracker.readsFromBills && CostEngine.measures(tracker)) {
+          // Mehrere Zähler liest man zusammen ab: Es zählt der zuletzt abgelesene.
+          final last = [for (final m in tracker.meters) ?_latest(tracker, m.id)?.date].fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
           if (last != null) {
             var at = DateTime(last.year, last.month, last.day + readAfterDays, readHour);
             if (!at.isAfter(now)) at = _nextAt(now, readHour);

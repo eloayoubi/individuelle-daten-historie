@@ -1384,5 +1384,59 @@
   "metricsCostAll": "Kosten der Kategorie",
   "detailAddTrackerHide": "„Tracker hinzufügen“ ausblenden",
   "detailAddTrackerHidden": "Weitere Tracker fügst du über den Stift oben hinzu",
-  "detailAddAnotherTracker": "Weiteren Tracker hinzufügen"
+  "detailAddAnotherTracker": "Weiteren Tracker hinzufügen",
+  "meterAdd": "Zähler hinzufügen",
+  "meterEdit": "Zähler bearbeiten",
+  "meterAddHint": "Weitere Zähler, z. B. Bad und WC oder Kalt- und Warmwasser – ihr Verbrauch zählt zusammen.",
+  "meterPlace": "Ort",
+  "meterPlaceBath": "Bad",
+  "meterPlaceKitchen": "Küche",
+  "meterPlaceToilet": "WC",
+  "meterPlaceGuestToilet": "Gäste-WC",
+  "meterPlaceBasement": "Keller",
+  "meterPlaceGarden": "Garten",
+  "meterPlaceFlat": "Wohnung",
+  "meterPlaceGarage": "Garage",
+  "meterGroup": "Gruppe",
+  "meterGroupNone": "Ohne",
+  "meterGroupCold": "Kaltwasser",
+  "meterGroupWarm": "Warmwasser",
+  "meterGroupHint": "Eigene Gruppe",
+  "meterGroupFieldHint": "z. B. Kaltwasser",
+  "meterGroupFooter": "Zähler einer Gruppe erscheinen in der Übersicht als eine Karte, z. B. Kalt- und Warmwasser getrennt. Unter „Anpassen“ lässt sich auch der Verbrauch aller Zähler zusammen zeigen.",
+  "meterShortCold": "kalt",
+  "meterShortWarm": "warm",
+  "meterName": "Name",
+  "meterNameHint": "Name, z. B. Bad warm",
+  "meterFirstTitle": "Bisheriger Zähler",
+  "meterFirstBody": "Gib auch „{name}“ eine Gruppe und einen Namen, damit die Übersicht beide auseinanderhält.",
+  "@meterFirstBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detailMeterAdded": "Zähler hinzugefügt.",
+  "metersAll": "{count, plural, =1{1 Zähler} =2{Beide Zähler} other{Alle {count} Zähler}}",
+  "@metersAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "metersCount": "{count, plural, =1{1 Zähler} other{{count} Zähler}}",
+  "@metersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "metricsCustomAdd": "Eigene Summe",
+  "metricsCustomAddHint": "Verbrauch ausgewählter Zähler zusammen, z. B. alles im Bad",
+  "metricsCustomTitle": "Eigene Summe",
+  "metricsCustomNameHint": "Name, z. B. Bad",
+  "metricsCustomFooter": "Der Verbrauch der gewählten Zähler wird addiert. Zusammen zählen nur Zähler mit derselben Einheit."
 }

@@ -92,6 +92,7 @@ abstract final class DataExport {
                       if (f.choices.isNotEmpty) 'choices': f.choices,
                       if (f.formula != null) 'formula': f.formula,
                       if (f.summary != null) 'summary': f.summary!.name,
+                      if (f.meterGroup != null) 'meterGroup': f.meterGroup,
                     },
                 ],
                 'entries': [

@@ -92,6 +92,20 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   Future<void> addTracker(String name) =>
       _run(() => _repository.createTracker(categoryId, name.trim(), sort: state.category?.trackers.length ?? 0), success: CategoryDetailEventKind.trackerAdded);
 
+  /// Weiterer Zähler im Tracker (Bad warm neben Bad kalt): Einheit, Umrechnung und Auswertung wie
+  /// beim ersten Zähler, sein Verbrauch zählt mit dem der anderen zusammen. [first] benennt dabei den
+  /// bisherigen ersten Zähler um und gibt ihm eine Gruppe.
+  Future<void> addMeter(Tracker tracker, {required String name, String? group, ({String name, String? group})? first}) => _run(() async {
+    final template = tracker.meter!;
+    if (first != null) await _repository.updateField(template.id, FieldDraft.of(template).asMeter(name: first.name, group: first.group));
+    final draft = FieldDraft.of(template).asMeter(name: name, group: group);
+    await _repository.createField(tracker.id, draft, sort: tracker.fields.length);
+  }, success: CategoryDetailEventKind.meterAdded);
+
+  /// Name und Gruppe eines Zählers ändern.
+  Future<void> updateMeter(FieldDefinition meter, {required String name, String? group}) =>
+      _run(() => _repository.updateField(meter.id, FieldDraft.of(meter).asMeter(name: name, group: group)));
+
   Future<void> renameTracker(String trackerId, String name) => _run(() => _repository.renameTracker(trackerId, name.trim()));
 
   /// Name und „Kosten enthalten in“ – nur, was sich geändert hat.

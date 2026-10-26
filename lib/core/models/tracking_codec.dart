@@ -65,6 +65,7 @@ abstract final class TrackingCodec {
     'choices': f.choices,
     'formula': f.formula,
     'summary': f.summary?.name,
+    if (f.meterGroup != null) 'meterGroup': f.meterGroup,
   };
 
   static FieldDefinition fieldFrom(Map<String, Object?> j) => FieldDefinition(
@@ -79,6 +80,7 @@ abstract final class TrackingCodec {
     choices: [for (final c in j['choices']! as List) c as String],
     formula: j['formula'] as String?,
     summary: FieldSummary.values.asNameMap()[j['summary']],
+    meterGroup: j['meterGroup'] as String?,
   );
 
   static Map<String, Object?> entry(Entry e) => {

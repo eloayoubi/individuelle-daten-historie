@@ -2296,4 +2296,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get detailAddAnotherTracker => 'Add another tracker';
+
+  @override
+  String get meterAdd => 'Add meter';
+
+  @override
+  String get meterEdit => 'Edit meter';
+
+  @override
+  String get meterAddHint =>
+      'More meters, e.g. bathroom and toilet or cold and hot water – their usage adds up.';
+
+  @override
+  String get meterPlace => 'Location';
+
+  @override
+  String get meterPlaceBath => 'Bathroom';
+
+  @override
+  String get meterPlaceKitchen => 'Kitchen';
+
+  @override
+  String get meterPlaceToilet => 'Toilet';
+
+  @override
+  String get meterPlaceGuestToilet => 'Guest toilet';
+
+  @override
+  String get meterPlaceBasement => 'Basement';
+
+  @override
+  String get meterPlaceGarden => 'Garden';
+
+  @override
+  String get meterPlaceFlat => 'Flat';
+
+  @override
+  String get meterPlaceGarage => 'Garage';
+
+  @override
+  String get meterGroup => 'Group';
+
+  @override
+  String get meterGroupNone => 'None';
+
+  @override
+  String get meterGroupCold => 'Cold water';
+
+  @override
+  String get meterGroupWarm => 'Hot water';
+
+  @override
+  String get meterGroupHint => 'Custom group';
+
+  @override
+  String get meterGroupFieldHint => 'e.g. Cold water';
+
+  @override
+  String get meterGroupFooter =>
+      'Meters in one group appear as one card in the overview, e.g. cold and hot water separately. Under “Customize” you can also show the usage of all meters together.';
+
+  @override
+  String get meterShortCold => 'cold';
+
+  @override
+  String get meterShortWarm => 'hot';
+
+  @override
+  String get meterName => 'Name';
+
+  @override
+  String get meterNameHint => 'Name, e.g. Bathroom hot';
+
+  @override
+  String get meterFirstTitle => 'Existing meter';
+
+  @override
+  String meterFirstBody(String name) {
+    return 'Give “$name” a group and a name too, so the overview can tell them apart.';
+  }
+
+  @override
+  String get detailMeterAdded => 'Meter added.';
+
+  @override
+  String metersAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'All $count meters',
+      two: 'Both meters',
+      one: '1 meter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String metersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meters',
+      one: '1 meter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get metricsCustomAdd => 'Custom total';
+
+  @override
+  String get metricsCustomAddHint =>
+      'Usage of selected meters combined, e.g. everything in the bathroom';
+
+  @override
+  String get metricsCustomTitle => 'Custom total';
+
+  @override
+  String get metricsCustomNameHint => 'Name, e.g. Bathroom';
+
+  @override
+  String get metricsCustomFooter =>
+      'The usage of the chosen meters is added up. Only meters with the same unit can be combined.';
 }

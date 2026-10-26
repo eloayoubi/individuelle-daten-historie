@@ -19,6 +19,7 @@ import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
 import 'package:kostenkurve/features/categories/view/category_setup_page.dart';
 import 'package:kostenkurve/features/categories/view/field_editor_page.dart';
 import 'package:kostenkurve/features/categories/view/tracker_setup_page.dart';
+import 'package:kostenkurve/features/categories/view/widgets/meter_sheet.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
 import 'package:kostenkurve/features/entries/view/entry_form_page.dart';
@@ -418,6 +419,35 @@ void main() {
         await t.tap(find.text('Fertig'));
         await t.pumpAndSettle();
         expect(find.byType(ReorderableListView), findsNothing);
+      });
+
+      testWidgets('Zähler hinzufügen: Ort und Gruppe ergeben den Namen, die Übersicht zählt zusammen', (t) async {
+        // Die Mock-Daten gelten für alle Tests: hell Wasser mit Gruppen, dunkel Strom ohne.
+        final water = mode == 'hell';
+        await pumpPage(t, CategoryDetailPage(categoryId: water ? 'c-wasser' : 'c-strom'), theme: theme, size: const Size(390, 2400));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Zähler hinzufügen'));
+        await t.pumpAndSettle();
+        expect(find.byType(MeterSheet), findsOneWidget);
+        await t.tap(find.text(water ? 'Bad' : 'Keller'));
+        await t.pumpAndSettle();
+        if (water) {
+          expect(find.text('Bisheriger Zähler'), findsOneWidget);
+          await t.tap(find.text('Warmwasser').first);
+          await t.pumpAndSettle();
+        }
+        expect(find.widgetWithText(TextField, water ? 'Bad warm' : 'Keller'), findsOneWidget);
+        await t.tap(find.widgetWithText(AppButton, 'Zähler hinzufügen'));
+        await t.pumpAndSettle();
+        expect(find.byType(MeterSheet), findsNothing);
+        expect(find.text(water ? 'Bad warm' : 'Keller'), findsOneWidget);
+        if (water) {
+          expect(find.text('Kaltwasser'), findsWidgets);
+          expect(find.text('Warmwasser'), findsWidgets);
+        } else {
+          expect(find.text('Beide Zähler'), findsOneWidget);
+        }
+        expect(t.takeException(), isNull);
       });
 
       testWidgets('Feld-Editor zeigt je nach Typ Einheit, Intervall oder Auswahlwerte', (t) async {

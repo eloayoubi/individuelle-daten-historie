@@ -64,6 +64,39 @@ void main() {
   );
 
   blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'legt einen weiteren Zähler wie den ersten an und benennt den bisherigen',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-wasser'),
+    act: (cubit) async {
+      await cubit.load();
+      final tracker = cubit.state.category!.trackers.single;
+      await cubit.addMeter(tracker, name: ' Bad warm ', group: 'Warmwasser', first: (name: 'Bad kalt', group: 'Kaltwasser'));
+      await pumpEventQueue();
+    },
+    skip: 1,
+    verify: (cubit) {
+      final meters = cubit.state.category!.trackers.single.meters;
+      expect([for (final m in meters) (m.name, m.meterGroup, m.unit)], [('Bad kalt', 'Kaltwasser', 'm³'), ('Bad warm', 'Warmwasser', 'm³')]);
+      expect(cubit.state.figures.where((f) => f.metric.isMeters).map((f) => f.metric.group), ['Kaltwasser', 'Warmwasser']);
+    },
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'ändert Name und Gruppe eines Zählers',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-wasser'),
+    act: (cubit) async {
+      await cubit.load();
+      final meter = cubit.state.category!.trackers.single.meter!;
+      await cubit.updateMeter(meter, name: 'Küche', group: ' ');
+      await pumpEventQueue();
+    },
+    skip: 1,
+    verify: (cubit) {
+      final meter = cubit.state.category!.trackers.single.meter!;
+      expect((meter.name, meter.meterGroup, meter.role), ('Küche', null, FieldRole.meterReading));
+    },
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
     'ändert Name, Symbol und Farbe',
     build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-strom'),
     act: (cubit) async {

@@ -42,7 +42,7 @@ class TrackerSetupPage extends StatelessWidget {
                   Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name != TrackerPage.routeName);
                 case CategoryDetailEventKind.failed:
                   AppToast.show(context, context.l10n.errorSave, icon: CupertinoIcons.exclamationmark_circle_fill);
-                case CategoryDetailEventKind.trackerAdded || CategoryDetailEventKind.archived || CategoryDetailEventKind.addTrackerHidden:
+                case CategoryDetailEventKind.trackerAdded || CategoryDetailEventKind.meterAdded || CategoryDetailEventKind.archived || CategoryDetailEventKind.addTrackerHidden:
                   break;
               }
             },

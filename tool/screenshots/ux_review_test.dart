@@ -7,6 +7,7 @@ import 'package:kostenkurve/core/theme/app_theme.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
+import 'package:kostenkurve/features/categories/view/widgets/meter_sheet.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
 import 'package:kostenkurve/features/entries/view/entry_form_page.dart';
@@ -59,6 +60,7 @@ void main() {
   final auto = MockCategoriesRepository.categories.firstWhere(
     (c) => c.id == 'c-auto',
   );
+  final wasser = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-wasser');
   final screens = <String, (Widget Function(), double)>{
     'home': (() => const ShellView(), 932),
     'insights': (() => BlocProvider(create: (_) => ShellCubit()..select(ShellTab.insights), child: const ShellView()), 2400),
@@ -121,6 +123,8 @@ void main() {
     'price_history': (() => const PriceHistoryPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom'), fieldId: 'f-strom-ap'), 932),
     'entries_all': (() => const EntriesPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom')), 1400),
     'category_heizung': (() => const CategoryDetailPage(categoryId: 'c-heizung'), 1400),
+    'category_wasser_zaehler': (() => const CategoryDetailPage(categoryId: 'c-zaehler'), 1600),
+    'meter_sheet': (() => MeterSheet(category: wasser, tracker: wasser.trackers.single), 1100),
   };
 
   // Neuer Stromzähler mit nur einer Rechnung, ohne Preise – zeigt die Hinweise für Einsteiger.
@@ -139,10 +143,33 @@ void main() {
       ),
     ],
   );
+  // Wasser mit vier Zählern in zwei Gruppen, ein gemeinsamer Preis.
+  FieldDefinition meter(String id, String name, String group) =>
+      FieldDefinition(id: id, name: name, kind: FieldKind.number, role: FieldRole.meterReading, unit: 'm³', meterGroup: group);
+  final meters = [meter('bk', 'Bad kalt', 'Kaltwasser'), meter('bw', 'Bad warm', 'Warmwasser'), meter('wk', 'WC kalt', 'Kaltwasser'), meter('ww', 'WC warm', 'Warmwasser')];
+  final fourMeters = Category(
+    id: 'c-zaehler',
+    name: 'Wasser',
+    icon: CategoryIcon.drop,
+    swatch: CategorySwatch.blue,
+    templateKey: 'wasser',
+    trackers: [
+      Tracker(
+        id: 't-zaehler',
+        name: 'Wasserzähler',
+        fields: [...meters, wasser.trackers.single.fields.firstWhere((f) => f.role == FieldRole.unitPrice)],
+        entries: [
+          Entry(id: 'p', date: DateTime.utc(2026), values: const {'f-wasser-preis': 4.62}),
+          for (var m = 1; m <= 10; m++)
+            Entry(id: 'r$m', date: DateTime.utc(2026, m, 1), values: {'bk': 100 + m * 2.1, 'bw': 40 + m * 1.2, 'wk': 20 + m * 0.6, 'ww': 8 + m * 0.3}),
+        ],
+      ),
+    ],
+  );
   setUp(() {
     getIt
       ..unregister<CategoriesRepository>()
-      ..registerLazySingleton<CategoriesRepository>(() => MockCategoriesRepository(seed: [...MockCategoriesRepository.categories, fresh]));
+      ..registerLazySingleton<CategoriesRepository>(() => MockCategoriesRepository(seed: [...MockCategoriesRepository.categories, fresh, fourMeters]));
   });
 
   for (final MapEntry(key: name, value: (page, height)) in screens.entries) {

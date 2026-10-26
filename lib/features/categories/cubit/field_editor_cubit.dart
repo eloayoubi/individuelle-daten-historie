@@ -49,6 +49,8 @@ class FieldEditorCubit extends Cubit<FieldEditorState> {
 
   void setConsumptionUnit(String unit) => emit(state.copyWith(consumptionUnit: unit));
 
+  void setMeterGroup(String group) => emit(state.copyWith(meterGroup: group));
+
   void setFactor(String text) => emit(state.copyWith(factorText: text));
 
   void setInterval(int months) => emit(state.copyWith(intervalMonths: months));

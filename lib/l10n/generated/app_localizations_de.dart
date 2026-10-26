@@ -2312,4 +2312,126 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get detailAddAnotherTracker => 'Weiteren Tracker hinzufügen';
+
+  @override
+  String get meterAdd => 'Zähler hinzufügen';
+
+  @override
+  String get meterEdit => 'Zähler bearbeiten';
+
+  @override
+  String get meterAddHint =>
+      'Weitere Zähler, z. B. Bad und WC oder Kalt- und Warmwasser – ihr Verbrauch zählt zusammen.';
+
+  @override
+  String get meterPlace => 'Ort';
+
+  @override
+  String get meterPlaceBath => 'Bad';
+
+  @override
+  String get meterPlaceKitchen => 'Küche';
+
+  @override
+  String get meterPlaceToilet => 'WC';
+
+  @override
+  String get meterPlaceGuestToilet => 'Gäste-WC';
+
+  @override
+  String get meterPlaceBasement => 'Keller';
+
+  @override
+  String get meterPlaceGarden => 'Garten';
+
+  @override
+  String get meterPlaceFlat => 'Wohnung';
+
+  @override
+  String get meterPlaceGarage => 'Garage';
+
+  @override
+  String get meterGroup => 'Gruppe';
+
+  @override
+  String get meterGroupNone => 'Ohne';
+
+  @override
+  String get meterGroupCold => 'Kaltwasser';
+
+  @override
+  String get meterGroupWarm => 'Warmwasser';
+
+  @override
+  String get meterGroupHint => 'Eigene Gruppe';
+
+  @override
+  String get meterGroupFieldHint => 'z. B. Kaltwasser';
+
+  @override
+  String get meterGroupFooter =>
+      'Zähler einer Gruppe erscheinen in der Übersicht als eine Karte, z. B. Kalt- und Warmwasser getrennt. Unter „Anpassen“ lässt sich auch der Verbrauch aller Zähler zusammen zeigen.';
+
+  @override
+  String get meterShortCold => 'kalt';
+
+  @override
+  String get meterShortWarm => 'warm';
+
+  @override
+  String get meterName => 'Name';
+
+  @override
+  String get meterNameHint => 'Name, z. B. Bad warm';
+
+  @override
+  String get meterFirstTitle => 'Bisheriger Zähler';
+
+  @override
+  String meterFirstBody(String name) {
+    return 'Gib auch „$name“ eine Gruppe und einen Namen, damit die Übersicht beide auseinanderhält.';
+  }
+
+  @override
+  String get detailMeterAdded => 'Zähler hinzugefügt.';
+
+  @override
+  String metersAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Alle $count Zähler',
+      two: 'Beide Zähler',
+      one: '1 Zähler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String metersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Zähler',
+      one: '1 Zähler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get metricsCustomAdd => 'Eigene Summe';
+
+  @override
+  String get metricsCustomAddHint =>
+      'Verbrauch ausgewählter Zähler zusammen, z. B. alles im Bad';
+
+  @override
+  String get metricsCustomTitle => 'Eigene Summe';
+
+  @override
+  String get metricsCustomNameHint => 'Name, z. B. Bad';
+
+  @override
+  String get metricsCustomFooter =>
+      'Der Verbrauch der gewählten Zähler wird addiert. Zusammen zählen nur Zähler mit derselben Einheit.';
 }

@@ -100,6 +100,20 @@ void main() {
       expect(cubit.state.draft.consumptionUnit, isNull);
     });
 
+    test('Gruppe gilt nur für Zählerstände und bleibt beim Bearbeiten erhalten', () {
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't'))
+        ..setName('Bad warm')
+        ..setKind(FieldKind.number)
+        ..setRole(FieldRole.meterReading)
+        ..setMeterGroup(' Warmwasser ');
+      expect(cubit.state.draft.meterGroup, 'Warmwasser');
+      cubit.setRole(FieldRole.snapshot);
+      expect(cubit.state.draft.meterGroup, isNull);
+
+      const meter = FieldDefinition(id: 'f', name: 'Bad warm', kind: FieldKind.number, role: FieldRole.meterReading, meterGroup: 'Warmwasser');
+      expect(FieldEditorState.of(meter, hasValues: true).draft.meterGroup, 'Warmwasser');
+    });
+
     test('Intervall gilt nur für wiederkehrende Beträge', () {
       final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't'))
         ..setName('Versicherung')

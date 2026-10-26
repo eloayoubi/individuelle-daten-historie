@@ -99,6 +99,7 @@ class FieldDefinition extends Equatable {
     this.choices = const [],
     this.formula,
     this.summary,
+    this.meterGroup,
   });
 
   final String id;
@@ -128,6 +129,10 @@ class FieldDefinition extends Equatable {
   /// Zeitverhaltens. Gilt nur, wenn es zum Zeitverhalten passt ([effectiveSummary]).
   final FieldSummary? summary;
 
+  /// Bei [FieldRole.meterReading]: Gruppe des Zählers (Kaltwasser, Warmwasser). Kennzahlen fassen
+  /// Zähler derselben Gruppe zusammen; `null` = ohne Gruppe.
+  final String? meterGroup;
+
   /// Zusammenfassung für Kennzahlen: die gewählte, wenn sie passt, sonst der Standard des
   /// Zeitverhaltens; `null` bei Feldern ohne Zahlen oder ohne Verlauf.
   FieldSummary? get effectiveSummary {
@@ -146,7 +151,7 @@ class FieldDefinition extends Equatable {
   bool get isRate => role == FieldRole.unitPrice || role == FieldRole.recurringCost || role == FieldRole.instalment;
 
   @override
-  List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary];
+  List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary, meterGroup];
 }
 
 /// Ein Eintrag zu einem Datum; trägt Werte für einige oder alle Felder des [Tracker]s.
@@ -253,8 +258,12 @@ class Tracker extends Equatable {
   /// Einträge mit Verlauf, ohne reine Detail-Einträge.
   List<Entry> get records => [for (final e in entries) if (!isDetailEntry(e)) e];
 
-  /// Das Zählerfeld, `null` ohne Zähler.
+  /// Das erste Zählerfeld, `null` ohne Zähler. Rechnungen tragen ihren Verbrauch hier ein.
   FieldDefinition? get meter => firstWithRole(FieldRole.meterReading);
+
+  /// Alle Zählerfelder (Bad kalt, Bad warm …): Ihr Verbrauch zählt zusammen, ein Arbeitspreis gilt
+  /// für alle.
+  List<FieldDefinition> get meters => [...withRole(FieldRole.meterReading)];
 
   /// Versorgungszähler (Strom, Gas, Wasser): Zähler mit Arbeitspreis. Nur er kennt Rechnungen und
   /// einen Vertrag; ein Zähler ohne Arbeitspreis (Auto) bleibt bei Ständen.
@@ -270,8 +279,8 @@ class Tracker extends Equatable {
   /// Verbrauch im Zeitraum (in der Verbrauchseinheit), kein Zählerstand.
   bool isBill(Entry e) => isUtilityMeter && e.hasPeriod && e.values.containsKey(meter!.id);
 
-  /// Zählerstand: Wert im Zählerfeld, der keine Rechnung ist.
-  bool isReading(Entry e) => meter != null && e.values.containsKey(meter!.id) && !isBill(e);
+  /// Zählerstand: Wert in einem Zählerfeld, der keine Rechnung ist.
+  bool isReading(Entry e) => !isBill(e) && fields.any((f) => f.role == FieldRole.meterReading && e.values.containsKey(f.id));
 
   /// Preisänderung eines Versorgungszählers: trägt nur Preise und Beträge mit „gilt ab“. Formel-Werte,
   /// die `Formulas.apply` angehängt hat, ändern daran nichts.

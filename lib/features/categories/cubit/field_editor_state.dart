@@ -22,6 +22,7 @@ class FieldEditorState extends Equatable {
     required this.role,
     this.unit = '',
     this.consumptionUnit = '',
+    this.meterGroup = '',
     this.factorText = '1',
     this.intervalMonths = 1,
     this.choices = const [],
@@ -44,6 +45,7 @@ class FieldEditorState extends Equatable {
     role: field?.role ?? FieldRole.snapshot,
     unit: field?.unit ?? '',
     consumptionUnit: field?.consumptionUnit ?? '',
+    meterGroup: field?.meterGroup ?? '',
     factorText: _formatFactor(field?.factor ?? 1),
     intervalMonths: field?.intervalMonths ?? 1,
     choices: field?.choices ?? const [],
@@ -58,6 +60,7 @@ class FieldEditorState extends Equatable {
   /// Grenzen wie in der Datenbank.
   static const maxName = 60;
   static const maxUnit = 20;
+  static const maxMeterGroup = 40;
   static const maxChoice = 40;
 
   final bool isNew;
@@ -82,6 +85,9 @@ class FieldEditorState extends Equatable {
   final FieldRole role;
   final String unit;
   final String consumptionUnit;
+
+  /// Gruppe eines Zählerstands (Kaltwasser, Warmwasser); leer = ohne.
+  final String meterGroup;
 
   /// Umrechnungsfaktor, wie eingetippt (Komma oder Punkt).
   final String factorText;
@@ -134,6 +140,7 @@ class FieldEditorState extends Equatable {
       unit: kind.hasUnit && unit.trim().isNotEmpty ? unit.trim() : null,
       consumptionUnit: meter && consumptionUnit.trim().isNotEmpty ? consumptionUnit.trim() : null,
       factor: meter ? factor ?? 1 : 1,
+      meterGroup: meter && meterGroup.trim().isNotEmpty ? meterGroup.trim() : null,
       intervalMonths: role == FieldRole.recurringCost ? intervalMonths : 1,
       choices: kind == FieldKind.choice ? choices : const [],
       formula: kind == FieldKind.formula ? formula.trim() : null,
@@ -152,6 +159,7 @@ class FieldEditorState extends Equatable {
     FieldRole? role,
     String? unit,
     String? consumptionUnit,
+    String? meterGroup,
     String? factorText,
     int? intervalMonths,
     List<String>? choices,
@@ -172,6 +180,7 @@ class FieldEditorState extends Equatable {
     role: role ?? this.role,
     unit: unit ?? this.unit,
     consumptionUnit: consumptionUnit ?? this.consumptionUnit,
+    meterGroup: meterGroup ?? this.meterGroup,
     factorText: factorText ?? this.factorText,
     intervalMonths: intervalMonths ?? this.intervalMonths,
     choices: choices ?? this.choices,
@@ -181,5 +190,5 @@ class FieldEditorState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, keepsMeter, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, summary, saving, event];
+  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, keepsMeter, tracker, name, kind, role, unit, consumptionUnit, meterGroup, factorText, intervalMonths, choices, formula, summary, saving, event];
 }
