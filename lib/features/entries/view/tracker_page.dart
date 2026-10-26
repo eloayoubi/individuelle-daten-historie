@@ -9,7 +9,7 @@ import '../data/tracker_history.dart';
 import 'entry_form_page.dart';
 import 'entries_page.dart';
 import 'widgets/contract_group.dart';
-import 'widgets/entry_row.dart';
+import 'widgets/entry_table.dart';
 import 'widgets/history_chart.dart';
 import 'widgets/tracker_details.dart';
 
@@ -26,8 +26,12 @@ class TrackerPage extends StatelessWidget {
 
   final TrackerArgs args;
 
-  static Future<void> open(BuildContext context, {required String categoryId, required String trackerId}) => Navigator.of(context).push(
-    CupertinoPageRoute<void>(settings: const RouteSettings(name: routeName), builder: (_) => TrackerPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId))),
+  /// [metric] öffnet gleich den Reiter Kosten bzw. Verbrauch.
+  static Future<void> open(BuildContext context, {required String categoryId, required String trackerId, HistoryMetric? metric}) => Navigator.of(context).push(
+    CupertinoPageRoute<void>(
+      settings: const RouteSettings(name: routeName),
+      builder: (_) => TrackerPage(args: TrackerArgs(categoryId: categoryId, trackerId: trackerId, metric: metric)),
+    ),
   );
 
   @override
@@ -233,12 +237,7 @@ class _Content extends StatelessWidget {
               ),
             )
           else
-            AppListGroup(
-              dividerIndent: Spacing.l,
-              children: [
-                for (final e in entries.take(_recent)) EntryRow(category: category, tracker: tracker, entry: e, onTap: category.canEdit ? () => open(e) : null),
-              ],
-            ),
+            EntryTable(category: category, tracker: tracker, entries: entries.take(_recent).toList(), onTap: category.canEdit ? open : null),
           // Einstellungen: Vertrag (Preise mit Verlauf und Details) bzw. Details.
           if (tracker.isUtilityMeter) ...[
             SectionHeader(title: l10n.contractTitle),

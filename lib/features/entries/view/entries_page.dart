@@ -6,7 +6,7 @@ import '../../../core/core.dart';
 import '../cubit/tracker_cubit.dart';
 import 'entry_form_page.dart';
 import 'tracker_page.dart';
-import 'widgets/entry_row.dart';
+import 'widgets/entry_table.dart';
 
 /// Alle Einträge eines Trackers, nach Jahren gruppiert, neueste zuerst; unten „Wert eintragen“.
 /// Lädt den Tracker selbst und aktualisiert sich bei jeder Änderung.
@@ -69,17 +69,11 @@ class _EntriesView extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, Spacing.xs),
                       child: AppText('$year', style: (t) => t.footnoteEmphasized, color: c.textSecondary),
                     ),
-                    AppListGroup(
-                      dividerIndent: Spacing.l,
-                      children: [
-                        for (final e in list)
-                          EntryRow(
-                            category: category,
-                            tracker: tracker,
-                            entry: e,
-                            onTap: category.canEdit ? () => EntryFormPage.open(context, category: category, tracker: tracker, entry: e) : null,
-                          ),
-                      ],
+                    EntryTable(
+                      category: category,
+                      tracker: tracker,
+                      entries: list,
+                      onTap: category.canEdit ? (e) => EntryFormPage.open(context, category: category, tracker: tracker, entry: e) : null,
                     ),
                     const SizedBox(height: Spacing.s),
                   ],
