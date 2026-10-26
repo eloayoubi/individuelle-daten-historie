@@ -3,14 +3,16 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/utils/dashboard_figures.dart';
 import '../../entries/data/tracker_history.dart';
 import '../data/categories_repository.dart';
 import '../data/tracker_details.dart';
 
 part 'category_detail_state.dart';
 
-/// Eine Kategorie mit ihren Trackern: Kennzahl des Jahres je Tracker, Details setzen, Aussehen
-/// ändern, Tracker anlegen, umbenennen, archivieren, Kategorie archivieren. Lädt bei jeder
+/// Eine Kategorie mit ihren Trackern: Kennzahlen der Übersicht im gewählten Zeitraum, Kennzahl des
+/// Jahres je Tracker, Details setzen, Aussehen und Übersicht ändern, Tracker anlegen, umbenennen,
+/// archivieren, Kategorie archivieren. Lädt bei jeder
 /// Änderung im Repository neu. Auch die Felder-Seite eines Trackers nutzt diesen Cubit.
 class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   CategoryDetailCubit(this._repository, this.categoryId, {DateTime Function()? now}) : _now = now ?? DateTime.now, super(const CategoryDetailState()) {
@@ -29,19 +31,59 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
       if (isClosed) return;
       final now = _now();
       emit(
-        state.copyWith(
-          status: category == null ? CategoryDetailStatus.missing : CategoryDetailStatus.ready,
-          category: category,
-          others: others,
-          yearToDate: {
-            for (final t in category?.trackers ?? const <Tracker>[])
-              if (TrackerHistory.yearToDate(t, now) case final YearToDate value) t.id: value,
-          },
+        _withFigures(
+          state.copyWith(
+            status: category == null ? CategoryDetailStatus.missing : CategoryDetailStatus.ready,
+            category: category,
+            others: others,
+            yearToDate: {
+              for (final t in category?.trackers ?? const <Tracker>[])
+                if (TrackerHistory.yearToDate(t, now) case final YearToDate value) t.id: value,
+            },
+          ),
         ),
       );
     } catch (_) {
       if (!isClosed) emit(state.copyWith(status: state.category == null ? CategoryDetailStatus.failure : state.status));
     }
+  }
+
+  /// Zeitraum der Kennzahlen; [custom] bei [DashboardPeriod.custom] (letzter Tag eingeschlossen).
+  void setPeriod(DashboardPeriod period, {DateTime? from, DateTime? to}) {
+    final custom = period == DashboardPeriod.custom && from != null && to != null
+        ? DateSpan(from.isAfter(to) ? to : from, (from.isAfter(to) ? from : to).add(const Duration(days: 1)))
+        : state.custom;
+    emit(_withFigures(state.copyWith(period: period, custom: () => custom)));
+  }
+
+  /// Gezeigte Kennzahlen (`null` = automatisch).
+  Future<void> setMetrics(List<DashboardMetric>? metrics) async {
+    final category = state.category;
+    if (category == null) return;
+    await _run(() => _repository.updateDashboard(categoryId, category.dashboard.copyWith(metrics: () => metrics)));
+  }
+
+  /// „Tracker hinzufügen“ unter „Wert eintragen“ wegklicken; danach geht es über „Bearbeiten“.
+  Future<void> hideAddTracker() async {
+    final category = state.category;
+    if (category == null) return;
+    await _run(
+      () => _repository.updateDashboard(categoryId, category.dashboard.copyWith(showAddTracker: false)),
+      success: CategoryDetailEventKind.addTrackerHidden,
+    );
+  }
+
+  /// Kennzahlen zum Zustand [s] neu rechnen (nach Laden oder neuem Zeitraum).
+  CategoryDetailState _withFigures(CategoryDetailState s) {
+    final category = s.category;
+    if (category == null) return s;
+    final today = _now();
+    final span = DashboardFigures.span(s.period, today, custom: s.custom, firstDay: DashboardFigures.firstDay(category));
+    final previous = DashboardFigures.previous(s.period, span);
+    return s.copyWith(
+      span: span,
+      figures: DashboardFigures.build(category, span, previous: previous, today: today, elsewhere: {for (final o in s.others) o.id}),
+    );
   }
 
   Future<void> updateAppearance({required String name, required CategoryIcon icon, required CategorySwatch swatch}) =>

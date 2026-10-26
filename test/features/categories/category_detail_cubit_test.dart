@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/utils/dashboard_figures.dart';
 import 'package:kostenkurve/features/categories/cubit/category_detail_cubit.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
@@ -105,4 +106,56 @@ void main() {
       isA<CategoryDetailState>().having((s) => s.category?.trackers.map((t) => t.id), 'trackers', ['t-glasfaser']),
     ],
   );
+
+  group('Übersicht', () {
+    blocTest<CategoryDetailCubit, CategoryDetailState>(
+      'rechnet Kosten und Verbrauch im Jahr und wechselt den Zeitraum',
+      build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-strom', now: () => DateTime(2026, 10, 22)),
+      act: (cubit) async {
+        await cubit.load();
+        cubit.setPeriod(DashboardPeriod.lastYear);
+      },
+      expect: () => [
+        isA<CategoryDetailState>()
+            .having((s) => s.span, 'span', DateSpan(DateTime.utc(2026), DateTime.utc(2026, 10, 23)))
+            .having((s) => s.figures.map((f) => f.metric), 'Kennzahlen', const [
+              DashboardMetric.cost(),
+              DashboardMetric.field(trackerId: 't-strom', fieldId: 'f-strom-stand'),
+            ])
+            .having((s) => s.figures.every((f) => (f.value ?? 0) > 0), 'Werte', isTrue),
+        isA<CategoryDetailState>()
+            .having((s) => s.period, 'period', DashboardPeriod.lastYear)
+            .having((s) => s.span, 'span', DateSpan(DateTime.utc(2025), DateTime.utc(2026))),
+      ],
+    );
+
+    blocTest<CategoryDetailCubit, CategoryDetailState>(
+      'eigener Zeitraum schließt den letzten Tag ein, auch rückwärts gewählt',
+      build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-strom', now: () => DateTime(2026, 10, 22)),
+      act: (cubit) async {
+        await cubit.load();
+        cubit.setPeriod(DashboardPeriod.custom, from: DateTime.utc(2026, 3, 31), to: DateTime.utc(2026, 3, 1));
+      },
+      skip: 1,
+      expect: () => [isA<CategoryDetailState>().having((s) => s.span, 'span', DateSpan(DateTime.utc(2026, 3), DateTime.utc(2026, 4)))],
+    );
+
+    blocTest<CategoryDetailCubit, CategoryDetailState>(
+      'gewählte Kennzahlen und weggeklicktes „Tracker hinzufügen“ landen im Dashboard der Kategorie',
+      build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-strom', now: () => DateTime(2026, 10, 22)),
+      act: (cubit) async {
+        await cubit.load();
+        await cubit.setMetrics(const [DashboardMetric.field(trackerId: 't-strom', fieldId: 'f-strom-ap')]);
+        await pumpEventQueue();
+        await cubit.hideAddTracker();
+        await pumpEventQueue();
+      },
+      verify: (cubit) {
+        final dashboard = cubit.state.category!.dashboard;
+        expect(dashboard.metrics, const [DashboardMetric.field(trackerId: 't-strom', fieldId: 'f-strom-ap')]);
+        expect(dashboard.showAddTracker, isFalse);
+        expect(cubit.state.figures.single.value, closeTo(0.329, 1e-9));
+      },
+    );
+  });
 }

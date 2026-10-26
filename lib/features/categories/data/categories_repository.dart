@@ -16,6 +16,7 @@ class FieldDraft extends Equatable {
     this.intervalMonths = 1,
     this.choices = const [],
     this.formula,
+    this.summary,
   });
 
   factory FieldDraft.of(FieldDefinition f) => FieldDraft(
@@ -28,6 +29,7 @@ class FieldDraft extends Equatable {
     intervalMonths: f.intervalMonths,
     choices: f.choices,
     formula: f.formula,
+    summary: f.summary,
   );
 
   final String name;
@@ -39,6 +41,7 @@ class FieldDraft extends Equatable {
   final int intervalMonths;
   final List<String> choices;
   final String? formula;
+  final FieldSummary? summary;
 
   FieldDefinition withId(String id) => FieldDefinition(
     id: id,
@@ -51,10 +54,11 @@ class FieldDraft extends Equatable {
     intervalMonths: intervalMonths,
     choices: choices,
     formula: formula,
+    summary: summary,
   );
 
   @override
-  List<Object?> get props => [name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula];
+  List<Object?> get props => [name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary];
 }
 
 /// Ein Tracker mit seinen Feldern, wie er angelegt wird.
@@ -145,6 +149,9 @@ abstract interface class CategoriesRepository {
   Future<String> createCategory(CategoryDraft draft);
 
   Future<void> updateCategory(String id, {required String name, required CategoryIcon icon, required CategorySwatch swatch});
+
+  /// Kennzahlen und Aufbau der Übersicht (owner und editor).
+  Future<void> updateDashboard(String id, CategoryDashboard dashboard);
 
   /// Archivieren und Wiederherstellen (nur owner).
   Future<void> setCategoryArchived(String id, {required bool archived});

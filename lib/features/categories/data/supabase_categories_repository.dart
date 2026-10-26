@@ -32,10 +32,10 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   }
 
   static const _select =
-      'id, name, icon, swatch, template_key, archived_at, '
+      'id, name, icon, swatch, template_key, archived_at, dashboard, '
       'category_members(user_id, role, sort, profiles(display_name)), '
       'trackers!trackers_category_id_fkey(id, name, sort, included_in, '
-      'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, sort), '
+      'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, summary, sort), '
       'entries(id, occurred_on, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
 
   @override
@@ -85,6 +85,10 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   @override
   Future<void> updateCategory(String id, {required String name, required CategoryIcon icon, required CategorySwatch swatch}) =>
       _write(() => _api.table('categories').update({'name': name, 'icon': icon.name, 'swatch': swatch.name}).eq('id', id));
+
+  @override
+  Future<void> updateDashboard(String id, CategoryDashboard dashboard) =>
+      _write(() => _api.table('categories').update({'dashboard': dashboard.toJson()}).eq('id', id));
 
   @override
   Future<void> setCategoryArchived(String id, {required bool archived}) => _write(
@@ -288,6 +292,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     'interval_months': f.intervalMonths,
     'choices': f.choices,
     'formula': f.formula,
+    'summary': f.summary?.name,
   };
 
   int _mySort(Map<String, dynamic> row) {
@@ -307,6 +312,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       icon: _enum(CategoryIcon.values, row['icon'] as String, CategoryIcon.star),
       swatch: _enum(CategorySwatch.values, row['swatch'] as String, CategorySwatch.indigo),
       templateKey: row['template_key'] as String?,
+      dashboard: CategoryDashboard.fromJson(row['dashboard']),
       archivedAt: switch (row['archived_at']) {
         final String iso => DateTime.parse(iso),
         _ => null,
@@ -347,6 +353,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     intervalMonths: (row['interval_months'] as num?)?.toInt() ?? 1,
     choices: [for (final c in (row['choices'] as List?) ?? const []) c as String],
     formula: row['formula'] as String?,
+    summary: FieldSummary.values.asNameMap()[row['summary']],
   );
 
   static Entry _entry(Map<String, dynamic> row) => Entry(

@@ -1,0 +1,265 @@
+import 'package:equatable/equatable.dart';
+
+import '../models/tracking.dart';
+import 'cost_engine.dart';
+import 'formulas.dart';
+
+/// Zeitraum der Kennzahlen; „bis heute“, wo er noch läuft.
+enum DashboardPeriod { thisMonth, lastMonth, thisYear, lastYear, last12Months, all, custom }
+
+/// Tage in `[from, to)`, jeweils UTC-Mitternacht.
+class DateSpan extends Equatable {
+  DateSpan(DateTime from, DateTime to) : from = CostEngine.day(from), to = CostEngine.day(to);
+
+  final DateTime from;
+  final DateTime to;
+
+  int get days => to.difference(from).inDays;
+
+  /// Letzter enthaltener Tag (für die Anzeige).
+  DateTime get last => to.subtract(const Duration(days: 1));
+
+  @override
+  List<Object?> get props => [from, to];
+}
+
+/// Eine ausgerechnete Kennzahl: Wert im Zeitraum und im Zeitraum davor (zum Vergleich).
+class DashboardFigure extends Equatable {
+  const DashboardFigure({required this.metric, this.tracker, this.field, this.summary, this.value, this.previous});
+
+  final DashboardMetric metric;
+
+  /// Tracker der Kennzahl; `null` bei den Kosten der ganzen Kategorie.
+  final Tracker? tracker;
+  final FieldDefinition? field;
+  final FieldSummary? summary;
+
+  /// `null`, wenn es im Zeitraum nichts zusammenzufassen gibt.
+  final double? value;
+  final double? previous;
+
+  /// Verbrauch aus Zählerständen (Differenz eines Zählerstands) – in der Verbrauchseinheit.
+  bool get isConsumption => field?.role == FieldRole.meterReading && summary == FieldSummary.difference;
+
+  /// Veränderung zum Zeitraum davor als Anteil; `null` ohne Vergleich.
+  double? get change {
+    final v = value, p = previous;
+    if (v == null || p == null || p.abs() < 1e-9) return null;
+    return (v - p) / p.abs();
+  }
+
+  @override
+  List<Object?> get props => [metric, tracker?.id, field, summary, value, previous];
+}
+
+/// Kennzahlen im Dashboard einer Kategorie: welche es gibt, welche gezeigt werden und ihre Werte.
+///
+/// - **Kosten** rechnet die [CostEngine] wie überall in der App; die der ganzen Kategorie lassen
+///   Tracker aus, deren Kosten schon in einer anderen (aktiven) Kategorie stecken.
+/// - **Felder** fassen ihre Werte nach [FieldDefinition.effectiveSummary] zusammen:
+///   - `sum` addiert die Werte im Zeitraum; wiederkehrende Beträge und Abschläge zählen anteilig je
+///     Tag (12 €/Monat über 15 Tage im Juni = 6 €).
+///   - `difference` ist neuer minus alter Wert: Wert am Ende minus Wert am Anfang, zwischen zwei
+///     Einträgen linear verteilt, vor dem ersten und nach dem letzten gilt der nächste bekannte
+///     Wert. Beim (ersten) Zählerstand ist das der Verbrauch der [CostEngine] – mit Umrechnung,
+///     Zählerwechsel und geschätzten Tagen seit dem letzten Ablesen.
+///   - `average`, `min`, `max` über die Einträge im Zeitraum; `latest` ist der zuletzt eingetragene
+///     Wert bis zum Ende des Zeitraums.
+/// - Formel-Felder werden vorher je Eintrag ausgerechnet ([Formulas.apply]).
+abstract final class DashboardFigures {
+  /// Was sich als Kennzahl wählen lässt: Kosten der Kategorie, bei mehreren Trackern die Kosten je
+  /// Tracker, dazu jedes Feld mit Zahlen und Verlauf.
+  static List<DashboardMetric> options(Category category) => [
+    if (category.trackers.isNotEmpty) const DashboardMetric.cost(),
+    if (category.trackers.length > 1)
+      for (final t in category.trackers)
+        if (_hasCost(t)) DashboardMetric.cost(trackerId: t.id),
+    for (final t in category.trackers)
+      for (final f in t.fields)
+        if (f.effectiveSummary != null) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
+  ];
+
+  /// Gezeigte Kennzahlen: die gewählten, soweit es Tracker und Feld noch gibt – ohne Wahl die
+  /// Kosten (wenn etwas kostet) und der Verbrauch jedes Zählers, sonst das erste Feld je Tracker.
+  static List<DashboardMetric> shown(Category category) {
+    final available = options(category).toSet();
+    if (category.dashboard.metrics case final chosen?) {
+      return [
+        for (final m in chosen)
+          if (available.contains(m)) m,
+      ];
+    }
+    final meters = [
+      for (final t in category.trackers)
+        for (final f in t.fields)
+          if (f.role == FieldRole.meterReading) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
+    ];
+    final fallback = meters.isNotEmpty
+        ? meters
+        : [
+            for (final t in category.trackers)
+              if (t.fields.where((f) => f.effectiveSummary != null).firstOrNull case final f?) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
+          ];
+    return [if (category.trackers.any(_hasCost)) const DashboardMetric.cost(), ...fallback];
+  }
+
+  /// Werte der gezeigten Kennzahlen in [span], zum Vergleich in [previous]. [elsewhere] sind die
+  /// übrigen aktiven Kategorien – Kosten, die dort stecken, zählen in der Kategorie-Summe nicht.
+  static List<DashboardFigure> build(Category category, DateSpan span, {DateSpan? previous, required DateTime today, Set<String> elsewhere = const {}}) {
+    final day = CostEngine.day(today);
+    final engines = <String, CostEngine>{};
+    final applied = <String, Tracker>{};
+    CostEngine engine(Tracker t) => engines[t.id] ??= CostEngine(t, today: day);
+    Tracker withFormulas(Tracker t) => applied[t.id] ??= Formulas.apply(t);
+    return [
+      for (final metric in shown(category))
+        if (metric.isCost)
+          _cost(category, metric, span, previous, engine, elsewhere)
+        else if (category.trackers.where((t) => t.id == metric.trackerId).firstOrNull case final tracker?)
+          if (tracker.fields.where((f) => f.id == metric.fieldId).firstOrNull case final field?)
+            DashboardFigure(
+              metric: metric,
+              tracker: tracker,
+              field: field,
+              summary: field.effectiveSummary,
+              value: fieldValue(withFormulas(tracker), field, span, engine: engine(tracker)),
+              previous: previous == null ? null : fieldValue(withFormulas(tracker), field, previous, engine: engine(tracker)),
+            ),
+    ];
+  }
+
+  static DashboardFigure _cost(
+    Category category,
+    DashboardMetric metric,
+    DateSpan span,
+    DateSpan? previous,
+    CostEngine Function(Tracker) engine,
+    Set<String> elsewhere,
+  ) {
+    final tracker = metric.trackerId == null ? null : category.trackers.where((t) => t.id == metric.trackerId).firstOrNull;
+    final trackers = tracker != null
+        ? [tracker]
+        : [
+            for (final t in category.trackers)
+              if (t.includedIn == null || t.includedIn == category.id || !elsewhere.contains(t.includedIn)) t,
+          ];
+    double sum(DateSpan s) => trackers.fold(0.0, (total, t) => total + engine(t).cost(s.from, s.to));
+    return DashboardFigure(metric: metric, tracker: tracker, value: sum(span), previous: previous == null ? null : sum(previous));
+  }
+
+  /// Wert eines Felds in [span] nach seiner Zusammenfassung. [tracker] mit ausgerechneten Formeln;
+  /// [engine] (für den Verbrauch des Zählerstands) aus dem Tracker ohne.
+  static double? fieldValue(Tracker tracker, FieldDefinition field, DateSpan span, {CostEngine? engine}) {
+    final summary = field.effectiveSummary;
+    if (summary == null) return null;
+    final points = [
+      for (final e in tracker.entries)
+        if (e.number(field.id) case final num v) (CostEngine.day(e.date), v.toDouble()),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
+    if (points.isEmpty) return null;
+    final inSpan = [
+      for (final (d, v) in points)
+        if (!d.isBefore(span.from) && d.isBefore(span.to)) v,
+    ];
+    switch (summary) {
+      case FieldSummary.sum:
+        if (field.role == FieldRole.recurringCost || field.role == FieldRole.instalment) return _prorated(points, field, span);
+        return inSpan.fold<double>(0, (a, b) => a + b);
+      case FieldSummary.difference:
+        if (field.role == FieldRole.meterReading && tracker.firstWithRole(FieldRole.meterReading)?.id == field.id) {
+          final meter = engine ?? CostEngine(tracker, today: DateTime.now());
+          return meter.hasMeter ? meter.consumption(span.from, span.to) : null;
+        }
+        final factor = field.role == FieldRole.meterReading ? field.factor : 1;
+        return (_interpolated(points, span.to) - _interpolated(points, span.from)) * factor;
+      case FieldSummary.average:
+        return inSpan.isEmpty ? null : inSpan.fold<double>(0, (a, b) => a + b) / inSpan.length;
+      case FieldSummary.latest:
+        return [
+          for (final (d, v) in points)
+            if (d.isBefore(span.to)) v,
+        ].lastOrNull;
+      case FieldSummary.min:
+        return inSpan.isEmpty ? null : inSpan.reduce((a, b) => a < b ? a : b);
+      case FieldSummary.max:
+        return inSpan.isEmpty ? null : inSpan.reduce((a, b) => a > b ? a : b);
+    }
+  }
+
+  /// Zeitraum zu [period] mit [today] als letztem Tag laufender Zeiträume. [custom] ist der gewählte
+  /// Zeitraum, [firstDay] der Beginn von „Gesamt“.
+  static DateSpan span(DashboardPeriod period, DateTime today, {DateSpan? custom, DateTime? firstDay}) {
+    final t = CostEngine.day(today);
+    final tomorrow = t.add(const Duration(days: 1));
+    return switch (period) {
+      DashboardPeriod.thisMonth => DateSpan(DateTime.utc(t.year, t.month), tomorrow),
+      DashboardPeriod.lastMonth => DateSpan(DateTime.utc(t.year, t.month - 1), DateTime.utc(t.year, t.month)),
+      DashboardPeriod.thisYear => DateSpan(DateTime.utc(t.year), tomorrow),
+      DashboardPeriod.lastYear => DateSpan(DateTime.utc(t.year - 1), DateTime.utc(t.year)),
+      DashboardPeriod.last12Months => DateSpan(_shift(tomorrow, months: -12), tomorrow),
+      DashboardPeriod.all => DateSpan(firstDay != null && firstDay.isBefore(t) ? firstDay : t, tomorrow),
+      DashboardPeriod.custom => custom ?? DateSpan(DateTime.utc(t.year), tomorrow),
+    };
+  }
+
+  /// Vergleichszeitraum: derselbe Abschnitt einen Monat bzw. ein Jahr früher, bei eigenem Zeitraum
+  /// die gleich vielen Tage direkt davor; „Gesamt“ hat keinen.
+  static DateSpan? previous(DashboardPeriod period, DateSpan span) => switch (period) {
+    DashboardPeriod.thisMonth || DashboardPeriod.lastMonth => DateSpan(_shift(span.from, months: -1), _shift(span.to, months: -1)),
+    DashboardPeriod.thisYear ||
+    DashboardPeriod.lastYear ||
+    DashboardPeriod.last12Months => DateSpan(_shift(span.from, months: -12), _shift(span.to, months: -12)),
+    DashboardPeriod.custom => DateSpan(span.from.subtract(Duration(days: span.days)), span.from),
+    DashboardPeriod.all => null,
+  };
+
+  /// Erster Tag mit einem Eintrag in [category] (Beginn von „Gesamt“).
+  static DateTime? firstDay(Category category) {
+    DateTime? first;
+    for (final t in category.trackers) {
+      for (final e in t.records) {
+        final d = CostEngine.day(e.hasPeriod && e.periodStart!.isBefore(e.date) ? e.periodStart! : e.date);
+        if (first == null || d.isBefore(first)) first = d;
+      }
+    }
+    return first;
+  }
+
+  static bool _hasCost(Tracker t) => t.fields.any((f) => f.role == FieldRole.unitPrice || f.role == FieldRole.recurringCost || f.role == FieldRole.oneOffCost);
+
+  /// Wiederkehrende Beträge anteilig je Tag: Betrag je Intervall, auf die Tage des Monats verteilt.
+  static double _prorated(List<(DateTime, double)> points, FieldDefinition field, DateSpan span) {
+    final months = field.intervalMonths < 1 || field.role == FieldRole.instalment ? 1 : field.intervalMonths;
+    var total = 0.0;
+    var i = 0;
+    double? current;
+    for (var d = span.from; d.isBefore(span.to); d = d.add(const Duration(days: 1))) {
+      while (i < points.length && !points[i].$1.isAfter(d)) {
+        current = points[i].$2;
+        i++;
+      }
+      if (current != null) total += current / months / DateTime.utc(d.year, d.month + 1, 0).day;
+    }
+    return total;
+  }
+
+  /// Wert an [d], zwischen zwei Einträgen linear; davor der erste, danach der letzte Wert.
+  static double _interpolated(List<(DateTime, double)> points, DateTime d) {
+    if (!d.isAfter(points.first.$1)) return points.first.$2;
+    for (var i = 1; i < points.length; i++) {
+      final (to, b) = points[i];
+      if (d.isAfter(to)) continue;
+      final (from, a) = points[i - 1];
+      final days = to.difference(from).inDays;
+      return days == 0 ? b : a + (b - a) * d.difference(from).inDays / days;
+    }
+    return points.last.$2;
+  }
+
+  /// [d] um [months] Monate verschoben; der Tag bleibt, höchstens bis Monatsende (31.3. → 28.2.).
+  static DateTime _shift(DateTime d, {required int months}) {
+    final first = DateTime.utc(d.year, d.month + months);
+    final lastDay = DateTime.utc(first.year, first.month + 1, 0).day;
+    return DateTime.utc(first.year, first.month, d.day > lastDay ? lastDay : d.day);
+  }
+}

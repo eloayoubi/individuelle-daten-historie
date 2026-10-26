@@ -75,6 +75,7 @@ class MockCategoriesRepository extends MemoryCategoriesRepository {
     myRole: c.myRole,
     templateKey: c.templateKey,
     archivedAt: c.archivedAt,
+    dashboard: c.dashboard,
     sharedWith: members,
   );
 

@@ -1,5 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+import 'dashboard.dart';
+
+export 'dashboard.dart';
+
 /// Wie ein Feld eingegeben und angezeigt wird.
 enum FieldKind { text, number, currency, percent, date, toggle, choice, formula }
 
@@ -60,6 +64,18 @@ enum FieldRole {
   instalment,
 }
 
+/// Welche Zusammenfassungen zu einem Zeitverhalten passen; die erste ist der Standard.
+extension FieldRoleSummaries on FieldRole {
+  List<FieldSummary> get summaries => switch (this) {
+    FieldRole.meterReading => const [FieldSummary.difference, FieldSummary.latest],
+    FieldRole.oneOffCost => const [FieldSummary.sum, FieldSummary.average, FieldSummary.min, FieldSummary.max, FieldSummary.latest],
+    FieldRole.recurringCost || FieldRole.instalment => const [FieldSummary.sum, FieldSummary.latest, FieldSummary.average, FieldSummary.min, FieldSummary.max],
+    FieldRole.unitPrice => const [FieldSummary.latest, FieldSummary.average, FieldSummary.min, FieldSummary.max],
+    FieldRole.snapshot => const [FieldSummary.latest, FieldSummary.average, FieldSummary.min, FieldSummary.max, FieldSummary.sum, FieldSummary.difference],
+    FieldRole.info || FieldRole.deadline => const [],
+  };
+}
+
 /// Symbol einer Kategorie; die Zuordnung zu Icons steht in `category_x.dart`.
 enum CategoryIcon { bolt, flame, drop, house, car, wifi, shield, play, cart, heart, star, doc }
 
@@ -82,6 +98,7 @@ class FieldDefinition extends Equatable {
     this.intervalMonths = 1,
     this.choices = const [],
     this.formula,
+    this.summary,
   });
 
   final String id;
@@ -107,6 +124,18 @@ class FieldDefinition extends Equatable {
   /// Ausdruck bei [FieldKind.formula], z. B. `verbrauch * arbeitspreis`.
   final String? formula;
 
+  /// Wie Kennzahlen die Werte über einen Zeitraum zusammenfassen; `null` = Standard des
+  /// Zeitverhaltens. Gilt nur, wenn es zum Zeitverhalten passt ([effectiveSummary]).
+  final FieldSummary? summary;
+
+  /// Zusammenfassung für Kennzahlen: die gewählte, wenn sie passt, sonst der Standard des
+  /// Zeitverhaltens; `null` bei Feldern ohne Zahlen oder ohne Verlauf.
+  FieldSummary? get effectiveSummary {
+    if (kind.storage != FieldStorage.number && kind != FieldKind.formula) return null;
+    final options = role.summaries;
+    return options.contains(summary) ? summary : options.firstOrNull;
+  }
+
   String get usageUnit => consumptionUnit ?? unit ?? '';
 
   /// Detail des Trackers (Anbieter, Vertragsnummer, Vertragsende): einmal festgelegt, nicht Teil
@@ -117,7 +146,7 @@ class FieldDefinition extends Equatable {
   bool get isRate => role == FieldRole.unitPrice || role == FieldRole.recurringCost || role == FieldRole.instalment;
 
   @override
-  List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula];
+  List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary];
 }
 
 /// Ein Eintrag zu einem Datum; trägt Werte für einige oder alle Felder des [Tracker]s.
@@ -311,6 +340,7 @@ class Category extends Equatable {
     this.myRole = MemberRole.owner,
     this.templateKey,
     this.archivedAt,
+    this.dashboard = const CategoryDashboard(),
   });
 
   final String id;
@@ -328,6 +358,9 @@ class Category extends Equatable {
 
   /// Archivierte Kategorien fehlen in Übersicht und Auswertung, lassen sich aber wiederherstellen.
   final DateTime? archivedAt;
+
+  /// Kennzahlen der Übersicht und ob „Tracker hinzufügen“ unten steht.
+  final CategoryDashboard dashboard;
 
   bool get isShared => sharedWith.isNotEmpty;
 
@@ -348,6 +381,7 @@ class Category extends Equatable {
     CategorySwatch? swatch,
     List<Tracker>? trackers,
     DateTime? Function()? archivedAt,
+    CategoryDashboard? dashboard,
   }) => Category(
     id: id,
     name: name ?? this.name,
@@ -358,8 +392,9 @@ class Category extends Equatable {
     myRole: myRole,
     templateKey: templateKey,
     archivedAt: archivedAt == null ? this.archivedAt : archivedAt(),
+    dashboard: dashboard ?? this.dashboard,
   );
 
   @override
-  List<Object?> get props => [id, name, icon, swatch, trackers, sharedWith, myRole, templateKey, archivedAt];
+  List<Object?> get props => [id, name, icon, swatch, trackers, sharedWith, myRole, templateKey, archivedAt, dashboard];
 }

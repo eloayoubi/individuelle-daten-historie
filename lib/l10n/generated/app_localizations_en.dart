@@ -2158,4 +2158,142 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudRequiredAction => 'See cloud';
+
+  @override
+  String get fieldSummary => 'Summary';
+
+  @override
+  String get fieldSummaryFooter =>
+      'How the category overview sums up a period – e.g. consumption as the new minus the old meter reading.';
+
+  @override
+  String get summarySum => 'Sum';
+
+  @override
+  String get summarySumHint =>
+      'Values in the period added up – recurring amounts prorated per day';
+
+  @override
+  String get summaryDifference => 'Difference';
+
+  @override
+  String get summaryDifferenceHint =>
+      'New minus old value, e.g. consumption from meter readings';
+
+  @override
+  String get summaryAverage => 'Average';
+
+  @override
+  String get summaryAverageHint => 'Mean of the values in the period';
+
+  @override
+  String get summaryLatest => 'Latest value';
+
+  @override
+  String get summaryLatestHint => 'The most recently entered value';
+
+  @override
+  String get summaryMin => 'Lowest value';
+
+  @override
+  String get summaryMinHint => 'The lowest value in the period';
+
+  @override
+  String get summaryMax => 'Highest value';
+
+  @override
+  String get summaryMaxHint => 'The highest value in the period';
+
+  @override
+  String get dashboardTitle => 'Overview';
+
+  @override
+  String get dashboardCustomize => 'Customize';
+
+  @override
+  String get dashboardCost => 'Costs';
+
+  @override
+  String get dashboardConsumption => 'Consumption';
+
+  @override
+  String dashboardFromField(String field) {
+    return 'from $field';
+  }
+
+  @override
+  String get dashboardNoValue => 'No values';
+
+  @override
+  String dashboardVsLastYear(String change) {
+    return '$change vs. last year';
+  }
+
+  @override
+  String dashboardVsLastMonth(String change) {
+    return '$change vs. last month';
+  }
+
+  @override
+  String dashboardVsBefore(String change) {
+    return '$change vs. before';
+  }
+
+  @override
+  String dashboardRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get dashboardEmpty => 'No key figures selected.';
+
+  @override
+  String get periodThisMonth => 'This month';
+
+  @override
+  String get periodLastMonth => 'Last month';
+
+  @override
+  String get periodThisYear => 'This year';
+
+  @override
+  String get periodLastYear => 'Last year';
+
+  @override
+  String get periodLast12Months => '12 months';
+
+  @override
+  String get periodAll => 'All time';
+
+  @override
+  String get periodCustom => 'Range …';
+
+  @override
+  String get periodPickFrom => 'Start of range';
+
+  @override
+  String get periodPickTo => 'End of range';
+
+  @override
+  String get metricsTitle => 'Choose key figures';
+
+  @override
+  String get metricsFooter =>
+      'How a field is summed up – sum, difference, average … – is set in the field settings under “Summary”.';
+
+  @override
+  String get metricsReset => 'Choose automatically';
+
+  @override
+  String get metricsCostAll => 'Category costs';
+
+  @override
+  String get detailAddTrackerHide => 'Hide “Add tracker”';
+
+  @override
+  String get detailAddTrackerHidden =>
+      'Add more trackers with the pencil at the top';
+
+  @override
+  String get detailAddAnotherTracker => 'Add another tracker';
 }

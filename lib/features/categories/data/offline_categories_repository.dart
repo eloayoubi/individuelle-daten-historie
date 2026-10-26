@@ -218,6 +218,9 @@ class OfflineCategoriesRepository implements CategoriesRepository {
       _remote.updateCategory(id, name: name, icon: icon, swatch: swatch);
 
   @override
+  Future<void> updateDashboard(String id, CategoryDashboard dashboard) => _remote.updateDashboard(id, dashboard);
+
+  @override
   Future<void> setCategoryArchived(String id, {required bool archived}) => _remote.setCategoryArchived(id, archived: archived);
 
   @override

@@ -181,6 +181,38 @@ void main() {
         expect(t.takeException(), isNull);
       });
 
+      testWidgets('Übersicht: Zeitraum wechseln, Kennzahlen wählen, „Tracker hinzufügen“ wegklicken', (t) async {
+        // Die Mock-Daten gelten für alle Tests: je Durchlauf eine andere Kategorie.
+        final id = mode == 'hell' ? 'c-wasser' : 'c-heizung';
+        await pumpPage(
+          t,
+          CategoryDetailPage(categoryId: id),
+          theme: theme,
+          size: const Size(390, 1400),
+        );
+        await t.pumpAndSettle();
+        expect(find.text('Übersicht'), findsOneWidget);
+        expect(find.text('Verbrauch'), findsWidgets);
+        await t.tap(find.text('Letztes Jahr'));
+        await t.pumpAndSettle();
+        expect(find.textContaining('31.12.${DateTime.now().year - 1}'), findsOneWidget);
+
+        await t.tap(find.text('Anpassen'));
+        await t.pumpAndSettle();
+        expect(find.text('Kennzahlen wählen'), findsOneWidget);
+        await t.tap(find.text('Speichern'));
+        await t.pumpAndSettle();
+
+        expect(find.text('Tracker hinzufügen'), findsOneWidget);
+        await t.tap(find.bySemanticsLabel('„Tracker hinzufügen“ ausblenden'));
+        await t.pumpAndSettle();
+        expect(find.text('Tracker hinzufügen'), findsNothing);
+        await t.tap(find.bySemanticsLabel('Kategorie bearbeiten'));
+        await t.pumpAndSettle();
+        expect(find.text('Weiteren Tracker hinzufügen'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
       testWidgets('Bearbeiten führt zu Feldern, getrennt nach Verlauf und Details', (t) async {
         await pumpPage(t, const CategoryDetailPage(categoryId: 'c-strom'), theme: theme, size: const Size(390, 1400));
         await t.pumpAndSettle();

@@ -26,7 +26,12 @@ class FieldRow extends StatelessWidget {
     return AppListRow(
       leading: AppIconTile(icon: field.kind.icon, color: context.colors.swatch(swatch)),
       title: field.name,
-      subtitle: context.joinParts([field.role == FieldRole.info ? field.kind.label(context.l10n) : field.role.label(context.l10n), unit]),
+      subtitle: context.joinParts([
+        field.role == FieldRole.info ? field.kind.label(context.l10n) : field.role.label(context.l10n),
+        unit,
+        // Nur eine selbst gewählte Auswertung; der Standard folgt aus dem Zeitverhalten.
+        if (field.summary case final summary? when field.withId('').effectiveSummary == summary) summary.label(context.l10n),
+      ]),
       trailing: trailing,
       onTap: onTap,
     );

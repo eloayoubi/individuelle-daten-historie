@@ -54,6 +54,27 @@ extension FieldRoleX on FieldRole {
   };
 }
 
+/// Beschriftung und Erklärung der Zusammenfassungen für Kennzahlen.
+extension FieldSummaryX on FieldSummary {
+  String label(AppLocalizations l10n) => switch (this) {
+    FieldSummary.sum => l10n.summarySum,
+    FieldSummary.difference => l10n.summaryDifference,
+    FieldSummary.average => l10n.summaryAverage,
+    FieldSummary.latest => l10n.summaryLatest,
+    FieldSummary.min => l10n.summaryMin,
+    FieldSummary.max => l10n.summaryMax,
+  };
+
+  String hint(AppLocalizations l10n) => switch (this) {
+    FieldSummary.sum => l10n.summarySumHint,
+    FieldSummary.difference => l10n.summaryDifferenceHint,
+    FieldSummary.average => l10n.summaryAverageHint,
+    FieldSummary.latest => l10n.summaryLatestHint,
+    FieldSummary.min => l10n.summaryMinHint,
+    FieldSummary.max => l10n.summaryMaxHint,
+  };
+}
+
 /// Fälligkeit wiederkehrender Beträge: monatlich, vierteljährlich, jährlich.
 abstract final class FieldIntervals {
   static const values = [1, 3, 12];

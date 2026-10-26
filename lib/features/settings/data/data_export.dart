@@ -91,6 +91,7 @@ abstract final class DataExport {
                       'intervalMonths': f.intervalMonths,
                       if (f.choices.isNotEmpty) 'choices': f.choices,
                       if (f.formula != null) 'formula': f.formula,
+                      if (f.summary != null) 'summary': f.summary!.name,
                     },
                 ],
                 'entries': [
