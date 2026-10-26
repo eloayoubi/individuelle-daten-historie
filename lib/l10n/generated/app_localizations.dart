@@ -3643,6 +3643,252 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Cloud ansehen'**
   String get cloudRequiredAction;
+
+  /// No description provided for @fieldSummary.
+  ///
+  /// In de, this message translates to:
+  /// **'Auswertung'**
+  String get fieldSummary;
+
+  /// No description provided for @fieldSummaryFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'So fasst die Übersicht der Kategorie die Werte eines Zeitraums zusammen – z. B. Verbrauch als neuer minus alter Zählerstand.'**
+  String get fieldSummaryFooter;
+
+  /// No description provided for @summarySum.
+  ///
+  /// In de, this message translates to:
+  /// **'Summe'**
+  String get summarySum;
+
+  /// No description provided for @summarySumHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Werte im Zeitraum addiert – wiederkehrende Beträge anteilig je Tag'**
+  String get summarySumHint;
+
+  /// No description provided for @summaryDifference.
+  ///
+  /// In de, this message translates to:
+  /// **'Differenz'**
+  String get summaryDifference;
+
+  /// No description provided for @summaryDifferenceHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Neuer minus alter Wert, z. B. Verbrauch aus Zählerständen'**
+  String get summaryDifferenceHint;
+
+  /// No description provided for @summaryAverage.
+  ///
+  /// In de, this message translates to:
+  /// **'Durchschnitt'**
+  String get summaryAverage;
+
+  /// No description provided for @summaryAverageHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Mittel der Werte im Zeitraum'**
+  String get summaryAverageHint;
+
+  /// No description provided for @summaryLatest.
+  ///
+  /// In de, this message translates to:
+  /// **'Letzter Wert'**
+  String get summaryLatest;
+
+  /// No description provided for @summaryLatestHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Der zuletzt eingetragene Wert'**
+  String get summaryLatestHint;
+
+  /// No description provided for @summaryMin.
+  ///
+  /// In de, this message translates to:
+  /// **'Kleinster Wert'**
+  String get summaryMin;
+
+  /// No description provided for @summaryMinHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Der kleinste Wert im Zeitraum'**
+  String get summaryMinHint;
+
+  /// No description provided for @summaryMax.
+  ///
+  /// In de, this message translates to:
+  /// **'Größter Wert'**
+  String get summaryMax;
+
+  /// No description provided for @summaryMaxHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Der größte Wert im Zeitraum'**
+  String get summaryMaxHint;
+
+  /// No description provided for @dashboardTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Übersicht'**
+  String get dashboardTitle;
+
+  /// No description provided for @dashboardCustomize.
+  ///
+  /// In de, this message translates to:
+  /// **'Anpassen'**
+  String get dashboardCustomize;
+
+  /// No description provided for @dashboardCost.
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten'**
+  String get dashboardCost;
+
+  /// No description provided for @dashboardConsumption.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbrauch'**
+  String get dashboardConsumption;
+
+  /// No description provided for @dashboardFromField.
+  ///
+  /// In de, this message translates to:
+  /// **'aus {field}'**
+  String dashboardFromField(String field);
+
+  /// No description provided for @dashboardNoValue.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Werte'**
+  String get dashboardNoValue;
+
+  /// No description provided for @dashboardVsLastYear.
+  ///
+  /// In de, this message translates to:
+  /// **'{change} ggü. Vorjahr'**
+  String dashboardVsLastYear(String change);
+
+  /// No description provided for @dashboardVsLastMonth.
+  ///
+  /// In de, this message translates to:
+  /// **'{change} ggü. Vormonat'**
+  String dashboardVsLastMonth(String change);
+
+  /// No description provided for @dashboardVsBefore.
+  ///
+  /// In de, this message translates to:
+  /// **'{change} ggü. davor'**
+  String dashboardVsBefore(String change);
+
+  /// No description provided for @dashboardRange.
+  ///
+  /// In de, this message translates to:
+  /// **'{from} – {to}'**
+  String dashboardRange(String from, String to);
+
+  /// No description provided for @dashboardEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Kennzahlen gewählt.'**
+  String get dashboardEmpty;
+
+  /// No description provided for @periodThisMonth.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Monat'**
+  String get periodThisMonth;
+
+  /// No description provided for @periodLastMonth.
+  ///
+  /// In de, this message translates to:
+  /// **'Letzter Monat'**
+  String get periodLastMonth;
+
+  /// No description provided for @periodThisYear.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Jahr'**
+  String get periodThisYear;
+
+  /// No description provided for @periodLastYear.
+  ///
+  /// In de, this message translates to:
+  /// **'Letztes Jahr'**
+  String get periodLastYear;
+
+  /// No description provided for @periodLast12Months.
+  ///
+  /// In de, this message translates to:
+  /// **'12 Monate'**
+  String get periodLast12Months;
+
+  /// No description provided for @periodAll.
+  ///
+  /// In de, this message translates to:
+  /// **'Gesamt'**
+  String get periodAll;
+
+  /// No description provided for @periodCustom.
+  ///
+  /// In de, this message translates to:
+  /// **'Zeitraum …'**
+  String get periodCustom;
+
+  /// No description provided for @periodPickFrom.
+  ///
+  /// In de, this message translates to:
+  /// **'Beginn des Zeitraums'**
+  String get periodPickFrom;
+
+  /// No description provided for @periodPickTo.
+  ///
+  /// In de, this message translates to:
+  /// **'Ende des Zeitraums'**
+  String get periodPickTo;
+
+  /// No description provided for @metricsTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Kennzahlen wählen'**
+  String get metricsTitle;
+
+  /// No description provided for @metricsFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Wie ein Feld zusammengefasst wird – Summe, Differenz, Durchschnitt … –, stellst du in den Feldeinstellungen unter „Auswertung“ ein.'**
+  String get metricsFooter;
+
+  /// No description provided for @metricsReset.
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch wählen'**
+  String get metricsReset;
+
+  /// No description provided for @metricsCostAll.
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten der Kategorie'**
+  String get metricsCostAll;
+
+  /// No description provided for @detailAddTrackerHide.
+  ///
+  /// In de, this message translates to:
+  /// **'„Tracker hinzufügen“ ausblenden'**
+  String get detailAddTrackerHide;
+
+  /// No description provided for @detailAddTrackerHidden.
+  ///
+  /// In de, this message translates to:
+  /// **'Weitere Tracker fügst du über den Stift oben hinzu'**
+  String get detailAddTrackerHidden;
+
+  /// No description provided for @detailAddAnotherTracker.
+  ///
+  /// In de, this message translates to:
+  /// **'Weiteren Tracker hinzufügen'**
+  String get detailAddAnotherTracker;
 }
 
 class _AppLocalizationsDelegate

@@ -244,6 +244,25 @@ class _EditorViewState extends State<_EditorView> {
                   ),
                 ),
               ],
+              if (s.summaries.isNotEmpty) ...[
+                SectionHeader(title: l10n.fieldSummary),
+                AppListGroup(
+                  children: [
+                    for (final summary in s.summaries)
+                      AppListRow(
+                        title: summary.label(l10n),
+                        subtitle: summary.hint(l10n),
+                        trailing: summary == s.effectiveSummary ? Icon(CupertinoIcons.checkmark_alt, size: 20, color: c.accent) : null,
+                        chevron: false,
+                        onTap: () => cubit.setSummary(summary),
+                      ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, 0),
+                  child: AppText(l10n.fieldSummaryFooter, style: (t) => t.footnote, color: c.textSecondary),
+                ),
+              ],
               if (s.kind == FieldKind.choice) ...[
                 SectionHeader(title: l10n.fieldChoices),
                 if (s.choices.isNotEmpty) ...[

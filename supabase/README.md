@@ -36,11 +36,11 @@ erDiagram
 | Tabelle | Inhalt |
 |---|---|
 | `profiles` | ein Eintrag je Auth-Nutzer (auch anonym), Anzeigename fürs Teilen. Legt der Trigger `on_auth_user_created` an. |
-| `categories` | Strom, Miete, Auto … – Einheit des Teilens. `icon`/`swatch` sind Schlüssel aus der App, `template_key` die Vorlage. |
+| `categories` | Strom, Miete, Auto … – Einheit des Teilens. `icon`/`swatch` sind Schlüssel aus der App, `template_key` die Vorlage. `dashboard` (jsonb) hält die gewählten Kennzahlen der Übersicht und ob „Tracker hinzufügen“ unten steht; ändern dürfen owner und editor. |
 | `category_members` | Rolle je Person: `owner` (alles, teilt, löscht), `editor` (Tracker, Felder, Einträge), `viewer` (nur lesen). Der owner kommt per Trigger dazu. `sort` ist die Reihenfolge **je Person**: geteilte Kategorien sortiert jeder für sich. |
 | `category_invites` | Einladungscode (10 Zeichen, 7 Tage, einmalig) – über `create_category_invite` / `accept_category_invite`. |
 | `trackers` | ein Zähler, Vertrag, Auto … innerhalb einer Kategorie. |
-| `fields` | frei definierte Felder: `kind` (Text, Zahl, Betrag, Prozent, Datum, Ja/Nein, Auswahl, Formel) und `role` (Zeitverhalten: Stammdatum, Momentwert, Zählerstand, Arbeitspreis, wiederkehrender/einmaliger Betrag, Stichtag, Abschlag). Formeln stehen als Ausdruck in `formula` und werden in der App gerechnet. Ein Check erzwingt passende Kombinationen. |
+| `fields` | frei definierte Felder: `kind` (Text, Zahl, Betrag, Prozent, Datum, Ja/Nein, Auswahl, Formel) und `role` (Zeitverhalten: Stammdatum, Momentwert, Zählerstand, Arbeitspreis, wiederkehrender/einmaliger Betrag, Stichtag, Abschlag). Formeln stehen als Ausdruck in `formula` und werden in der App gerechnet. Ein Check erzwingt passende Kombinationen. `summary` (sum, difference, average, latest, min, max; leer = Standard des Zeitverhaltens) bestimmt, wie Kennzahlen das Feld über einen Zeitraum zusammenfassen. |
 | `entries` | ein Eintrag zu einem Datum, optional Abrechnungszeitraum, `meter_change` beim Zählerwechsel. |
 | `trackers.included_in` | Kategorie, in deren Kosten der Tracker schon steckt (z. B. Wasser in den Nebenkosten). Die App zählt ihn dann in keiner Summe. Nie die eigene Kategorie; fällt die Ziel-Kategorie weg, wird der Wert `null`. |
 | `entry_values` | typisierte Werte (`num`, `txt`, `dat`, `flag` – genau eine gesetzt). Ein Trigger prüft, dass Feld und Eintrag zum selben Tracker gehören und die Spalte zum Feldtyp passt. Formeln werden in der App berechnet, nicht gespeichert. |

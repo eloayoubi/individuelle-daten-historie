@@ -11,6 +11,7 @@ abstract final class TrackingCodec {
     'myRole': c.myRole.name,
     'templateKey': c.templateKey,
     'archivedAt': c.archivedAt?.toIso8601String(),
+    'dashboard': c.dashboard.toJson(),
     'sharedWith': [
       for (final m in c.sharedWith) {'userId': m.userId, 'name': m.name, 'role': m.role.name},
     ],
@@ -28,6 +29,7 @@ abstract final class TrackingCodec {
       final String iso => DateTime.parse(iso),
       _ => null,
     },
+    dashboard: CategoryDashboard.fromJson(j['dashboard']),
     sharedWith: [
       for (final m in (j['sharedWith']! as List).cast<Map<String, Object?>>())
         CategoryMember(userId: m['userId']! as String, name: m['name']! as String, role: MemberRole.values.byName(m['role']! as String)),
@@ -62,6 +64,7 @@ abstract final class TrackingCodec {
     'intervalMonths': f.intervalMonths,
     'choices': f.choices,
     'formula': f.formula,
+    'summary': f.summary?.name,
   };
 
   static FieldDefinition fieldFrom(Map<String, Object?> j) => FieldDefinition(
@@ -75,6 +78,7 @@ abstract final class TrackingCodec {
     intervalMonths: (j['intervalMonths']! as num).toInt(),
     choices: [for (final c in j['choices']! as List) c as String],
     formula: j['formula'] as String?,
+    summary: FieldSummary.values.asNameMap()[j['summary']],
   );
 
   static Map<String, Object?> entry(Entry e) => {

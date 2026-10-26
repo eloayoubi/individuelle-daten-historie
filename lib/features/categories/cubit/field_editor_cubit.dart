@@ -55,6 +55,10 @@ class FieldEditorCubit extends Cubit<FieldEditorState> {
 
   void setFormula(String formula) => emit(state.copyWith(formula: formula));
 
+  void setSummary(FieldSummary summary) {
+    if (state.summaries.contains(summary)) emit(state.copyWith(summary: () => summary));
+  }
+
   void addChoice(String choice) {
     final value = choice.trim();
     if (value.isEmpty || state.choices.contains(value)) return;

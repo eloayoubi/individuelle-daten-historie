@@ -78,6 +78,7 @@ Features heute:
 - `cost_engine.dart`: Verbrauch, Kosten nach Herkunft, Trend, Spanne, Abschläge.
 - `formula.dart`: eigener Parser für Formel-Felder.
 - `formulas.dart`: Formel-Werte je Eintrag (`verbrauch`, `tage`, `monate`, Feld-Kurznamen).
+- `dashboard_figures.dart`: Kennzahlen der Kategorie-Übersicht je Zeitraum (Dieser Monat … Gesamt, eigener Zeitraum) mit Vergleich zum Zeitraum davor. Jedes Feld mit Zahlen hat eine Auswertung (`FieldSummary`: Summe, Differenz = neuer minus alter Wert, Durchschnitt, letzter, kleinster, größter Wert), Standard aus dem Zeitverhalten. Welche Kennzahlen eine Kategorie zeigt, steht in `Category.dashboard` (für alle Mitglieder), ohne Wahl Kosten und Verbrauch je Zähler.
 
 Ein Tracker kann seine Kosten einer anderen Kategorie zuordnen (`includedIn`, z. B. Wasser in den Nebenkosten): gezeigt, nie doppelt gezählt.
 

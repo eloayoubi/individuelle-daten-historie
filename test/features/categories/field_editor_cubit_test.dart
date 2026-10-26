@@ -210,4 +210,37 @@ void main() {
       expect(cubit.state.role, FieldRole.snapshot);
     });
   });
+
+  group('Auswertung', () {
+    test('Zählerstand: Standard ist die Differenz, „Letzter Wert“ wird gespeichert', () {
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't-strom'))
+        ..setKind(FieldKind.number)
+        ..setRole(FieldRole.meterReading);
+      expect(cubit.state.summaries, [FieldSummary.difference, FieldSummary.latest]);
+      expect(cubit.state.effectiveSummary, FieldSummary.difference);
+      expect(cubit.state.draft.summary, isNull);
+      cubit.setSummary(FieldSummary.latest);
+      expect(cubit.state.draft.summary, FieldSummary.latest);
+    });
+
+    test('passt die Wahl nach einem Wechsel nicht mehr, gilt wieder der Standard', () {
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't-strom'))
+        ..setKind(FieldKind.number)
+        ..setRole(FieldRole.snapshot)
+        ..setSummary(FieldSummary.sum)
+        ..setRole(FieldRole.meterReading);
+      expect(cubit.state.effectiveSummary, FieldSummary.difference);
+      expect(cubit.state.draft.summary, isNull);
+      cubit.setKind(FieldKind.text);
+      expect(cubit.state.summaries, isEmpty);
+    });
+
+    test('unpassende Wahl wird ignoriert', () {
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't-strom'))
+        ..setKind(FieldKind.currency)
+        ..setRole(FieldRole.unitPrice)
+        ..setSummary(FieldSummary.sum);
+      expect(cubit.state.summary, isNull);
+    });
+  });
 }

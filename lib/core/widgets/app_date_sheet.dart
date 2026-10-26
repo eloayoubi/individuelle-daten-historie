@@ -13,11 +13,13 @@ class AppDateSheet extends StatefulWidget {
   final DateTime? minimum;
   final DateTime? maximum;
 
-  static Future<DateTime?> show(BuildContext context, {required DateTime initial, DateTime? minimum, DateTime? maximum}) => AppSheet.show<DateTime>(
-    context,
-    title: context.l10n.datePickerTitle,
-    child: AppDateSheet(initial: initial, minimum: minimum, maximum: maximum),
-  );
+  /// [title] statt „Datum wählen“, z. B. „Beginn des Zeitraums“.
+  static Future<DateTime?> show(BuildContext context, {required DateTime initial, DateTime? minimum, DateTime? maximum, String? title}) =>
+      AppSheet.show<DateTime>(
+        context,
+        title: title ?? context.l10n.datePickerTitle,
+        child: AppDateSheet(initial: initial, minimum: minimum, maximum: maximum),
+      );
 
   @override
   State<AppDateSheet> createState() => _AppDateSheetState();

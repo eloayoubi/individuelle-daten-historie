@@ -52,6 +52,9 @@ class StorageCategoriesRepository implements CategoriesRepository {
       _active.updateCategory(id, name: name, icon: icon, swatch: swatch);
 
   @override
+  Future<void> updateDashboard(String id, CategoryDashboard dashboard) => _active.updateDashboard(id, dashboard);
+
+  @override
   Future<void> setCategoryArchived(String id, {required bool archived}) => _active.setCategoryArchived(id, archived: archived);
 
   @override

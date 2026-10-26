@@ -26,6 +26,7 @@ class FieldEditorState extends Equatable {
     this.intervalMonths = 1,
     this.choices = const [],
     this.formula = '',
+    this.summary,
     this.saving = false,
     this.event,
   });
@@ -46,6 +47,7 @@ class FieldEditorState extends Equatable {
     factorText: _formatFactor(field?.factor ?? 1),
     intervalMonths: field?.intervalMonths ?? 1,
     choices: field?.choices ?? const [],
+    summary: field?.summary,
   );
 
   /// Letzter Arbeitspreis eines Versorgungszählers mit Rechnungen: Ohne ihn wären die Rechnungen
@@ -88,6 +90,9 @@ class FieldEditorState extends Equatable {
 
   /// Ausdruck bei [FieldKind.formula].
   final String formula;
+
+  /// Gewählte Zusammenfassung für Kennzahlen; `null` = Standard des Zeitverhaltens.
+  final FieldSummary? summary;
   final bool saving;
   final FieldEditorEvent? event;
 
@@ -114,6 +119,12 @@ class FieldEditorState extends Equatable {
 
   bool get canArchive => !isNew && !keepsBills;
 
+  /// Zusammenfassungen, die zu Typ und Zeitverhalten passen (leer: Feld ohne Kennzahl).
+  List<FieldSummary> get summaries => kind.storage == FieldStorage.number || kind == FieldKind.formula ? role.summaries : const [];
+
+  /// Gilt gerade: die gewählte, wenn sie passt, sonst die erste passende.
+  FieldSummary? get effectiveSummary => summaries.contains(summary) ? summary : summaries.firstOrNull;
+
   FieldDraft get draft {
     final meter = role == FieldRole.meterReading;
     return FieldDraft(
@@ -126,6 +137,7 @@ class FieldEditorState extends Equatable {
       intervalMonths: role == FieldRole.recurringCost ? intervalMonths : 1,
       choices: kind == FieldKind.choice ? choices : const [],
       formula: kind == FieldKind.formula ? formula.trim() : null,
+      summary: summaries.contains(summary) ? summary : null,
     );
   }
 
@@ -144,6 +156,7 @@ class FieldEditorState extends Equatable {
     int? intervalMonths,
     List<String>? choices,
     String? formula,
+    FieldSummary? Function()? summary,
     bool? saving,
     FieldEditorEvent? event,
   }) => FieldEditorState(
@@ -162,10 +175,11 @@ class FieldEditorState extends Equatable {
     factorText: factorText ?? this.factorText,
     intervalMonths: intervalMonths ?? this.intervalMonths,
     choices: choices ?? this.choices,
+    summary: summary == null ? this.summary : summary(),
     saving: saving ?? this.saving,
     event: event,
   );
 
   @override
-  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, keepsMeter, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, saving, event];
+  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, keepsMeter, tracker, name, kind, role, unit, consumptionUnit, factorText, intervalMonths, choices, formula, summary, saving, event];
 }

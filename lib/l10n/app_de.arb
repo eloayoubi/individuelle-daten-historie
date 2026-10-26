@@ -1305,5 +1305,84 @@
   "settingsStorageFooterCloud": "Deine Daten liegen in der Cloud (Rechenzentrum in Frankfurt) und als Kopie auf diesem Gerät.",
   "cloudRequiredTitle": "Dafür brauchst du die Cloud",
   "cloudRequiredShare": "Zum Teilen müssen deine Daten in der Cloud liegen. Lokal bleiben sie nur auf diesem Gerät.",
-  "cloudRequiredAction": "Cloud ansehen"
+  "cloudRequiredAction": "Cloud ansehen",
+  "fieldSummary": "Auswertung",
+  "fieldSummaryFooter": "So fasst die Übersicht der Kategorie die Werte eines Zeitraums zusammen – z. B. Verbrauch als neuer minus alter Zählerstand.",
+  "summarySum": "Summe",
+  "summarySumHint": "Werte im Zeitraum addiert – wiederkehrende Beträge anteilig je Tag",
+  "summaryDifference": "Differenz",
+  "summaryDifferenceHint": "Neuer minus alter Wert, z. B. Verbrauch aus Zählerständen",
+  "summaryAverage": "Durchschnitt",
+  "summaryAverageHint": "Mittel der Werte im Zeitraum",
+  "summaryLatest": "Letzter Wert",
+  "summaryLatestHint": "Der zuletzt eingetragene Wert",
+  "summaryMin": "Kleinster Wert",
+  "summaryMinHint": "Der kleinste Wert im Zeitraum",
+  "summaryMax": "Größter Wert",
+  "summaryMaxHint": "Der größte Wert im Zeitraum",
+  "dashboardTitle": "Übersicht",
+  "dashboardCustomize": "Anpassen",
+  "dashboardCost": "Kosten",
+  "dashboardConsumption": "Verbrauch",
+  "dashboardFromField": "aus {field}",
+  "@dashboardFromField": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardNoValue": "Keine Werte",
+  "dashboardVsLastYear": "{change} ggü. Vorjahr",
+  "@dashboardVsLastYear": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardVsLastMonth": "{change} ggü. Vormonat",
+  "@dashboardVsLastMonth": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardVsBefore": "{change} ggü. davor",
+  "@dashboardVsBefore": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardRange": "{from} – {to}",
+  "@dashboardRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardEmpty": "Keine Kennzahlen gewählt.",
+  "periodThisMonth": "Dieser Monat",
+  "periodLastMonth": "Letzter Monat",
+  "periodThisYear": "Dieses Jahr",
+  "periodLastYear": "Letztes Jahr",
+  "periodLast12Months": "12 Monate",
+  "periodAll": "Gesamt",
+  "periodCustom": "Zeitraum …",
+  "periodPickFrom": "Beginn des Zeitraums",
+  "periodPickTo": "Ende des Zeitraums",
+  "metricsTitle": "Kennzahlen wählen",
+  "metricsFooter": "Wie ein Feld zusammengefasst wird – Summe, Differenz, Durchschnitt … –, stellst du in den Feldeinstellungen unter „Auswertung“ ein.",
+  "metricsReset": "Automatisch wählen",
+  "metricsCostAll": "Kosten der Kategorie",
+  "detailAddTrackerHide": "„Tracker hinzufügen“ ausblenden",
+  "detailAddTrackerHidden": "Weitere Tracker fügst du über den Stift oben hinzu",
+  "detailAddAnotherTracker": "Weiteren Tracker hinzufügen"
 }

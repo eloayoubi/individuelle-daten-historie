@@ -1,16 +1,38 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../../../../core/core.dart';
 import 'appearance_pickers.dart';
 
-/// Name, Symbol und Farbe einer Kategorie ändern. Liefert die neuen Werte oder `null`.
+/// Ergebnis des Bearbeiten-Sheets: neue Werte oder der Wunsch, einen weiteren Tracker anzulegen.
+sealed class CategoryEditResult {
+  const CategoryEditResult();
+}
+
+class CategoryEdited extends CategoryEditResult {
+  const CategoryEdited({required this.name, required this.icon, required this.swatch});
+
+  final String name;
+  final CategoryIcon icon;
+  final CategorySwatch swatch;
+}
+
+class CategoryAddTracker extends CategoryEditResult {
+  const CategoryAddTracker();
+}
+
+/// Name, Symbol und Farbe einer Kategorie ändern; mit [canAddTracker] darunter „Weiteren Tracker
+/// hinzufügen“. Liefert das Ergebnis oder `null` bei Abbruch.
 class CategoryEditSheet extends StatefulWidget {
-  const CategoryEditSheet({super.key, required this.category});
+  const CategoryEditSheet({super.key, required this.category, this.canAddTracker = false});
 
   final Category category;
+  final bool canAddTracker;
 
-  static Future<({String name, CategoryIcon icon, CategorySwatch swatch})?> show(BuildContext context, Category category) =>
-      AppSheet.show(context, title: context.l10n.detailEditCategory, child: CategoryEditSheet(category: category));
+  static Future<CategoryEditResult?> show(BuildContext context, Category category, {bool canAddTracker = false}) => AppSheet.show<CategoryEditResult>(
+    context,
+    title: context.l10n.detailEditCategory,
+    child: CategoryEditSheet(category: category, canAddTracker: canAddTracker),
+  );
 
   @override
   State<CategoryEditSheet> createState() => _CategoryEditSheetState();
@@ -63,8 +85,17 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
         const SizedBox(height: Spacing.xl),
         AppButton(
           label: l10n.actionSave,
-          onPressed: _name.text.trim().isEmpty ? null : () => Navigator.of(context).pop((name: _name.text.trim(), icon: _icon, swatch: _swatch)),
+          onPressed: _name.text.trim().isEmpty ? null : () => Navigator.of(context).pop(CategoryEdited(name: _name.text.trim(), icon: _icon, swatch: _swatch)),
         ),
+        if (widget.canAddTracker) ...[
+          const SizedBox(height: Spacing.s),
+          AppButton(
+            label: l10n.detailAddAnotherTracker,
+            icon: CupertinoIcons.plus,
+            variant: AppButtonVariant.tinted,
+            onPressed: () => Navigator.of(context).pop(const CategoryAddTracker()),
+          ),
+        ],
       ],
     );
   }

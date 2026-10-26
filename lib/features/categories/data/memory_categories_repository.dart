@@ -76,6 +76,12 @@ class MemoryCategoriesRepository implements CategoriesRepository {
   }
 
   @override
+  Future<void> updateDashboard(String id, CategoryDashboard dashboard) async {
+    await ready();
+    updateCategoryWith(id, (c) => c.copyWith(dashboard: dashboard));
+  }
+
+  @override
   Future<void> setCategoryArchived(String id, {required bool archived}) async {
     await ready();
     final category = items.firstWhere((c) => c.id == id);
