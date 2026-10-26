@@ -119,7 +119,7 @@ Die Rechnung läuft Tag für Tag:
 
 1. **Verbrauch:** Zwischen zwei Zählerständen wird linear verteilt. So ergibt sich auch ein sauberes Kalenderjahr, obwohl selten am 1. Januar abgelesen wird.
 2. **Arbeitspreis:** Der Verbrauch des Tages wird mit dem Preis multipliziert, der an diesem Tag gilt.
-3. **Wiederkehrende Beträge:** Sie werden anteilig auf die Tage des Monats verteilt.
+3. **Wiederkehrende Beträge:** Sie zählen voll für jeden Monat, ab dem Monat ihres Datums (die am 26. eingetragene Miete gilt schon für den ganzen Monat); gebucht am Monatsersten.
 4. **Einmalige Beträge:** Sie zählen an ihrem Tag.
 
 Damit gelten auch Preiswechsel mitten im Monat taggenau.

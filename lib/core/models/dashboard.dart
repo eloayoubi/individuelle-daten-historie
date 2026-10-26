@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 /// Wie die Werte eines Felds über einen Zeitraum zusammengefasst werden – Grundlage der Kennzahlen
 /// im Dashboard einer Kategorie. Welche zu einem Feld passen, steht in `FieldRoleSummaries`.
 enum FieldSummary {
-  /// Alle Werte im Zeitraum addiert (Tanken, Nachzahlungen); wiederkehrende Beträge anteilig je Tag.
+  /// Alle Werte im Zeitraum addiert (Tanken, Nachzahlungen); wiederkehrende Beträge voll je Monat.
   sum,
 
   /// Neuer minus alter Wert: Wert am Ende des Zeitraums minus Wert am Anfang (Verbrauch aus

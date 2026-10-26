@@ -2187,7 +2187,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get summarySumHint =>
-      'Werte im Zeitraum addiert – wiederkehrende Beträge anteilig je Tag';
+      'Werte im Zeitraum addiert – wiederkehrende Beträge voll je Monat';
 
   @override
   String get summaryDifference => 'Differenz';
