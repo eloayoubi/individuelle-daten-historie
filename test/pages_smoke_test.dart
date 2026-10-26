@@ -21,10 +21,12 @@ import 'package:kostenkurve/features/categories/view/field_editor_page.dart';
 import 'package:kostenkurve/features/categories/view/tracker_setup_page.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
+import 'package:kostenkurve/features/entries/data/tracker_history.dart';
 import 'package:kostenkurve/features/entries/view/entry_form_page.dart';
 import 'package:kostenkurve/features/entries/view/entries_page.dart';
 import 'package:kostenkurve/features/entries/view/price_history_page.dart';
 import 'package:kostenkurve/features/entries/view/tracker_page.dart';
+import 'package:kostenkurve/features/entries/view/widgets/entry_table.dart';
 import 'package:kostenkurve/features/home/view/home_page.dart';
 import 'package:kostenkurve/features/insights/view/insights_page.dart';
 import 'package:kostenkurve/features/home/view/widgets/quick_add_sheet.dart';
@@ -222,6 +224,17 @@ void main() {
         expect(find.text('Werte mit Verlauf'), findsOneWidget);
         expect(find.text('Details'), findsOneWidget);
         expect(find.text('Feld hinzufügen'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Übersicht: Verbrauch antippen öffnet den Verlauf im Reiter Verbrauch', (t) async {
+        await pumpPage(t, const CategoryDetailPage(categoryId: 'c-strom'), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Verbrauch').first);
+        await t.pumpAndSettle();
+        expect(find.byType(TrackerPage), findsOneWidget);
+        final cubit = BlocProvider.of<TrackerCubit>(t.element(find.byType(EntryTable).first));
+        expect(cubit.state.metric, HistoryMetric.consumption);
         expect(t.takeException(), isNull);
       });
 

@@ -77,6 +77,17 @@ void main() {
     );
 
     blocTest<TrackerCubit, TrackerState>(
+      'öffnet im gewünschten Reiter',
+      build: () => TrackerCubit(
+        MockCategoriesRepository(),
+        const TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom', metric: HistoryMetric.consumption),
+        now: () => now,
+      ),
+      act: (cubit) => cubit.load(),
+      expect: () => [isA<TrackerState>().having((s) => s.metric, 'metric', HistoryMetric.consumption).having((s) => s.history?.unit, 'unit', 'kWh')],
+    );
+
+    blocTest<TrackerCubit, TrackerState>(
       'meldet einen fehlenden Tracker',
       build: () => TrackerCubit(MockCategoriesRepository(), const TrackerArgs(categoryId: 'c-strom', trackerId: 'weg'), now: () => now),
       act: (cubit) => cubit.load(),

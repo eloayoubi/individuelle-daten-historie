@@ -10,12 +10,15 @@ import '../data/tracker_history.dart';
 
 part 'tracker_state.dart';
 
-/// Welcher Tracker gezeigt wird.
+/// Welcher Tracker gezeigt wird – auf Wunsch gleich mit Kosten oder Verbrauch (aus der Übersicht).
 class TrackerArgs {
-  const TrackerArgs({required this.categoryId, required this.trackerId});
+  const TrackerArgs({required this.categoryId, required this.trackerId, this.metric});
 
   final String categoryId;
   final String trackerId;
+
+  /// Kennzahl beim Öffnen; ohne sie (oder wenn es sie nicht gibt) die übliche.
+  final HistoryMetric? metric;
 }
 
 /// Verlauf eines Trackers: Kennzahl wählen (Kosten oder Verbrauch), zwölf Monate, Details setzen,
@@ -52,7 +55,11 @@ class TrackerCubit extends Cubit<TrackerState> {
       // Ohne Preise gibt es noch keine Kosten – dann zuerst den Verbrauch zeigen.
       final missingPrice = _missingPrice(raw, metrics);
       final preferred = missingPrice && metrics.contains(HistoryMetric.consumption) ? HistoryMetric.consumption : metrics.firstOrNull;
-      final metric = metrics.contains(state.metric) ? state.metric : preferred;
+      final metric = metrics.contains(state.metric)
+          ? state.metric
+          : metrics.contains(args.metric)
+          ? args.metric
+          : preferred;
       emit(
         TrackerState(
           status: TrackerStatus.ready,

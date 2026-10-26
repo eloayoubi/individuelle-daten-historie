@@ -4,11 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/core.dart';
 import '../../../../core/utils/dashboard_figures.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../entries/data/tracker_history.dart';
+import '../../../entries/view/tracker_page.dart';
 import '../../cubit/category_detail_cubit.dart';
 
 /// Übersicht einer Kategorie: Zeitraum wählen, darunter die Kennzahlen als Kacheln – Kosten,
 /// Verbrauch und jedes Feld nach seiner Auswertung (Summe, Differenz …). owner und editor wählen
-/// unter „Anpassen“, welche Kennzahlen erscheinen.
+/// unter „Anpassen“, welche Kennzahlen erscheinen. Eine Kachel antippen öffnet den Verlauf ihres
+/// Trackers, bei Kosten und Verbrauch gleich im passenden Reiter.
 class CategoryDashboardSection extends StatelessWidget {
   const CategoryDashboardSection({super.key, required this.category, required this.state});
 
@@ -36,6 +39,32 @@ class CategoryDashboardSection extends StatelessWidget {
     final to = await AppDateSheet.show(context, title: l10n.periodPickTo, initial: today, minimum: from, maximum: today);
     if (to == null) return;
     cubit.setPeriod(DashboardPeriod.custom, from: DateTime.utc(from.year, from.month, from.day), to: DateTime.utc(to.year, to.month, to.day));
+  }
+
+  /// Kosten der ganzen Kategorie gehören zu mehreren Trackern – dann erst den Tracker wählen.
+  Future<void> _open(BuildContext context, DashboardFigure figure) async {
+    final metric = figure.metric.isCost
+        ? HistoryMetric.cost
+        : figure.isConsumption
+        ? HistoryMetric.consumption
+        : null;
+    final candidates = switch (figure.tracker) {
+      final Tracker t => [t],
+      null when figure.metric.isCost => [for (final t in category.trackers) if (TrackerHistory.metricsFor(t).contains(HistoryMetric.cost)) t],
+      null => const <Tracker>[],
+    };
+    final tracker = candidates.length <= 1
+        ? candidates.firstOrNull
+        : await AppSheet.show<Tracker>(
+            context,
+            title: context.l10n.dashboardCost,
+            child: AppListGroup(
+              children: [
+                for (final t in candidates) AppListRow(title: t.name, onTap: () => Navigator.of(context).pop(t)),
+              ],
+            ),
+          );
+    if (tracker != null && context.mounted) await TrackerPage.open(context, categoryId: category.id, trackerId: tracker.id, metric: metric);
   }
 
   Future<void> _customize(BuildContext context) async {
@@ -95,7 +124,7 @@ class CategoryDashboardSection extends StatelessWidget {
                     for (final figure in state.figures)
                       SizedBox(
                         width: state.figures.length == 1 ? constraints.maxWidth : width,
-                        child: _FigureTile(category: category, figure: figure, period: state.period),
+                        child: _FigureTile(category: category, figure: figure, period: state.period, onTap: () => _open(context, figure)),
                       ),
                   ],
                 );
@@ -108,11 +137,12 @@ class CategoryDashboardSection extends StatelessWidget {
 }
 
 class _FigureTile extends StatelessWidget {
-  const _FigureTile({required this.category, required this.figure, required this.period});
+  const _FigureTile({required this.category, required this.figure, required this.period, required this.onTap});
 
   final Category category;
   final DashboardFigure figure;
   final DashboardPeriod period;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +160,8 @@ class _FigureTile extends StatelessWidget {
     };
     return AppCard(
       padding: const EdgeInsets.all(Spacing.m),
+      onTap: onTap,
+      semanticLabel: title,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 2,
