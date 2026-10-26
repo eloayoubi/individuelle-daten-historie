@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/core/di/lookup.dart';
 import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/core/theme/app_theme.dart';
+import 'package:kostenkurve/core/theme/dimensions.dart';
 import 'package:kostenkurve/core/widgets/widgets.dart';
 import 'package:kostenkurve/features/account/view/account_page.dart';
 import 'package:kostenkurve/features/auth/data/auth_repository.dart';
@@ -22,6 +23,7 @@ import 'package:kostenkurve/features/categories/view/field_editor_page.dart';
 import 'package:kostenkurve/features/categories/view/tracker_setup_page.dart';
 import 'package:kostenkurve/features/categories/view/widgets/category_dashboard.dart';
 import 'package:kostenkurve/features/categories/view/widgets/category_sheets.dart';
+import 'package:kostenkurve/features/categories/view/widgets/item_sheets.dart';
 import 'package:kostenkurve/features/categories/view/widgets/meter_sheet.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
@@ -449,7 +451,48 @@ void main() {
         await t.tap(find.text('Kategorie anlegen'));
         await t.pumpAndSettle();
         expect(find.byType(CategoryDetailPage), findsOneWidget);
-        expect(find.text('Streaming'), findsOneWidget);
+        expect(find.text('Noch keine Abos'), findsOneWidget);
+        expect(find.widgetWithText(AppButton, 'Abo hinzufügen'), findsOneWidget);
+        expect(find.text('Wert eintragen'), findsNothing);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Abo hinzufügen: Vorschlag wählen, Preis, erscheint unter seiner Art; Wert eintragen fragt nach Art', (t) async {
+        // Die Mock-Daten gelten für alle Tests: je Durchgang ein anderes Abo.
+        final (name, group) = mode == 'hell' ? ('Disney+', 'Streaming') : ('Spotify', 'Musik & Hörbücher');
+        await pumpPage(t, const CategoryDetailPage(categoryId: 'c-abos'), theme: theme, size: const Size(390, 2400));
+        await t.pumpAndSettle();
+        expect(find.text('Netflix'), findsOneWidget);
+        expect(find.text('Fitness & Sport'), findsOneWidget);
+        await t.tap(find.widgetWithText(AppButton, 'Abo hinzufügen'));
+        await t.pumpAndSettle();
+        expect(find.byType(ItemSheet), findsOneWidget);
+        // Netflix gibt es schon: kein Vorschlag mehr.
+        expect(find.descendant(of: find.byType(ItemSheet), matching: find.text('Netflix')), findsNothing);
+        await t.tap(find.descendant(of: find.byType(ItemSheet), matching: find.text(name)));
+        await t.pumpAndSettle();
+        await t.enterText(find.widgetWithText(TextField, 'Preis'), '9,99');
+        await t.pumpAndSettle();
+        await t.tap(find.descendant(of: find.byType(ItemSheet), matching: find.widgetWithText(AppButton, 'Abo hinzufügen')));
+        await t.pumpAndSettle();
+        expect(find.byType(ItemSheet), findsNothing);
+        expect(find.text(name), findsOneWidget);
+        expect(find.text(group), findsWidgets);
+        expect(find.text('9,99 €/Monat'), findsWidgets);
+
+        // Der Toast „… hinzugefügt“ liegt über der Aktionsleiste: erst abwarten.
+        await t.pump(Motion.toast);
+        await t.pumpAndSettle();
+        await t.tap(find.text('Wert eintragen'));
+        await t.pumpAndSettle();
+        expect(find.byType(TrackerPickerSheet), findsOneWidget);
+        final picker = find.byType(TrackerPickerSheet);
+        expect(find.descendant(of: picker, matching: find.text('Streaming')), findsOneWidget);
+        expect(find.descendant(of: picker, matching: find.text('Fitness & Sport')), findsOneWidget);
+        await t.tap(find.descendant(of: picker, matching: find.text('Fitnessstudio')));
+        await t.pumpAndSettle();
+        expect(find.byType(EntryFormPage), findsOneWidget);
+        expect(find.text('Fitnessstudio'), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 

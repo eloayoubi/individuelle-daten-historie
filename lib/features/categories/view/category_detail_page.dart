@@ -11,15 +11,20 @@ import '../../entries/view/widgets/tracker_details.dart';
 import '../../sharing/view/share_page.dart';
 import '../../storage/view/cloud_flow.dart';
 import '../cubit/category_detail_cubit.dart';
+import '../data/category_templates.dart';
+import '../data/tracker_groups.dart';
 import 'tracker_setup_page.dart';
 import 'widgets/category_dashboard.dart';
 import 'widgets/category_sheets.dart';
+import 'widgets/item_sheets.dart';
 import 'widgets/meter_sheet.dart';
 
 /// Eine Kategorie mit ihren Trackern – oben die Übersicht (Kennzahlen im gewählten Zeitraum), je
 /// Tracker der Verlauf mit der Kennzahl des Jahres und die Einstellungen (Vertrag bzw. Details). Die
-/// Hauptaktion „Wert eintragen“ steht fest unten, bei mehreren Trackern fragt sie, wofür; darunter
-/// „Tracker hinzufügen“, bis es weggeklickt wird. Der Stift oben bündelt das Bearbeiten: Darstellung,
+/// Hauptaktion „Wert eintragen“ steht fest unten, bei mehreren Trackern fragt sie, wofür (nach Art
+/// gruppiert); darunter „Tracker hinzufügen“, bis es weggeklickt wird. Kategorien aus gleichartigen
+/// Trackern (Abos, Versicherungen: [ItemTemplate]) zeigen sie als kompakte Liste je Art und bieten
+/// statt „Tracker hinzufügen“ dauerhaft „Abo hinzufügen“ an. Der Stift oben bündelt das Bearbeiten: Darstellung,
 /// Felder und Einstellungen je Tracker (auch über „Bearbeiten“ am Tracker), Tracker hinzufügen,
 /// Archivieren und Löschen. owner und editor bearbeiten, viewer lesen nur.
 class CategoryDetailPage extends StatelessWidget {
@@ -44,6 +49,8 @@ class _DetailView extends StatelessWidget {
     switch (state.event!.kind) {
       case CategoryDetailEventKind.trackerAdded:
         AppToast.show(context, l10n.detailTrackerAdded);
+      case CategoryDetailEventKind.itemAdded:
+        AppToast.show(context, l10n.itemAdded(state.event!.name ?? ''));
       case CategoryDetailEventKind.meterAdded:
         AppToast.show(context, l10n.detailMeterAdded);
       case CategoryDetailEventKind.trackerArchived:
@@ -92,9 +99,12 @@ class _Content extends StatelessWidget {
 
   Map<String, YearToDate> get yearToDate => state.yearToDate;
 
+  /// Bauplan für weitere Tracker (Abos, Versicherungen), `null` bei anderen Kategorien.
+  ItemTemplate? _item(BuildContext context) => CategoryTemplates.item(context.l10n, category.templateKey);
+
   /// Stift oben: Menü „Kategorie bearbeiten“, die Auswahl führt diese Seite aus.
   Future<void> _edit(BuildContext context) async {
-    final choice = await CategoryMenuSheet.show(context, category);
+    final choice = await CategoryMenuSheet.show(context, category, addLabel: _item(context)?.add);
     if (!context.mounted) return;
     switch (choice) {
       case CategoryMenuAppearance():
@@ -119,8 +129,13 @@ class _Content extends StatelessWidget {
     }
   }
 
+  /// Mit Bauplan ein fertiges Abo (eine Versicherung) anlegen, sonst einen leeren Tracker mit Namen.
   Future<void> _addTracker(BuildContext context) async {
     final cubit = context.read<CategoryDetailCubit>();
+    if (_item(context) case final ItemTemplate item) {
+      if (await ItemSheet.show(context, item: item, category: category) case final ItemDraft draft) await cubit.addItem(item, draft);
+      return;
+    }
     if (await TrackerSheet.show(context) case TrackerRenamed(:final name)) await cubit.addTracker(name);
   }
 
@@ -150,19 +165,11 @@ class _Content extends StatelessWidget {
     if (confirmed) await cubit.delete();
   }
 
-  /// Wert eintragen: direkt beim einzigen Tracker, sonst erst den Tracker wählen.
+  /// Wert eintragen: direkt beim einzigen Tracker, sonst erst den Tracker wählen (nach Art gruppiert).
   Future<void> _addEntry(BuildContext context, List<Tracker> trackers) async {
     final tracker = trackers.length == 1
         ? trackers.single
-        : await AppSheet.show<Tracker>(
-            context,
-            title: context.l10n.trackerAddEntryFor,
-            child: AppListGroup(
-              children: [
-                for (final t in trackers) AppListRow(title: t.name, onTap: () => Navigator.of(context).pop(t)),
-              ],
-            ),
-          );
+        : await TrackerPickerSheet.show(context, trackers: trackers, order: _item(context)?.groupNames ?? const []);
     if (tracker != null && context.mounted) await EntryFormPage.open(context, category: category, tracker: tracker);
   }
 
@@ -177,10 +184,13 @@ class _Content extends StatelessWidget {
     final setupOnly = setup.isNotEmpty && setup.length == category.trackers.length;
     final addable = [for (final t in category.trackers) if (t.entryFields.isNotEmpty && !setup.contains(t)) t];
     final today = DateTime.now();
+    final item = _item(context);
     final canAddEntry = editable && addable.isNotEmpty;
-    // Ohne Tracker ist „Tracker hinzufügen“ die Hauptaktion und lässt sich nicht wegklicken.
+    // Ohne Tracker ist „Tracker hinzufügen“ die Hauptaktion und lässt sich nicht wegklicken, ebenso
+    // „Abo hinzufügen“ in Kategorien aus gleichartigen Trackern.
     final noTrackers = category.trackers.isEmpty;
-    final showAddTracker = editable && !setupOnly && (noTrackers || category.dashboard.showAddTracker);
+    final keepAddTracker = noTrackers || item != null;
+    final showAddTracker = editable && !setupOnly && (keepAddTracker || category.dashboard.showAddTracker);
     final hasAction = canAddEntry || showAddTracker || setupOnly;
     return AppActionBar(
       action: hasAction
@@ -197,13 +207,13 @@ class _Content extends StatelessWidget {
                     children: [
                       Expanded(
                         child: AppButton(
-                          label: l10n.detailAddTracker,
+                          label: item?.add ?? l10n.detailAddTracker,
                           icon: CupertinoIcons.plus,
                           variant: canAddEntry ? AppButtonVariant.tinted : AppButtonVariant.filled,
                           onPressed: () => _addTracker(context),
                         ),
                       ),
-                      if (!noTrackers)
+                      if (!keepAddTracker)
                         AppIconButton(
                           icon: CupertinoIcons.xmark,
                           semanticLabel: l10n.detailAddTrackerHide,
@@ -254,12 +264,18 @@ class _Content extends StatelessWidget {
               child: Column(
                 spacing: Spacing.s,
                 children: [
-                  AppText(setupOnly ? l10n.meterSetupTitle : l10n.detailNoTrackersTitle, style: (t) => t.title3, align: TextAlign.center),
-                  AppText(setupOnly ? l10n.meterSetupBody : l10n.detailNoTrackersBody, style: (t) => t.subheadline, color: c.textSecondary, align: TextAlign.center),
+                  AppText(setupOnly ? l10n.meterSetupTitle : item?.emptyTitle ?? l10n.detailNoTrackersTitle, style: (t) => t.title3, align: TextAlign.center),
+                  AppText(
+                    setupOnly ? l10n.meterSetupBody : item?.emptyBody ?? l10n.detailNoTrackersBody,
+                    style: (t) => t.subheadline,
+                    color: c.textSecondary,
+                    align: TextAlign.center,
+                  ),
                 ],
               ),
             ),
-          for (final tracker in setupOnly ? const <Tracker>[] : category.trackers) ...[
+          if (item != null) _ItemList(category: category, item: item, today: today),
+          for (final tracker in setupOnly || item != null ? const <Tracker>[] : category.trackers) ...[
             SectionHeader(
               title: tracker.name,
               action: editable && !setup.contains(tracker) ? l10n.actionEdit : null,
@@ -422,6 +438,55 @@ class _TrackerGroup extends StatelessWidget {
     final cubit = context.read<CategoryDetailCubit>();
     final result = await MeterSheet.show(context, category: category, tracker: tracker, meter: meter);
     if (result != null) await cubit.updateMeter(meter, name: result.meter.name, group: result.meter.group);
+  }
+}
+
+/// Abos (Versicherungen …) kompakt: je Art eine Gruppe, je Abo eine Zeile mit Betrag und Stichtag;
+/// Verlauf, Details und Einstellungen liegen hinter der Zeile auf der Tracker-Seite.
+class _ItemList extends StatelessWidget {
+  const _ItemList({required this.category, required this.item, required this.today});
+
+  final Category category;
+  final ItemTemplate item;
+  final DateTime today;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final groups = groupTrackers(category.trackers, order: item.groupNames);
+    final named = groups.any((g) => g.name != null);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final group in groups) ...[
+          SectionHeader(title: group.name ?? (named ? l10n.itemOtherGroup : item.listTitle)),
+          AppListGroup(
+            children: [
+              for (final tracker in group.trackers)
+                AppListRow(
+                  leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
+                  title: tracker.name,
+                  subtitle: _deadline(context, tracker) ?? (tracker.currentAmount(today) == null ? l10n.itemNoAmount : null),
+                  trailing: switch (tracker.currentAmount(today)) {
+                    (final field, final value) => AppText(context.fieldValue(field, value), style: (t) => t.numberM, maxLines: 1),
+                    null => null,
+                  },
+                  onTap: () => TrackerPage.open(context, categoryId: category.id, trackerId: tracker.id),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Erster gesetzter Stichtag („Kündbar bis 1.3.2027“), `null` ohne.
+  String? _deadline(BuildContext context, Tracker tracker) {
+    for (final field in tracker.withRole(FieldRole.deadline)) {
+      if (tracker.detailValue(field.id) case final DateTime date) return context.l10n.itemDeadline(field.name, context.shortDate(date));
+    }
+    return null;
   }
 }
 

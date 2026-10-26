@@ -1,9 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/core/utils/dashboard_figures.dart';
 import 'package:kostenkurve/features/categories/cubit/category_detail_cubit.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
+import 'package:kostenkurve/features/categories/data/category_templates.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
+import 'package:kostenkurve/l10n/generated/app_localizations.dart';
 
 void main() {
   blocTest<CategoryDetailCubit, CategoryDetailState>(
@@ -135,6 +138,52 @@ void main() {
     expect: () => [
       isA<CategoryDetailState>().having((s) => (s.category?.name, s.category?.icon, s.category?.swatch), 'look', ('Strom Wohnung', CategoryIcon.star, CategorySwatch.yellow)),
     ],
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'legt ein Abo aus dem Bauplan an: Preis ab „seit“, Art als Detail',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-abos', now: () => DateTime(2026, 10, 26)),
+    act: (cubit) async {
+      await cubit.load();
+      final item = CategoryTemplates.item(lookupAppLocalizations(const Locale('de')), 'abos')!;
+      await cubit.addItem(item, ItemDraft(name: ' Disney+ ', group: 'Streaming', amount: 89.9, interval: 12, since: DateTime(2026, 3, 15, 9)));
+      await pumpEventQueue();
+    },
+    skip: 1,
+    // Das Ereignis gilt nur für einen Zustand, das Neuladen danach räumt es wieder ab.
+    expect: () => contains(
+      isA<CategoryDetailState>()
+          .having((s) => s.event?.kind, 'event', CategoryDetailEventKind.itemAdded)
+          .having((s) => s.event?.name, 'name', 'Disney+'),
+    ),
+    verify: (cubit) {
+      final disney = cubit.state.category!.trackers.last;
+      expect(disney.name, 'Disney+');
+      expect(disney.group, 'Streaming');
+      final (price, value) = disney.currentAmount(DateTime(2026, 10, 26))!;
+      expect((price.name, price.intervalMonths, price.unit, value), ('Preis', 12, '€/Jahr', 89.9));
+      expect(disney.records.single.date, DateTime.utc(2026, 3, 15));
+      expect(disney.detailFields.map((f) => f.name), ['Kündbar bis', 'Art']);
+    },
+  );
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'legt ein Abo ohne Preis und ohne Art an',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-abos'),
+    act: (cubit) async {
+      await cubit.load();
+      final item = CategoryTemplates.item(lookupAppLocalizations(const Locale('de')), 'abos')!;
+      await cubit.addItem(item, ItemDraft(name: 'Kletterhalle', interval: 1, since: DateTime(2026, 10, 1)));
+      await pumpEventQueue();
+    },
+    skip: 1,
+    verify: (cubit) {
+      final tracker = cubit.state.category!.trackers.last;
+      expect(tracker.name, 'Kletterhalle');
+      expect(tracker.entries, isEmpty);
+      expect(tracker.group, isNull);
+      expect(tracker.fields, hasLength(3));
+    },
   );
 
   blocTest<CategoryDetailCubit, CategoryDetailState>(

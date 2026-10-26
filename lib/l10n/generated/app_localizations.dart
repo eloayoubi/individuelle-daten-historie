@@ -1178,12 +1178,6 @@ abstract class AppLocalizations {
   /// **'Hausrat'**
   String get tplTrackerContents;
 
-  /// No description provided for @tplTrackerStreaming.
-  ///
-  /// In de, this message translates to:
-  /// **'Streaming'**
-  String get tplTrackerStreaming;
-
   /// No description provided for @tplFieldReading.
   ///
   /// In de, this message translates to:
@@ -4159,6 +4153,204 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Der Verbrauch der gewählten Zähler wird addiert. Zusammen zählen nur Zähler mit derselben Einheit.'**
   String get metricsCustomFooter;
+
+  /// No description provided for @itemGroup.
+  ///
+  /// In de, this message translates to:
+  /// **'Art'**
+  String get itemGroup;
+
+  /// No description provided for @itemAboAdd.
+  ///
+  /// In de, this message translates to:
+  /// **'Abo hinzufügen'**
+  String get itemAboAdd;
+
+  /// No description provided for @itemAboNameHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Name, z. B. Netflix'**
+  String get itemAboNameHint;
+
+  /// No description provided for @itemAboList.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Abos'**
+  String get itemAboList;
+
+  /// No description provided for @itemAboEmptyTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Abos'**
+  String get itemAboEmptyTitle;
+
+  /// No description provided for @itemAboEmptyBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Füge jedes Abo einzeln hinzu – Netflix, Fitnessstudio, Zeitung … So siehst du, was du im Monat zahlst und bis wann du kündigen kannst.'**
+  String get itemAboEmptyBody;
+
+  /// No description provided for @itemAboGroupVideo.
+  ///
+  /// In de, this message translates to:
+  /// **'Streaming'**
+  String get itemAboGroupVideo;
+
+  /// No description provided for @itemAboGroupMusic.
+  ///
+  /// In de, this message translates to:
+  /// **'Musik & Hörbücher'**
+  String get itemAboGroupMusic;
+
+  /// No description provided for @itemAboGroupFitness.
+  ///
+  /// In de, this message translates to:
+  /// **'Fitness & Sport'**
+  String get itemAboGroupFitness;
+
+  /// No description provided for @itemAboGroupSoftware.
+  ///
+  /// In de, this message translates to:
+  /// **'Software & Cloud'**
+  String get itemAboGroupSoftware;
+
+  /// No description provided for @itemAboGroupNews.
+  ///
+  /// In de, this message translates to:
+  /// **'Zeitung & Magazine'**
+  String get itemAboGroupNews;
+
+  /// No description provided for @itemAboGroupGaming.
+  ///
+  /// In de, this message translates to:
+  /// **'Gaming'**
+  String get itemAboGroupGaming;
+
+  /// No description provided for @itemAboGroupOther.
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get itemAboGroupOther;
+
+  /// No description provided for @itemAboSuggestVideo.
+  ///
+  /// In de, this message translates to:
+  /// **'Netflix|Disney+|Amazon Prime|YouTube Premium|Apple TV+|WOW|DAZN|RTL+|Joyn PLUS+|Paramount+'**
+  String get itemAboSuggestVideo;
+
+  /// No description provided for @itemAboSuggestMusic.
+  ///
+  /// In de, this message translates to:
+  /// **'Spotify|Apple Music|Amazon Music Unlimited|YouTube Music|Deezer|Audible'**
+  String get itemAboSuggestMusic;
+
+  /// No description provided for @itemAboSuggestFitness.
+  ///
+  /// In de, this message translates to:
+  /// **'Fitnessstudio|Urban Sports Club|Sportverein|Gymondo'**
+  String get itemAboSuggestFitness;
+
+  /// No description provided for @itemAboSuggestSoftware.
+  ///
+  /// In de, this message translates to:
+  /// **'iCloud+|Google One|Microsoft 365|Adobe Creative Cloud|ChatGPT Plus|Dropbox'**
+  String get itemAboSuggestSoftware;
+
+  /// No description provided for @itemAboSuggestNews.
+  ///
+  /// In de, this message translates to:
+  /// **'Tageszeitung|Zeitschrift|SPIEGEL+|Readly'**
+  String get itemAboSuggestNews;
+
+  /// No description provided for @itemAboSuggestGaming.
+  ///
+  /// In de, this message translates to:
+  /// **'PlayStation Plus|Xbox Game Pass|Nintendo Switch Online'**
+  String get itemAboSuggestGaming;
+
+  /// No description provided for @itemAboSuggestOther.
+  ///
+  /// In de, this message translates to:
+  /// **'Deutschlandticket|BahnCard|ADAC|Verein'**
+  String get itemAboSuggestOther;
+
+  /// No description provided for @itemInsuranceAdd.
+  ///
+  /// In de, this message translates to:
+  /// **'Versicherung hinzufügen'**
+  String get itemInsuranceAdd;
+
+  /// No description provided for @itemInsuranceNameHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Name, z. B. Kfz-Versicherung'**
+  String get itemInsuranceNameHint;
+
+  /// No description provided for @itemInsuranceList.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Versicherungen'**
+  String get itemInsuranceList;
+
+  /// No description provided for @itemInsuranceEmptyTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Versicherungen'**
+  String get itemInsuranceEmptyTitle;
+
+  /// No description provided for @itemInsuranceEmptyBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Füge jede Versicherung einzeln hinzu – mit Beitrag und Hauptfälligkeit.'**
+  String get itemInsuranceEmptyBody;
+
+  /// No description provided for @itemInsuranceSuggestions.
+  ///
+  /// In de, this message translates to:
+  /// **'Haftpflicht|Hausrat|Kfz-Versicherung|Rechtsschutz|Berufsunfähigkeit|Unfallversicherung|Zahnzusatz|Wohngebäude|Reiseversicherung|Tierhalterhaftpflicht|Risikolebensversicherung'**
+  String get itemInsuranceSuggestions;
+
+  /// No description provided for @itemSuggestions.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorschläge'**
+  String get itemSuggestions;
+
+  /// No description provided for @itemSince.
+  ///
+  /// In de, this message translates to:
+  /// **'Seit'**
+  String get itemSince;
+
+  /// No description provided for @itemAmountFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Optional – gilt ab „Seit“, bis du einen neuen Wert einträgst.'**
+  String get itemAmountFooter;
+
+  /// No description provided for @itemAdded.
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ hinzugefügt'**
+  String itemAdded(String name);
+
+  /// No description provided for @itemOtherGroup.
+  ///
+  /// In de, this message translates to:
+  /// **'Weitere'**
+  String get itemOtherGroup;
+
+  /// No description provided for @itemNoAmount.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch ohne Betrag'**
+  String get itemNoAmount;
+
+  /// No description provided for @itemDeadline.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} {date}'**
+  String itemDeadline(String name, String date);
 }
 
 class _AppLocalizationsDelegate
