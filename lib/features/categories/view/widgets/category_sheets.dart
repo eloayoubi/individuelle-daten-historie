@@ -3,12 +3,102 @@ import 'package:flutter/cupertino.dart';
 import '../../../../core/core.dart';
 import 'appearance_pickers.dart';
 
-/// Ergebnis des Bearbeiten-Sheets: neue Werte oder der Wunsch, einen weiteren Tracker anzulegen.
-sealed class CategoryEditResult {
-  const CategoryEditResult();
+/// Auswahl im Menü „Kategorie bearbeiten“; ausgeführt wird sie von der Kategorie-Seite.
+sealed class CategoryMenuChoice {
+  const CategoryMenuChoice();
 }
 
-class CategoryEdited extends CategoryEditResult {
+/// Name, Symbol und Farbe ändern.
+class CategoryMenuAppearance extends CategoryMenuChoice {
+  const CategoryMenuAppearance();
+}
+
+/// Felder und Einstellungen eines Trackers öffnen.
+class CategoryMenuTrackerSetup extends CategoryMenuChoice {
+  const CategoryMenuTrackerSetup(this.trackerId);
+
+  final String trackerId;
+}
+
+class CategoryMenuAddTracker extends CategoryMenuChoice {
+  const CategoryMenuAddTracker();
+}
+
+class CategoryMenuArchive extends CategoryMenuChoice {
+  const CategoryMenuArchive();
+}
+
+class CategoryMenuDelete extends CategoryMenuChoice {
+  const CategoryMenuDelete();
+}
+
+/// Alles zum Bearbeiten einer Kategorie an einer Stelle: Darstellung, Felder und Einstellungen je
+/// Tracker, weiteren Tracker hinzufügen; für den owner darunter Archivieren und Löschen.
+class CategoryMenuSheet extends StatelessWidget {
+  const CategoryMenuSheet({super.key, required this.category});
+
+  final Category category;
+
+  static Future<CategoryMenuChoice?> show(BuildContext context, Category category) => AppSheet.show<CategoryMenuChoice>(
+    context,
+    title: context.l10n.detailEditCategory,
+    child: CategoryMenuSheet(category: category),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    void choose(CategoryMenuChoice choice) => Navigator.of(context).pop(choice);
+    return ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.only(bottom: Spacing.xl),
+      children: [
+        AppListGroup(
+          color: c.surfaceRaised,
+          children: [
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.paintbrush_fill, color: c.swatch(category.swatch)),
+              title: l10n.detailAppearance,
+              subtitle: l10n.detailAppearanceHint,
+              onTap: () => choose(const CategoryMenuAppearance()),
+            ),
+            for (final tracker in category.trackers)
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.slider_horizontal_3, color: c.accent),
+                title: l10n.trackerSetup,
+                subtitle: tracker.name,
+                onTap: () => choose(CategoryMenuTrackerSetup(tracker.id)),
+              ),
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.plus, color: c.accent),
+              title: category.trackers.isEmpty ? l10n.detailAddTracker : l10n.detailAddAnotherTracker,
+              chevron: false,
+              onTap: () => choose(const CategoryMenuAddTracker()),
+            ),
+          ],
+        ),
+        // Archivieren behält alles (nur ausgeblendet), Löschen ist endgültig.
+        if (category.isOwner)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xl, Spacing.l, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: Spacing.s,
+              children: [
+                if (!category.isArchived)
+                  AppButton(label: l10n.detailArchive, variant: AppButtonVariant.destructive, onPressed: () => choose(const CategoryMenuArchive())),
+                AppButton(label: l10n.detailDelete, variant: AppButtonVariant.destructive, onPressed: () => choose(const CategoryMenuDelete())),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Neue Darstellung einer Kategorie aus dem [CategoryEditSheet].
+class CategoryEdited {
   const CategoryEdited({required this.name, required this.icon, required this.swatch});
 
   final String name;
@@ -16,22 +106,17 @@ class CategoryEdited extends CategoryEditResult {
   final CategorySwatch swatch;
 }
 
-class CategoryAddTracker extends CategoryEditResult {
-  const CategoryAddTracker();
-}
-
-/// Name, Symbol und Farbe einer Kategorie ändern; mit [canAddTracker] darunter „Weiteren Tracker
-/// hinzufügen“. Liefert das Ergebnis oder `null` bei Abbruch.
+/// Darstellung einer Kategorie ändern: Name, Symbol und Farbe. Liefert die neuen Werte oder `null`
+/// bei Abbruch.
 class CategoryEditSheet extends StatefulWidget {
-  const CategoryEditSheet({super.key, required this.category, this.canAddTracker = false});
+  const CategoryEditSheet({super.key, required this.category});
 
   final Category category;
-  final bool canAddTracker;
 
-  static Future<CategoryEditResult?> show(BuildContext context, Category category, {bool canAddTracker = false}) => AppSheet.show<CategoryEditResult>(
+  static Future<CategoryEdited?> show(BuildContext context, Category category) => AppSheet.show<CategoryEdited>(
     context,
-    title: context.l10n.detailEditCategory,
-    child: CategoryEditSheet(category: category, canAddTracker: canAddTracker),
+    title: context.l10n.detailAppearance,
+    child: CategoryEditSheet(category: category),
   );
 
   @override
@@ -87,15 +172,6 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
           label: l10n.actionSave,
           onPressed: _name.text.trim().isEmpty ? null : () => Navigator.of(context).pop(CategoryEdited(name: _name.text.trim(), icon: _icon, swatch: _swatch)),
         ),
-        if (widget.canAddTracker) ...[
-          const SizedBox(height: Spacing.s),
-          AppButton(
-            label: l10n.detailAddAnotherTracker,
-            icon: CupertinoIcons.plus,
-            variant: AppButtonVariant.tinted,
-            onPressed: () => Navigator.of(context).pop(const CategoryAddTracker()),
-          ),
-        ],
       ],
     );
   }

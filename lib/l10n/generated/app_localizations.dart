@@ -518,6 +518,18 @@ abstract class AppLocalizations {
   /// **'{name} ist angelegt.'**
   String setupCreated(String name);
 
+  /// No description provided for @detailAppearance.
+  ///
+  /// In de, this message translates to:
+  /// **'Darstellung'**
+  String get detailAppearance;
+
+  /// No description provided for @detailAppearanceHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Name, Symbol und Farbe'**
+  String get detailAppearanceHint;
+
   /// No description provided for @detailEditCategory.
   ///
   /// In de, this message translates to:

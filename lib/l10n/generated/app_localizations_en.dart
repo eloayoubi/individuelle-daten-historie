@@ -281,6 +281,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get detailAppearance => 'Appearance';
+
+  @override
+  String get detailAppearanceHint => 'Name, icon and colour';
+
+  @override
   String get detailEditCategory => 'Edit category';
 
   @override

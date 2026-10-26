@@ -19,6 +19,7 @@ import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
 import 'package:kostenkurve/features/categories/view/category_setup_page.dart';
 import 'package:kostenkurve/features/categories/view/field_editor_page.dart';
 import 'package:kostenkurve/features/categories/view/tracker_setup_page.dart';
+import 'package:kostenkurve/features/categories/view/widgets/category_sheets.dart';
 import 'package:kostenkurve/features/categories/view/widgets/meter_sheet.dart';
 import 'package:kostenkurve/features/entries/cubit/entry_form_cubit.dart';
 import 'package:kostenkurve/features/entries/cubit/tracker_cubit.dart';
@@ -213,6 +214,33 @@ void main() {
         await t.tap(find.bySemanticsLabel('Kategorie bearbeiten'));
         await t.pumpAndSettle();
         expect(find.text('Weiteren Tracker hinzufügen'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Stift oben bündelt Darstellung, Felder, Archivieren und Löschen', (t) async {
+        await pumpPage(t, const CategoryDetailPage(categoryId: 'c-strom'), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        expect(find.text('Kategorie archivieren'), findsNothing);
+        expect(find.text('Kategorie löschen'), findsNothing);
+
+        await t.tap(find.bySemanticsLabel('Kategorie bearbeiten'));
+        await t.pumpAndSettle();
+        expect(find.text('Darstellung'), findsOneWidget);
+        expect(find.text('Felder und Einstellungen'), findsWidgets);
+        expect(find.text('Kategorie archivieren'), findsOneWidget);
+        expect(find.text('Kategorie löschen'), findsOneWidget);
+
+        await t.tap(find.text('Darstellung'));
+        await t.pumpAndSettle();
+        expect(find.byType(CategoryEditSheet), findsOneWidget);
+        await t.tapAt(const Offset(10, 10));
+        await t.pumpAndSettle();
+
+        await t.tap(find.bySemanticsLabel('Kategorie bearbeiten'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Felder und Einstellungen').first);
+        await t.pumpAndSettle();
+        expect(find.byType(TrackerSetupPage), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 

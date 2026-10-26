@@ -198,6 +198,8 @@
       }
     }
   },
+  "detailAppearance": "Darstellung",
+  "detailAppearanceHint": "Name, Symbol und Farbe",
   "detailEditCategory": "Kategorie bearbeiten",
   "detailAddTracker": "Tracker hinzufügen",
   "detailAddField": "Feld hinzufügen",
