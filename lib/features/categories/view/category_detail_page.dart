@@ -14,6 +14,7 @@ import '../cubit/category_detail_cubit.dart';
 import 'tracker_setup_page.dart';
 import 'widgets/category_dashboard.dart';
 import 'widgets/category_sheets.dart';
+import 'widgets/meter_sheet.dart';
 
 /// Eine Kategorie mit ihren Trackern – oben die Übersicht (Kennzahlen im gewählten Zeitraum), je
 /// Tracker der Verlauf mit der Kennzahl des Jahres und die Einstellungen (Vertrag bzw. Details). Die
@@ -42,6 +43,8 @@ class _DetailView extends StatelessWidget {
     switch (state.event!.kind) {
       case CategoryDetailEventKind.trackerAdded:
         AppToast.show(context, l10n.detailTrackerAdded);
+      case CategoryDetailEventKind.meterAdded:
+        AppToast.show(context, l10n.detailMeterAdded);
       case CategoryDetailEventKind.trackerArchived:
         AppToast.show(context, l10n.detailTrackerArchived, icon: CupertinoIcons.archivebox_fill);
       case CategoryDetailEventKind.archived:
@@ -254,7 +257,8 @@ class _Content extends StatelessWidget {
 }
 
 /// Daten eines Trackers: Verlauf (mit Kosten oder Verbrauch des Jahres), ohne Felder dazu „Felder
-/// festlegen“. Eingetragen wird über die Hauptaktion unten.
+/// festlegen“. Ein Versorgungszähler listet bei mehreren Zählern jeden mit seinem letzten Stand und
+/// bietet „Zähler hinzufügen“ an. Eingetragen wird über die Hauptaktion unten.
 class _TrackerGroup extends StatelessWidget {
   const _TrackerGroup({required this.category, required this.tracker, this.yearToDate, this.includedIn});
 
@@ -299,8 +303,55 @@ class _TrackerGroup extends StatelessWidget {
             title: l10n.trackerSetUpFields,
             onTap: () => TrackerSetupPage.open(context, categoryId: category.id, trackerId: tracker.id),
           ),
+        if (tracker.isUtilityMeter) ...[
+          if (tracker.meters.length > 1)
+            for (final meter in tracker.meters)
+              AppListRow(
+                leading: AppIconTile(icon: CupertinoIcons.gauge, color: swatch),
+                title: meter.name,
+                subtitle: context.joinParts([?meter.meterGroup, ?_lastReading(context, meter)]),
+                chevron: category.canEdit,
+                onTap: category.canEdit ? () => _editMeter(context, meter) : null,
+              ),
+          if (category.canEdit)
+            AppListRow(
+              leading: AppIconTile(icon: CupertinoIcons.add, color: c.accent),
+              title: l10n.meterAdd,
+              subtitle: tracker.meters.length == 1 ? l10n.meterAddHint : null,
+              onTap: () => _addMeter(context),
+            ),
+        ],
       ],
     );
+  }
+
+  /// Letzter Stand des Zählers mit Datum, `null` ohne Stand.
+  String? _lastReading(BuildContext context, FieldDefinition meter) {
+    Entry? latest;
+    for (final e in tracker.entries) {
+      if (tracker.isBill(e) || e.number(meter.id) == null) continue;
+      if (latest == null || e.date.isAfter(latest.date)) latest = e;
+    }
+    if (latest == null) return null;
+    return '${context.fieldValue(meter, latest.number(meter.id)!)} · ${context.shortDate(latest.date)}';
+  }
+
+  Future<void> _addMeter(BuildContext context) async {
+    final cubit = context.read<CategoryDetailCubit>();
+    final result = await MeterSheet.show(context, category: category, tracker: tracker);
+    if (result == null) return;
+    await cubit.addMeter(
+      tracker,
+      name: result.meter.name,
+      group: result.meter.group,
+      first: result.first == null ? null : (name: result.first!.name, group: result.first!.group),
+    );
+  }
+
+  Future<void> _editMeter(BuildContext context, FieldDefinition meter) async {
+    final cubit = context.read<CategoryDetailCubit>();
+    final result = await MeterSheet.show(context, category: category, tracker: tracker, meter: meter);
+    if (result != null) await cubit.updateMeter(meter, name: result.meter.name, group: result.meter.group);
   }
 }
 

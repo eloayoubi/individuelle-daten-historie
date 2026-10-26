@@ -29,7 +29,8 @@ class CategorySummary extends Equatable {
   /// Jahr je Monat – ein paar Tage mit einer Tankfüllung wären sonst ein riesiger Schnitt.
   final double monthlyAverage;
 
-  /// Verbrauch seit 1. Januar (erster Zähler der Kategorie), `null` ohne Zähler.
+  /// Verbrauch seit 1. Januar: alle Zähler der Kategorie mit der Einheit des ersten zusammen, `null`
+  /// ohne Zähler.
   final double? usage;
   final String usageUnit;
 
@@ -167,9 +168,10 @@ class HomeOverview extends Equatable {
         }
         final meter = tracker.firstWithRole(FieldRole.meterReading);
         if (meter != null && engine.hasMeter) {
-          if (usage == null) {
-            usage = engine.consumption(yearStart, tomorrow);
-            usageUnit = meter.usageUnit;
+          // Alle Zähler mit der Einheit des ersten zusammen (Bad kalt + Bad warm …).
+          if (usage == null) usageUnit = meter.usageUnit;
+          for (final m in tracker.meters) {
+            if (m.usageUnit == usageUnit && engine.measuresField(m.id)) usage = (usage ?? 0) + engine.consumptionOf(m.id, yearStart, tomorrow);
           }
           // Wer nach Rechnung erfasst, liest nicht selbst ab – dann keine Erinnerung; wer nur ansehen
           // darf, auch nicht (wie die Benachrichtigungen).

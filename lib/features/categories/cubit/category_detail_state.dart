@@ -2,7 +2,7 @@ part of 'category_detail_cubit.dart';
 
 enum CategoryDetailStatus { loading, ready, missing, failure }
 
-enum CategoryDetailEventKind { trackerAdded, trackerArchived, archived, addTrackerHidden, failed }
+enum CategoryDetailEventKind { trackerAdded, meterAdded, trackerArchived, archived, addTrackerHidden, failed }
 
 /// Einmaliges Ereignis für Toasts und Navigation. Bewusst nicht `const`.
 class CategoryDetailEvent {

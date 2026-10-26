@@ -25,18 +25,23 @@ class DateSpan extends Equatable {
 
 /// Eine ausgerechnete Kennzahl: Wert im Zeitraum und im Zeitraum davor (zum Vergleich).
 class DashboardFigure extends Equatable {
-  const DashboardFigure({required this.metric, this.tracker, this.field, this.summary, this.value, this.previous});
+  const DashboardFigure({required this.metric, this.tracker, this.field, this.summary, this.value, this.previous, this.meterCount = 0});
 
   final DashboardMetric metric;
 
-  /// Tracker der Kennzahl; `null` bei den Kosten der ganzen Kategorie.
+  /// Tracker der Kennzahl; `null` bei den Kosten der ganzen Kategorie und mehreren Zählern.
   final Tracker? tracker;
+
+  /// Feld der Kennzahl; bei mehreren Zählern der erste (für die Einheit).
   final FieldDefinition? field;
   final FieldSummary? summary;
 
   /// `null`, wenn es im Zeitraum nichts zusammenzufassen gibt.
   final double? value;
   final double? previous;
+
+  /// Bei mehreren Zählern: wie viele zusammengezählt sind.
+  final int meterCount;
 
   /// Verbrauch aus Zählerständen (Differenz eines Zählerstands) – in der Verbrauchseinheit.
   bool get isConsumption => field?.role == FieldRole.meterReading && summary == FieldSummary.difference;
@@ -49,7 +54,7 @@ class DashboardFigure extends Equatable {
   }
 
   @override
-  List<Object?> get props => [metric, tracker?.id, field, summary, value, previous];
+  List<Object?> get props => [metric, tracker?.id, field, summary, value, previous, meterCount];
 }
 
 /// Kennzahlen im Dashboard einer Kategorie: welche es gibt, welche gezeigt werden und ihre Werte.
@@ -62,46 +67,93 @@ class DashboardFigure extends Equatable {
 ///     15. Juli = 12 € für Juli).
 ///   - `difference` ist neuer minus alter Wert: Wert am Ende minus Wert am Anfang, zwischen zwei
 ///     Einträgen linear verteilt, vor dem ersten und nach dem letzten gilt der nächste bekannte
-///     Wert. Beim (ersten) Zählerstand ist das der Verbrauch der [CostEngine] – mit Umrechnung,
+///     Wert. Bei einem Zählerstand ist das der Verbrauch der [CostEngine] – mit Umrechnung,
 ///     Zählerwechsel und geschätzten Tagen seit dem letzten Ablesen.
+/// - **Mehrere Zähler** zählen ihren Verbrauch zusammen: alle Zähler der Kategorie, die einer
+///   Gruppe (Kaltwasser) oder eine eigene Auswahl – jeweils nur Zähler mit derselben
+///   Verbrauchseinheit wie der erste.
 ///   - `average`, `min`, `max` über die Einträge im Zeitraum; `latest` ist der zuletzt eingetragene
 ///     Wert bis zum Ende des Zeitraums.
 /// - Formel-Felder werden vorher je Eintrag ausgerechnet ([Formulas.apply]).
 abstract final class DashboardFigures {
   /// Was sich als Kennzahl wählen lässt: Kosten der Kategorie, bei mehreren Trackern die Kosten je
-  /// Tracker, dazu jedes Feld mit Zahlen und Verlauf.
-  static List<DashboardMetric> options(Category category) => [
-    if (category.trackers.isNotEmpty) const DashboardMetric.cost(),
-    if (category.trackers.length > 1)
+  /// Tracker, bei mehreren Zählern ihr Verbrauch zusammen und je Gruppe, dazu jedes Feld mit Zahlen
+  /// und Verlauf. Eigene Summen kommen aus der Wahl ([shown]).
+  static List<DashboardMetric> options(Category category) {
+    final meters = allMeters(category);
+    return [
+      if (category.trackers.isNotEmpty) const DashboardMetric.cost(),
+      if (category.trackers.length > 1)
+        for (final t in category.trackers)
+          if (_hasCost(t)) DashboardMetric.cost(trackerId: t.id),
+      if (meters.length > 1) ...[const DashboardMetric.meters(), for (final g in groups(category)) DashboardMetric.meters(group: g)],
       for (final t in category.trackers)
-        if (_hasCost(t)) DashboardMetric.cost(trackerId: t.id),
-    for (final t in category.trackers)
-      for (final f in t.fields)
-        if (f.effectiveSummary != null) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
-  ];
+        for (final f in t.fields)
+          if (f.effectiveSummary != null) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
+    ];
+  }
 
-  /// Gezeigte Kennzahlen: die gewählten, soweit es Tracker und Feld noch gibt – ohne Wahl die
-  /// Kosten (wenn etwas kostet) und der Verbrauch jedes Zählers, sonst das erste Feld je Tracker.
+  /// Gezeigte Kennzahlen: die gewählten, soweit es Tracker, Feld bzw. Zähler noch gibt. Ohne Wahl
+  /// die Kosten (wenn etwas kostet) und der Verbrauch:
+  /// - mit Gruppen je Gruppe eine Karte (Kaltwasser, Warmwasser), Zähler ohne Gruppe einzeln;
+  /// - mehrere Zähler eines Trackers ohne Gruppen zusammen;
+  /// - sonst je Zähler, ohne Zähler das erste Feld je Tracker.
   static List<DashboardMetric> shown(Category category) {
     final available = options(category).toSet();
     if (category.dashboard.metrics case final chosen?) {
       return [
         for (final m in chosen)
-          if (available.contains(m)) m,
+          if (m.isCustom ? metersOf(category, m).isNotEmpty : available.contains(m)) m,
       ];
     }
-    final meters = [
-      for (final t in category.trackers)
-        for (final f in t.fields)
-          if (f.role == FieldRole.meterReading) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
+    final meters = allMeters(category);
+    final groups = DashboardFigures.groups(category);
+    final List<DashboardMetric> usage;
+    if (groups.isNotEmpty) {
+      usage = [
+        for (final g in groups) DashboardMetric.meters(group: g),
+        for (final (t, f) in meters)
+          if (f.meterGroup == null) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
+      ];
+    } else if (meters.length > 1 && meters.every((m) => m.$1.id == meters.first.$1.id) && metersOf(category, const DashboardMetric.meters()).length == meters.length) {
+      usage = [const DashboardMetric.meters()];
+    } else if (meters.isNotEmpty) {
+      usage = [for (final (t, f) in meters) DashboardMetric.field(trackerId: t.id, fieldId: f.id)];
+    } else {
+      usage = [
+        for (final t in category.trackers)
+          if (t.fields.where((f) => f.effectiveSummary != null).firstOrNull case final f?) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
+      ];
+    }
+    return [if (category.trackers.any(_hasCost)) const DashboardMetric.cost(), ...usage];
+  }
+
+  /// Alle Zähler der Kategorie mit ihrem Tracker, in Reihenfolge.
+  static List<(Tracker, FieldDefinition)> allMeters(Category category) => [
+    for (final t in category.trackers)
+      for (final f in t.meters) (t, f),
+  ];
+
+  /// Gruppen der Zähler (Kaltwasser, Warmwasser) in der Reihenfolge ihres ersten Zählers.
+  static List<String> groups(Category category) => {
+    for (final (_, f) in allMeters(category))
+      if (f.meterGroup case final String g) g,
+  }.toList();
+
+  /// Zähler einer Kennzahl über mehrere Zähler – nur die mit der Verbrauchseinheit des ersten.
+  static List<(Tracker, FieldDefinition)> metersOf(Category category, DashboardMetric metric) {
+    if (!metric.isMeters) return const [];
+    final ids = metric.fieldIds?.toSet();
+    final chosen = [
+      for (final m in allMeters(category))
+        if (ids != null ? ids.contains(m.$2.id) : metric.group == null || m.$2.meterGroup == metric.group) m,
     ];
-    final fallback = meters.isNotEmpty
-        ? meters
-        : [
-            for (final t in category.trackers)
-              if (t.fields.where((f) => f.effectiveSummary != null).firstOrNull case final f?) DashboardMetric.field(trackerId: t.id, fieldId: f.id),
-          ];
-    return [if (category.trackers.any(_hasCost)) const DashboardMetric.cost(), ...fallback];
+    if (chosen.isEmpty) return const [];
+    final unit = chosen.first.$2.usageUnit;
+    return [
+      for (final m in chosen)
+        if (m.$2.usageUnit == unit) m,
+    ];
   }
 
   /// Werte der gezeigten Kennzahlen in [span], zum Vergleich in [previous]. [elsewhere] sind die
@@ -116,6 +168,8 @@ abstract final class DashboardFigures {
       for (final metric in shown(category))
         if (metric.isCost)
           _cost(category, metric, span, previous, engine, elsewhere)
+        else if (metric.isMeters)
+          _meters(category, metric, span, previous, engine)
         else if (category.trackers.where((t) => t.id == metric.trackerId).firstOrNull case final tracker?)
           if (tracker.fields.where((f) => f.id == metric.fieldId).firstOrNull case final field?)
             DashboardFigure(
@@ -148,6 +202,23 @@ abstract final class DashboardFigures {
     return DashboardFigure(metric: metric, tracker: tracker, value: sum(span), previous: previous == null ? null : sum(previous));
   }
 
+  static DashboardFigure _meters(Category category, DashboardMetric metric, DateSpan span, DateSpan? previous, CostEngine Function(Tracker) engine) {
+    final meters = metersOf(category, metric);
+    final measured = [
+      for (final (t, f) in meters)
+        if (engine(t).measuresField(f.id)) (engine(t), f),
+    ];
+    double? sum(DateSpan s) => measured.isEmpty ? null : measured.fold<double>(0, (total, m) => total + m.$1.consumptionOf(m.$2.id, s.from, s.to));
+    return DashboardFigure(
+      metric: metric,
+      field: meters.firstOrNull?.$2,
+      summary: FieldSummary.difference,
+      value: sum(span),
+      previous: previous == null ? null : sum(previous),
+      meterCount: meters.length,
+    );
+  }
+
   /// Wert eines Felds in [span] nach seiner Zusammenfassung. [tracker] mit ausgerechneten Formeln;
   /// [engine] (für den Verbrauch des Zählerstands) aus dem Tracker ohne.
   static double? fieldValue(Tracker tracker, FieldDefinition field, DateSpan span, {CostEngine? engine}) {
@@ -167,12 +238,11 @@ abstract final class DashboardFigures {
         if (field.role == FieldRole.recurringCost || field.role == FieldRole.instalment) return _monthly(points, field, span);
         return inSpan.fold<double>(0, (a, b) => a + b);
       case FieldSummary.difference:
-        if (field.role == FieldRole.meterReading && tracker.firstWithRole(FieldRole.meterReading)?.id == field.id) {
+        if (field.role == FieldRole.meterReading) {
           final meter = engine ?? CostEngine(tracker, today: DateTime.now());
-          return meter.hasMeter ? meter.consumption(span.from, span.to) : null;
+          return meter.measuresField(field.id) ? meter.consumptionOf(field.id, span.from, span.to) : null;
         }
-        final factor = field.role == FieldRole.meterReading ? field.factor : 1;
-        return (_interpolated(points, span.to) - _interpolated(points, span.from)) * factor;
+        return _interpolated(points, span.to) - _interpolated(points, span.from);
       case FieldSummary.average:
         return inSpan.isEmpty ? null : inSpan.fold<double>(0, (a, b) => a + b) / inSpan.length;
       case FieldSummary.latest:

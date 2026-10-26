@@ -35,7 +35,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       'id, name, icon, swatch, template_key, archived_at, dashboard, '
       'category_members(user_id, role, sort, profiles(display_name)), '
       'trackers!trackers_category_id_fkey(id, name, sort, included_in, '
-      'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, summary, sort), '
+      'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, summary, meter_group, sort), '
       'entries(id, occurred_on, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
 
   @override
@@ -293,6 +293,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     'choices': f.choices,
     'formula': f.formula,
     'summary': f.summary?.name,
+    'meter_group': f.meterGroup,
   };
 
   int _mySort(Map<String, dynamic> row) {
@@ -354,6 +355,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     choices: [for (final c in (row['choices'] as List?) ?? const []) c as String],
     formula: row['formula'] as String?,
     summary: FieldSummary.values.asNameMap()[row['summary']],
+    meterGroup: row['meter_group'] as String?,
   );
 
   static Entry _entry(Map<String, dynamic> row) => Entry(

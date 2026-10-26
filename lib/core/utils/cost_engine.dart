@@ -31,11 +31,15 @@ class CostParts {
 ///   Vor dem ersten Stand ist nichts bekannt, dort zählt nichts. Zählerwechsel an einem Tag: der
 ///   Stand ohne Markierung schließt den alten Zähler ab, der markierte ([Entry.meterChange]) beginnt
 ///   den neuen.
-/// - **Rechnungen** ([Tracker.isBill]): Der Verbrauch im Zeitraum verteilt sich gleichmäßig auf
-///   dessen Tage (ohne Umrechnungsfaktor, er steht schon in der Verbrauchseinheit). Eine Rechnung
-///   hat Vorrang vor Zählerständen, bei Überschneidung gilt die später endende. Deckt sie nur einen
-///   Teil der Tage zwischen zwei Ständen, bekommen die übrigen Tage den Rest des gemessenen
-///   Verbrauchs zu gleichen Teilen (Differenz minus Rechnungsverbrauch, mindestens 0).
+/// - **Mehrere Zähler** ([Tracker.meters], z. B. Bad kalt und Bad warm): Jeder Zähler wird für sich
+///   so gerechnet (auch nach seinem letzten Stand), der Verbrauch des Trackers ist die Summe – und
+///   der Arbeitspreis gilt für diese Summe.
+/// - **Rechnungen** ([Tracker.isBill]) gehören zum ersten Zähler ([Tracker.meter]). Der Verbrauch
+///   im Zeitraum verteilt sich gleichmäßig auf dessen Tage (ohne Umrechnungsfaktor, er steht schon in
+///   der Verbrauchseinheit). Eine Rechnung hat Vorrang vor Zählerständen, bei Überschneidung gilt
+///   die später endende. Deckt sie nur einen Teil der Tage zwischen zwei Ständen, bekommen die
+///   übrigen Tage den Rest des gemessenen Verbrauchs zu gleichen Teilen (Differenz minus
+///   Rechnungsverbrauch, mindestens 0).
 /// - **Lücken** zwischen bekannten Tagen (zwischen zwei Rechnungen, Zählerwechsel ohne Endstand):
 ///   die erste Hälfte mit dem Tagesverbrauch davor, die zweite mit dem danach.
 /// - **Arbeitspreis** ([FieldRole.unitPrice]) gilt ab seinem Datum bis zur nächsten Änderung. Im
@@ -57,7 +61,10 @@ class CostParts {
 class CostEngine {
   CostEngine(Tracker source, {required DateTime today}) : _today = day(today) {
     final tracker = Formulas.apply(source);
-    _prepareConsumption(tracker);
+    for (final field in tracker.meters) {
+      final usage = _Usage.of(tracker, field, withBills: field.id == tracker.meter!.id);
+      if (usage != null) _usages[field.id] = usage;
+    }
     // Durchschnitt einmaliger Beträge: was in den letzten 365 Tagen gezahlt wurde (nach Zahltag).
     final yearAgo = _today.subtract(const Duration(days: 365));
     var paidLastYear = 0.0;
@@ -104,13 +111,8 @@ class CostEngine {
 
   final DateTime _today;
 
-  /// Erster bekannter Tag und ab dort je Tag der Verbrauch – aus Zählerständen und Rechnungen.
-  DateTime? _first;
-  DateTime? _end;
-  final _daily = <double>[];
-  double _trailingRate = 0;
-
-  double? _trend;
+  /// Verbrauch je Zählerfeld, nur Zähler mit bekanntem Verbrauch.
+  final _usages = <String, _Usage>{};
 
   final _unitPrices = <(DateTime, double)>[];
   final _recurring = <(List<(DateTime, double)>, int)>[];
@@ -126,11 +128,15 @@ class CostEngine {
   static DateTime day(DateTime d) => DateTime.utc(d.year, d.month, d.day);
 
   /// Erster Tag nach dem bekannten Verbrauch: Tag des letzten Stands bzw. Tag nach dem Ende der
-  /// letzten Rechnung; `null` ohne bekannten Verbrauch.
-  DateTime? get lastReading => _end;
+  /// letzten Rechnung, bei mehreren Zählern der späteste; `null` ohne bekannten Verbrauch.
+  DateTime? get lastReading => _usages.values.map((u) => u.end).fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
 
-  /// Verbrauch bekannt: ab zwei Zählerständen an verschiedenen Tagen oder einer Rechnung.
-  bool get hasMeter => _daily.isNotEmpty;
+  /// Verbrauch bekannt: ab zwei Zählerständen an verschiedenen Tagen oder einer Rechnung (bei
+  /// mehreren Zählern: bei mindestens einem).
+  bool get hasMeter => _usages.isNotEmpty;
+
+  /// Verbrauch des Zählerfelds [fieldId] bekannt?
+  bool measuresField(String fieldId) => _usages.containsKey(fieldId);
 
   /// [hasMeter] für [tracker], ohne Stichtag – der Verbrauch hängt nicht vom heutigen Tag ab.
   static bool measures(Tracker tracker) => CostEngine(tracker, today: DateTime.utc(2000)).hasMeter;
@@ -143,11 +149,26 @@ class CostEngine {
   /// Abschlag je Monat, der an [d] gilt.
   double instalmentOn(DateTime d) => _instalments.fold(0.0, (sum, s) => sum + _valueAt(s.$1, day(d)) / s.$2);
 
-  /// Verhältnis Verbrauch letzte 365 Tage zu den 365 davor, `null` ohne zwei volle Jahre.
-  double? get trend => _trend;
+  /// Verhältnis Verbrauch letzte 365 Tage zu den 365 davor, `null` ohne zwei volle Jahre. Bei
+  /// mehreren Zählern über die Zähler mit zwei vollen Jahren zusammen.
+  double? get trend {
+    var recent = 0.0, older = 0.0;
+    for (final u in _usages.values) {
+      if (u.trend == null) continue;
+      recent += u.recent;
+      older += u.older;
+    }
+    return older <= 0 ? null : (recent / older).clamp(0.8, 1.25);
+  }
 
-  /// Verbrauch in `[from, to)`.
+  /// Verbrauch in `[from, to)`, bei mehreren Zählern zusammen.
   double consumption(DateTime from, DateTime to) => _sum(from, to, _rateOn);
+
+  /// Verbrauch des Zählerfelds [fieldId] in `[from, to)`; 0, wenn er nicht bekannt ist.
+  double consumptionOf(String fieldId, DateTime from, DateTime to) {
+    final usage = _usages[fieldId];
+    return usage == null ? 0 : _sum(from, to, usage.rateOn);
+  }
 
   /// Kosten in `[from, to)`.
   double cost(DateTime from, DateTime to) => _sum(from, to, _costOn);
@@ -170,7 +191,8 @@ class CostEngine {
   /// Halbe Breite der Prognose-Spanne für [p]: Verbrauch je nach Trend (mindestens ±5 %, ohne
   /// Trend ±10 %), feste Beträge ±1 %, einmalige ±25 %; unabhängig, daher als Wurzel der Quadrate.
   double uncertainty(CostParts p) {
-    final meterShare = _trend == null ? 0.1 : math.max(0.05, (_trend! - 1).abs());
+    final trend = this.trend;
+    final meterShare = trend == null ? 0.1 : math.max(0.05, (trend - 1).abs());
     return math.sqrt(math.pow(p.meter * meterShare, 2) + math.pow(p.fixed * 0.01, 2) + math.pow(p.oneOff * 0.25, 2));
   }
 
@@ -213,9 +235,52 @@ class CostEngine {
     for (final (date, v) in timeline) (DateTime.utc(date.year, date.month), v),
   ];
 
-  double _rateOn(DateTime d) {
-    if (!hasMeter || d.isBefore(_first!)) return 0;
-    final end = _end!;
+  double _rateOn(DateTime d) => _usages.values.fold(0.0, (sum, u) => sum + u.rateOn(d));
+
+  static List<(DateTime, double)> _timeline(Tracker tracker, FieldDefinition field) => [
+    for (final e in tracker.entries)
+      if (e.number(field.id) case final num v) (day(e.date), v.toDouble()),
+  ]..sort((a, b) => a.$1.compareTo(b.$1));
+
+  /// Wert, der an [d] gilt: der letzte am oder vor [d], davor [beforeFirst].
+  static double _valueAt(List<(DateTime, double)> timeline, DateTime d, {double beforeFirst = 0}) {
+    var value = beforeFirst;
+    for (final (date, v) in timeline) {
+      if (date.isAfter(d)) break;
+      value = v;
+    }
+    return value;
+  }
+}
+
+/// Verbrauch eines Zählerfelds Tag für Tag (siehe [CostEngine]).
+class _Usage {
+  _Usage(this.first, this.end, this._daily) {
+    // Durchschnitt der letzten 365 bekannten Tage (oder aller, wenn es weniger sind).
+    final last = _daily.skip(math.max(0, _daily.length - 365));
+    _trailingRate = last.fold(0.0, (sum, v) => sum + v) / last.length;
+    final years = _computeTrend();
+    recent = years?.$1 ?? 0;
+    older = years?.$2 ?? 0;
+    trend = years == null ? null : (recent / older).clamp(0.8, 1.25);
+  }
+
+  /// Erster bekannter Tag und erster Tag danach ohne bekannten Verbrauch.
+  final DateTime first;
+  final DateTime end;
+  final List<double> _daily;
+  late final double _trailingRate;
+
+  /// Verbrauch der letzten 365 bekannten Tage und der 365 davor (0 ohne zwei volle Jahre).
+  late final double recent;
+  late final double older;
+  late final double? trend;
+
+  static DateTime day(DateTime d) => CostEngine.day(d);
+
+  /// Tagesverbrauch an [d]: vor dem ersten bekannten Tag 0, danach wie im Vorjahr (mit Trend).
+  double rateOn(DateTime d) {
+    if (d.isBefore(first)) return 0;
     if (!d.isBefore(end)) {
       // Nach dem letzten bekannten Tag: derselbe Tag ein (oder zwei …) Jahre früher, damit die
       // Prognose die Saison abbildet (Heizung im Winter). Reicht der Verlauf nicht so weit: Durchschnitt.
@@ -223,24 +288,23 @@ class CostEngine {
       while (!back.isBefore(end)) {
         back = back.subtract(const Duration(days: 365));
       }
-      return back.isBefore(_first!) ? _trailingRate : _segmentRate(back) * (_trend ?? 1);
+      return back.isBefore(first) ? _trailingRate : _segmentRate(back) * (trend ?? 1);
     }
     return _segmentRate(d);
   }
 
   /// Tagesverbrauch an [d] (zwischen erstem und letztem bekannten Tag).
-  double _segmentRate(DateTime d) => _daily[d.difference(_first!).inDays];
+  double _segmentRate(DateTime d) => _daily[d.difference(first).inDays];
 
-  void _prepareConsumption(Tracker tracker) {
-    final field = tracker.meter;
-    if (field == null) return;
-
+  /// Verbrauch des Zählerfelds [field] aus seinen Ständen, mit [withBills] auch aus den Rechnungen
+  /// des Trackers; `null`, wenn er nicht bekannt ist.
+  static _Usage? of(Tracker tracker, FieldDefinition field, {required bool withBills}) {
     // Zählerstände je Tag: Endstand des alten Abschnitts (ohne Wechsel-Markierung) und Anfangsstand
     // des nächsten (beim Zählerwechsel der markierte Stand). Mehrere Stände an einem Tag: der höchste
     // schließt ab, der niedrigste Wechsel-Stand beginnt – unabhängig von der Reihenfolge.
     final ends = <DateTime, double>{}, starts = <DateTime, double>{};
     for (final e in tracker.entries) {
-      if (!tracker.isReading(e)) continue;
+      if (tracker.isBill(e)) continue;
       final value = e.number(field.id)?.toDouble();
       if (value == null) continue;
       final date = day(e.date);
@@ -262,11 +326,12 @@ class CostEngine {
 
     // Rechnungen: gleichmäßig auf ihre Tage, die später endende zuletzt – sie gewinnt.
     final bills = [
-      for (final e in tracker.entries)
-        if (tracker.isBill(e))
-          if (e.number(field.id) case final num v) (day(e.periodStart!), day(e.periodEnd!).add(const Duration(days: 1)), v.toDouble()),
+      if (withBills)
+        for (final e in tracker.entries)
+          if (tracker.isBill(e))
+            if (e.number(field.id) case final num v) (day(e.periodStart!), day(e.periodEnd!).add(const Duration(days: 1)), v.toDouble()),
     ]..sort((a, b) => a.$2.compareTo(b.$2));
-    if (readings.isEmpty && bills.isEmpty) return;
+    if (readings.isEmpty && bills.isEmpty) return null;
 
     final bounds = [for (final s in readings) ...[s.$1, s.$2], for (final b in bills) ...[b.$1, b.$2]];
     final first = bounds.reduce((a, b) => a.isBefore(b) ? a : b);
@@ -312,22 +377,14 @@ class CostEngine {
       }
       i = j;
     }
-    _daily.addAll(daily.cast<double>());
-    _first = first;
-    _end = end;
-
-    // Durchschnitt der letzten 365 bekannten Tage (oder aller, wenn es weniger sind).
-    final last = _daily.skip(math.max(0, _daily.length - 365));
-    _trailingRate = last.fold(0.0, (sum, v) => sum + v) / last.length;
-    _trend = _computeTrend();
+    return _Usage(first, end, daily.cast<double>());
   }
 
   /// Letzte 365 bekannte Tage gegen die 365 davor – nur mit zwei vollen Jahren Verlauf.
-  double? _computeTrend() {
-    final end = _end!;
+  (double, double)? _computeTrend() {
     final middle = end.subtract(const Duration(days: 365));
     final start = end.subtract(const Duration(days: 730));
-    if (_first!.isAfter(start)) return null;
+    if (first.isAfter(start)) return null;
     double actual(DateTime from, DateTime to) {
       var sum = 0.0;
       for (var d = from; d.isBefore(to); d = d.add(const Duration(days: 1))) {
@@ -337,23 +394,6 @@ class CostEngine {
     }
 
     final older = actual(start, middle);
-    if (older <= 0) return null;
-    return (actual(middle, end) / older).clamp(0.8, 1.25);
+    return older <= 0 ? null : (actual(middle, end), older);
   }
-
-  static List<(DateTime, double)> _timeline(Tracker tracker, FieldDefinition field) => [
-    for (final e in tracker.entries)
-      if (e.number(field.id) case final num v) (day(e.date), v.toDouble()),
-  ]..sort((a, b) => a.$1.compareTo(b.$1));
-
-  /// Wert, der an [d] gilt: der letzte am oder vor [d], davor [beforeFirst].
-  static double _valueAt(List<(DateTime, double)> timeline, DateTime d, {double beforeFirst = 0}) {
-    var value = beforeFirst;
-    for (final (date, v) in timeline) {
-      if (date.isAfter(d)) break;
-      value = v;
-    }
-    return value;
-  }
-
 }
