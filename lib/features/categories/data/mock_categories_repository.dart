@@ -88,8 +88,15 @@ class MockCategoriesRepository extends MemoryCategoriesRepository {
     Category(id: 'c-miete', name: 'Miete & Nebenkosten', icon: CategoryIcon.house, swatch: CategorySwatch.brown, trackers: [_wohnung], sharedWith: const [anna]),
     Category(id: 'c-auto', name: 'Auto', icon: CategoryIcon.car, swatch: CategorySwatch.green, trackers: [_golf], sharedWith: const [anna]),
     Category(id: 'c-internet', name: 'Internet & Mobilfunk', icon: CategoryIcon.wifi, swatch: CategorySwatch.purple, trackers: [_glasfaser, _handy]),
-    Category(id: 'c-versicherung', name: 'Versicherungen', icon: CategoryIcon.shield, swatch: CategorySwatch.teal, trackers: [_haftpflicht, _hausrat]),
-    Category(id: 'c-abos', name: 'Abos & Mitgliedschaften', icon: CategoryIcon.play, swatch: CategorySwatch.pink, trackers: [_streaming, _fitness, _ticket]),
+    Category(id: 'c-versicherung', name: 'Versicherungen', icon: CategoryIcon.shield, swatch: CategorySwatch.teal, templateKey: 'versicherung', trackers: [_haftpflicht, _hausrat]),
+    Category(
+      id: 'c-abos',
+      name: 'Abos & Mitgliedschaften',
+      icon: CategoryIcon.play,
+      swatch: CategorySwatch.pink,
+      templateKey: 'abos',
+      trackers: [_streaming, _fitness, _ticket],
+    ),
   ];
 
   static DateTime _d(int y, int m, int d) => DateTime.utc(y, m, d);
@@ -233,18 +240,23 @@ class MockCategoriesRepository extends MemoryCategoriesRepository {
 
   /// [provider] landet wie über „Details“ gesetzt in einem eigenen Eintrag, [ends] (ältere Art) im
   /// letzten Preis-Eintrag.
-  static Tracker _contract(String id, String name, List<(DateTime, double)> prices, {int intervalMonths = 1, DateTime? ends, String? provider}) => Tracker(
+  static const _aboGroups = ['Streaming', 'Musik & Hörbücher', 'Fitness & Sport', 'Software & Cloud', 'Zeitung & Magazine', 'Gaming', 'Sonstiges'];
+
+  /// Vertrag mit wiederkehrendem Beitrag; [group] setzt die Art wie „Abo hinzufügen“.
+  static Tracker _contract(String id, String name, List<(DateTime, double)> prices, {int intervalMonths = 1, DateTime? ends, String? provider, String? group}) => Tracker(
     id: 't-$id',
     name: name,
     fields: [
       FieldDefinition(id: 'f-$id-preis', name: 'Beitrag', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: intervalMonths == 12 ? '€/Jahr' : '€/Monat', intervalMonths: intervalMonths),
       if (provider != null) FieldDefinition(id: 'f-$id-anbieter', name: 'Anbieter', kind: FieldKind.text),
       if (ends != null) FieldDefinition(id: 'f-$id-ende', name: 'Vertragsende', kind: FieldKind.date, role: FieldRole.deadline),
+      if (group != null) FieldDefinition(id: 'f-$id-art', name: 'Art', kind: FieldKind.choice, choices: _aboGroups),
     ],
     entries: [
       for (final (i, (date, price)) in prices.indexed)
         Entry(id: 'e-$id-$i', date: date, values: {'f-$id-preis': price, if (i == prices.length - 1 && ends != null) 'f-$id-ende': ends}),
       if (provider != null) Entry(id: 'e-$id-anbieter', date: prices.first.$1, values: {'f-$id-anbieter': provider}),
+      if (group != null) Entry(id: 'e-$id-art', date: prices.first.$1, values: {'f-$id-art': group}),
     ],
   );
 
@@ -252,7 +264,7 @@ class MockCategoriesRepository extends MemoryCategoriesRepository {
   static final _handy = _contract('handy', 'Handyvertrag', [(_d(2024, 1, 1), 14.99)], provider: 'congstar');
   static final _haftpflicht = _contract('haftpflicht', 'Privathaftpflicht', [(_d(2024, 1, 1), 68.40)], intervalMonths: 12);
   static final _hausrat = _contract('hausrat', 'Hausrat', [(_d(2024, 1, 1), 117.60), (_d(2026, 3, 1), 124.80)], intervalMonths: 12);
-  static final _streaming = _contract('streaming', 'Streaming', [(_d(2024, 1, 1), 13.99), (_d(2025, 9, 1), 15.99)]);
-  static final _fitness = _contract('fitness', 'Fitnessstudio', [(_d(2024, 1, 1), 29.90)]);
-  static final _ticket = _contract('ticket', 'Deutschlandticket', [(_d(2024, 1, 1), 49), (_d(2025, 1, 1), 58), (_d(2026, 1, 1), 63)]);
+  static final _streaming = _contract('streaming', 'Netflix', [(_d(2024, 1, 1), 13.99), (_d(2025, 9, 1), 15.99)], group: 'Streaming');
+  static final _fitness = _contract('fitness', 'Fitnessstudio', [(_d(2024, 1, 1), 29.90)], group: 'Fitness & Sport');
+  static final _ticket = _contract('ticket', 'Deutschlandticket', [(_d(2024, 1, 1), 49), (_d(2025, 1, 1), 58), (_d(2026, 1, 1), 63)], group: 'Sonstiges');
 }

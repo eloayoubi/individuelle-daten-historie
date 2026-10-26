@@ -255,6 +255,28 @@ class Tracker extends Equatable {
     return detail;
   }
 
+  /// Art des Trackers (Streaming, Fitness & Sport): Wert des ersten Auswahl-Details, `null` ohne.
+  /// Kategorien aus vielen gleichartigen Trackern (Abos) gruppieren danach.
+  String? get group {
+    for (final f in detailFields) {
+      if (f.kind == FieldKind.choice) return detailValue(f.id) as String?;
+    }
+    return null;
+  }
+
+  /// Aktueller wiederkehrender Betrag (Preis eines Abos) zum Tag [today]: Feld und Wert des ersten
+  /// wiederkehrenden Betrags, `null` ohne Wert bis dahin.
+  (FieldDefinition, num)? currentAmount(DateTime today) {
+    final field = firstWithRole(FieldRole.recurringCost);
+    if (field == null) return null;
+    Entry? latest;
+    for (final e in entries) {
+      if (e.number(field.id) == null || e.date.isAfter(today)) continue;
+      if (latest == null || e.date.isAfter(latest.date)) latest = e;
+    }
+    return latest == null ? null : (field, latest.number(field.id)!);
+  }
+
   /// Einträge mit Verlauf, ohne reine Detail-Einträge.
   List<Entry> get records => [for (final e in entries) if (!isDetailEntry(e)) e];
 

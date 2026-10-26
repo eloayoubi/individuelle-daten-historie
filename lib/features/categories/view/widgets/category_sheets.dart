@@ -35,14 +35,17 @@ class CategoryMenuDelete extends CategoryMenuChoice {
 /// Alles zum Bearbeiten einer Kategorie an einer Stelle: Darstellung, Felder und Einstellungen je
 /// Tracker, weiteren Tracker hinzufügen; für den owner darunter Archivieren und Löschen.
 class CategoryMenuSheet extends StatelessWidget {
-  const CategoryMenuSheet({super.key, required this.category});
+  const CategoryMenuSheet({super.key, required this.category, this.addLabel});
 
   final Category category;
 
-  static Future<CategoryMenuChoice?> show(BuildContext context, Category category) => AppSheet.show<CategoryMenuChoice>(
+  /// Statt „Tracker hinzufügen“, z. B. „Abo hinzufügen“.
+  final String? addLabel;
+
+  static Future<CategoryMenuChoice?> show(BuildContext context, Category category, {String? addLabel}) => AppSheet.show<CategoryMenuChoice>(
     context,
     title: context.l10n.detailEditCategory,
-    child: CategoryMenuSheet(category: category),
+    child: CategoryMenuSheet(category: category, addLabel: addLabel),
   );
 
   @override
@@ -72,7 +75,7 @@ class CategoryMenuSheet extends StatelessWidget {
               ),
             AppListRow(
               leading: AppIconTile(icon: CupertinoIcons.plus, color: c.accent),
-              title: category.trackers.isEmpty ? l10n.detailAddTracker : l10n.detailAddAnotherTracker,
+              title: addLabel ?? (category.trackers.isEmpty ? l10n.detailAddTracker : l10n.detailAddAnotherTracker),
               chevron: false,
               onTap: () => choose(const CategoryMenuAddTracker()),
             ),

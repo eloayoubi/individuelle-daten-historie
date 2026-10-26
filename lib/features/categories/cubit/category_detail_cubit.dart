@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/utils/cost_engine.dart';
 import '../../../core/utils/dashboard_figures.dart';
+import '../../../core/utils/ids.dart';
 import '../../entries/data/tracker_history.dart';
 import '../data/categories_repository.dart';
+import '../data/category_templates.dart';
 import '../data/tracker_details.dart';
 
 part 'category_detail_state.dart';
@@ -96,6 +99,21 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   Future<void> addTracker(String name) =>
       _run(() => _repository.createTracker(categoryId, name.trim(), sort: state.category?.trackers.length ?? 0), success: CategoryDetailEventKind.trackerAdded);
 
+  /// Neuer Tracker nach dem Bauplan [item] (ein Abo, eine Versicherung): Felder anlegen, den Betrag
+  /// ab [ItemDraft.since] eintragen und die Art als Detail setzen.
+  Future<void> addItem(ItemTemplate item, ItemDraft draft) => _run(() async {
+    final name = draft.name.trim();
+    final trackerId = await _repository.createTracker(categoryId, name, sort: state.category?.trackers.length ?? 0);
+    final fields = item.draftFields(interval: draft.interval);
+    final ids = [for (final (i, f) in fields.indexed) await _repository.createField(trackerId, f, sort: i)];
+    if (draft.amount case final double amount) {
+      await _repository.saveEntry(trackerId, Entry(id: newId(), date: CostEngine.day(draft.since), values: {ids.first: amount}));
+    }
+    if (draft.group case final String group when fields.last.kind == FieldKind.choice) {
+      await _repository.saveEntry(trackerId, Entry(id: newId(), date: CostEngine.day(_now()), values: {ids.last: group}));
+    }
+  }, success: CategoryDetailEventKind.itemAdded, name: draft.name.trim());
+
   /// Weiterer Zähler im Tracker (Bad warm neben Bad kalt): Einheit, Umrechnung und Auswertung wie
   /// beim ersten Zähler, sein Verbrauch zählt mit dem der anderen zusammen. [first] benennt dabei den
   /// bisherigen ersten Zähler um und gibt ihm eine Gruppe.
@@ -136,10 +154,10 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
     }
   }
 
-  Future<void> _run(Future<void> Function() write, {CategoryDetailEventKind? success}) async {
+  Future<void> _run(Future<void> Function() write, {CategoryDetailEventKind? success, String? name}) async {
     try {
       await write();
-      if (!isClosed && success != null) emit(state.copyWith(event: CategoryDetailEvent(success)));
+      if (!isClosed && success != null) emit(state.copyWith(event: CategoryDetailEvent(success, name: name)));
     } catch (_) {
       if (!isClosed) emit(state.copyWith(event: CategoryDetailEvent(CategoryDetailEventKind.failed)));
     }

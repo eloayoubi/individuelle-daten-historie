@@ -651,9 +651,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tplTrackerContents => 'Home contents';
 
   @override
-  String get tplTrackerStreaming => 'Streaming';
-
-  @override
   String get tplFieldReading => 'Meter reading';
 
   @override
@@ -2449,4 +2446,117 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get metricsCustomFooter =>
       'The usage of the chosen meters is added up. Only meters with the same unit can be combined.';
+
+  @override
+  String get itemGroup => 'Type';
+
+  @override
+  String get itemAboAdd => 'Add subscription';
+
+  @override
+  String get itemAboNameHint => 'Name, e.g. Netflix';
+
+  @override
+  String get itemAboList => 'Your subscriptions';
+
+  @override
+  String get itemAboEmptyTitle => 'No subscriptions yet';
+
+  @override
+  String get itemAboEmptyBody =>
+      'Add each subscription on its own – Netflix, gym, newspaper … So you see what you pay per month and until when you can cancel.';
+
+  @override
+  String get itemAboGroupVideo => 'Streaming';
+
+  @override
+  String get itemAboGroupMusic => 'Music & audiobooks';
+
+  @override
+  String get itemAboGroupFitness => 'Fitness & sports';
+
+  @override
+  String get itemAboGroupSoftware => 'Software & cloud';
+
+  @override
+  String get itemAboGroupNews => 'News & magazines';
+
+  @override
+  String get itemAboGroupGaming => 'Gaming';
+
+  @override
+  String get itemAboGroupOther => 'Other';
+
+  @override
+  String get itemAboSuggestVideo =>
+      'Netflix|Disney+|Amazon Prime|YouTube Premium|Apple TV+|WOW|DAZN|RTL+|Joyn PLUS+|Paramount+';
+
+  @override
+  String get itemAboSuggestMusic =>
+      'Spotify|Apple Music|Amazon Music Unlimited|YouTube Music|Deezer|Audible';
+
+  @override
+  String get itemAboSuggestFitness =>
+      'Gym|Urban Sports Club|Sports club|Gymondo';
+
+  @override
+  String get itemAboSuggestSoftware =>
+      'iCloud+|Google One|Microsoft 365|Adobe Creative Cloud|ChatGPT Plus|Dropbox';
+
+  @override
+  String get itemAboSuggestNews => 'Newspaper|Magazine|SPIEGEL+|Readly';
+
+  @override
+  String get itemAboSuggestGaming =>
+      'PlayStation Plus|Xbox Game Pass|Nintendo Switch Online';
+
+  @override
+  String get itemAboSuggestOther =>
+      'Deutschlandticket|BahnCard|ADAC|Club membership';
+
+  @override
+  String get itemInsuranceAdd => 'Add insurance';
+
+  @override
+  String get itemInsuranceNameHint => 'Name, e.g. car insurance';
+
+  @override
+  String get itemInsuranceList => 'Your insurances';
+
+  @override
+  String get itemInsuranceEmptyTitle => 'No insurances yet';
+
+  @override
+  String get itemInsuranceEmptyBody =>
+      'Add each insurance on its own – with premium and renewal date.';
+
+  @override
+  String get itemInsuranceSuggestions =>
+      'Liability|Contents|Car insurance|Legal protection|Disability|Accident|Dental|Building|Travel|Pet liability|Term life';
+
+  @override
+  String get itemSuggestions => 'Suggestions';
+
+  @override
+  String get itemSince => 'Since';
+
+  @override
+  String get itemAmountFooter =>
+      'Optional – applies from “Since” until you enter a new value.';
+
+  @override
+  String itemAdded(String name) {
+    return '“$name” added';
+  }
+
+  @override
+  String get itemOtherGroup => 'More';
+
+  @override
+  String get itemNoAmount => 'No amount yet';
+
+  @override
+  String itemDeadline(String name, String date) {
+    return '$name $date';
+  }
 }

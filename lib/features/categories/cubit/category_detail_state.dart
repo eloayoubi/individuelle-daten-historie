@@ -2,13 +2,16 @@ part of 'category_detail_cubit.dart';
 
 enum CategoryDetailStatus { loading, ready, missing, failure }
 
-enum CategoryDetailEventKind { trackerAdded, meterAdded, trackerArchived, archived, restored, deleted, addTrackerHidden, failed }
+enum CategoryDetailEventKind { trackerAdded, itemAdded, meterAdded, trackerArchived, archived, restored, deleted, addTrackerHidden, failed }
 
 /// Einmaliges Ereignis für Toasts und Navigation. Bewusst nicht `const`.
 class CategoryDetailEvent {
-  CategoryDetailEvent(this.kind);
+  CategoryDetailEvent(this.kind, {this.name});
 
   final CategoryDetailEventKind kind;
+
+  /// Name des Angelegten (bei [CategoryDetailEventKind.itemAdded]).
+  final String? name;
 }
 
 class CategoryDetailState extends Equatable {

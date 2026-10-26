@@ -656,9 +656,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tplTrackerContents => 'Hausrat';
 
   @override
-  String get tplTrackerStreaming => 'Streaming';
-
-  @override
   String get tplFieldReading => 'Zählerstand';
 
   @override
@@ -2465,4 +2462,116 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get metricsCustomFooter =>
       'Der Verbrauch der gewählten Zähler wird addiert. Zusammen zählen nur Zähler mit derselben Einheit.';
+
+  @override
+  String get itemGroup => 'Art';
+
+  @override
+  String get itemAboAdd => 'Abo hinzufügen';
+
+  @override
+  String get itemAboNameHint => 'Name, z. B. Netflix';
+
+  @override
+  String get itemAboList => 'Deine Abos';
+
+  @override
+  String get itemAboEmptyTitle => 'Noch keine Abos';
+
+  @override
+  String get itemAboEmptyBody =>
+      'Füge jedes Abo einzeln hinzu – Netflix, Fitnessstudio, Zeitung … So siehst du, was du im Monat zahlst und bis wann du kündigen kannst.';
+
+  @override
+  String get itemAboGroupVideo => 'Streaming';
+
+  @override
+  String get itemAboGroupMusic => 'Musik & Hörbücher';
+
+  @override
+  String get itemAboGroupFitness => 'Fitness & Sport';
+
+  @override
+  String get itemAboGroupSoftware => 'Software & Cloud';
+
+  @override
+  String get itemAboGroupNews => 'Zeitung & Magazine';
+
+  @override
+  String get itemAboGroupGaming => 'Gaming';
+
+  @override
+  String get itemAboGroupOther => 'Sonstiges';
+
+  @override
+  String get itemAboSuggestVideo =>
+      'Netflix|Disney+|Amazon Prime|YouTube Premium|Apple TV+|WOW|DAZN|RTL+|Joyn PLUS+|Paramount+';
+
+  @override
+  String get itemAboSuggestMusic =>
+      'Spotify|Apple Music|Amazon Music Unlimited|YouTube Music|Deezer|Audible';
+
+  @override
+  String get itemAboSuggestFitness =>
+      'Fitnessstudio|Urban Sports Club|Sportverein|Gymondo';
+
+  @override
+  String get itemAboSuggestSoftware =>
+      'iCloud+|Google One|Microsoft 365|Adobe Creative Cloud|ChatGPT Plus|Dropbox';
+
+  @override
+  String get itemAboSuggestNews => 'Tageszeitung|Zeitschrift|SPIEGEL+|Readly';
+
+  @override
+  String get itemAboSuggestGaming =>
+      'PlayStation Plus|Xbox Game Pass|Nintendo Switch Online';
+
+  @override
+  String get itemAboSuggestOther => 'Deutschlandticket|BahnCard|ADAC|Verein';
+
+  @override
+  String get itemInsuranceAdd => 'Versicherung hinzufügen';
+
+  @override
+  String get itemInsuranceNameHint => 'Name, z. B. Kfz-Versicherung';
+
+  @override
+  String get itemInsuranceList => 'Deine Versicherungen';
+
+  @override
+  String get itemInsuranceEmptyTitle => 'Noch keine Versicherungen';
+
+  @override
+  String get itemInsuranceEmptyBody =>
+      'Füge jede Versicherung einzeln hinzu – mit Beitrag und Hauptfälligkeit.';
+
+  @override
+  String get itemInsuranceSuggestions =>
+      'Haftpflicht|Hausrat|Kfz-Versicherung|Rechtsschutz|Berufsunfähigkeit|Unfallversicherung|Zahnzusatz|Wohngebäude|Reiseversicherung|Tierhalterhaftpflicht|Risikolebensversicherung';
+
+  @override
+  String get itemSuggestions => 'Vorschläge';
+
+  @override
+  String get itemSince => 'Seit';
+
+  @override
+  String get itemAmountFooter =>
+      'Optional – gilt ab „Seit“, bis du einen neuen Wert einträgst.';
+
+  @override
+  String itemAdded(String name) {
+    return '„$name“ hinzugefügt';
+  }
+
+  @override
+  String get itemOtherGroup => 'Weitere';
+
+  @override
+  String get itemNoAmount => 'Noch ohne Betrag';
+
+  @override
+  String itemDeadline(String name, String date) {
+    return '$name $date';
+  }
 }
