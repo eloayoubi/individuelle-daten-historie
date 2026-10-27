@@ -45,6 +45,7 @@ erDiagram
 | `trackers.included_in` | Kategorie, in deren Kosten der Tracker schon steckt (z. B. Wasser in den Nebenkosten). Die App zählt ihn dann in keiner Summe. Nie die eigene Kategorie; fällt die Ziel-Kategorie weg, wird der Wert `null`. |
 | `entry_values` | typisierte Werte (`num`, `txt`, `dat`, `flag` – genau eine gesetzt). Ein Trigger prüft, dass Feld und Eintrag zum selben Tracker gehören und die Spalte zum Feldtyp passt. Formeln werden in der App berechnet, nicht gespeichert. |
 | `entitlements` | Abo-Stand (`free`/`plus`; `plus` = Kostenkurve Cloud). Nur lesbar – schreiben darf nur die Service-Role (Edge Function nach Kaufprüfung). |
+| `app_releases` | Pflicht-Update: neuester Build je Vertriebsweg (`testflight`, `app_store`) mit Link. Lesbar für alle, auch ohne Konto; schreiben nur `publish_app_build` (Server, aus `fastlane beta`), die Nummer steigt nur. |
 | `attachments` | Belege (JPEG, PNG, HEIC, PDF, ≤ 20 MB) im privaten Bucket `attachments` unter `<category_id>/<entry_id>/<datei>`. Hochladen nur mit Plus; Mitglieder sehen Belege ohne eigenes Abo. |
 | `store_transactions` | App-Store-Abos von Kostenkurve Plus, eine Zeile je Abo (`original_transaction_id`) mit dem neuesten Stand: Produkt, letzte Transaktion, Ablauf, Erstattung, Umgebung, Apples Signaturzeit. Lesbar nur die eigenen; schreiben nur `apply_plus_transaction`. |
 | `apple_tokens` | Refresh-Token von Sign in with Apple je Nutzer, für den Widerruf beim Löschen des Kontos. Nur Service-Role: RLS an, keine Policies, keine Rechte für anon/authenticated. |

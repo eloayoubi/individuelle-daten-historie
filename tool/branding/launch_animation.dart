@@ -1,7 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:kostenkurve/core/theme/color_config.dart';
+
 import 'brand.dart';
+
+part 'update_animation.dart';
 
 /// Startanimation als Lottie: In das leere Glashaus vom nativen Splash fließen Wasser, Heizung und
 /// Strom, schwappen und kommen zur Ruhe. Dann zeichnet sich die Kostenkurve bis „heute“, der Punkt
@@ -43,6 +47,9 @@ abstract final class LaunchAnimation {
   /// Schritt der Keyframes (in Bildern) für die schwappenden Oberflächen.
   static const _slosh = 2;
 
+  /// Höhe der leeren Schichten (unter dem Haus, im Einheitsquadrat).
+  static const _empty = 0.86;
+
   /// Einheitliche Kurven (kubische Bézier): [_enter] bremst sanft ab (Signatur für Auftritte),
   /// [_glide] beschleunigt und bremst (Bewegung auf der Fläche, die Kurve zeichnet sich).
   static const _enter = (0.2, 0.0, 0.0, 1.0);
@@ -57,7 +64,6 @@ abstract final class LaunchAnimation {
     final today = Brand.at(box, Brand.today);
     final (past, forecast) = Brand.curve();
     final inside = [_mask(Brand.inside(), box)];
-    final house = Brand.house();
 
     final dotScale = _anim([
       (_dotStart, [0, 0], _enter),
@@ -131,9 +137,7 @@ abstract final class LaunchAnimation {
         ],
         masks: inside,
       ),
-      _layer(7, 'Rahmen', [
-        _group('Rahmen', [_shape(house, box), _stroke(Brand.white, Brand.frame * s)]),
-      ]),
+      _frameLayer(7, box),
       _layer(
         8,
         'Schichten',
@@ -143,56 +147,7 @@ abstract final class LaunchAnimation {
         ],
         masks: inside,
       ),
-      _layer(9, 'Glas', [
-        _group('Spiegelung', [_shape(Brand.reflection(), box), _fill(Brand.white, opacity: 16)]),
-        _group('Glas', [
-          _shape(Brand.inside(), box),
-          _gradientFill(
-            start: Brand.at(box, const Offset(0.5, 0.18)),
-            end: Brand.at(box, const Offset(0.5, 0.83)),
-            colors: [(0, Brand.glass[0]), (1, Brand.glass[1])],
-          ),
-        ]),
-      ]),
-      _layer(
-        10,
-        'Hausschatten',
-        [
-          _group('Rahmen', [_shape(house, box), _stroke(Brand.shadow, Brand.frame * s, opacity: Brand.shadowOpacity * 100)]),
-          _group('Fläche', [_shape(Brand.inside(), box), _shade(Brand.shadowOpacity)]),
-        ],
-        offset: Offset(0, Brand.shadowOffset * s),
-        blur: Brand.shadowBlur * s,
-      ),
-      _layer(11, 'Kachel', [
-        _group('Licht', [
-          _path(Brand.squirclePoints(box)),
-          _gradientFill(
-            start: box.topLeft + Offset(s * 0.22, s * 0.08),
-            end: box.topLeft + Offset(s * 0.22 + s * 0.95, s * 0.08),
-            colors: [(0, Brand.white), (1, Brand.white)],
-            alphas: [(0, 0.12), (1, 0)],
-            radial: true,
-          ),
-        ]),
-        _group('Verlauf', [
-          _path(Brand.squirclePoints(box)),
-          _gradientFill(
-            start: box.topLeft + Offset(s * 0.1, 0),
-            end: box.bottomRight - Offset(s * 0.1, 0),
-            colors: [(0, Brand.gradient[0]), (0.5, Brand.gradient[1]), (1, Brand.gradient[2])],
-          ),
-        ]),
-      ]),
-      _layer(
-        12,
-        'Kachelschatten',
-        [
-          _group('Schatten', [_path(Brand.squirclePoints(box)), _shade(0.26)]),
-        ],
-        offset: Offset(0, 0.03 * s),
-        blur: 0.05 * s,
-      ),
+      ..._houseLayers(9, box),
     ];
 
     return {
@@ -233,12 +188,94 @@ abstract final class LaunchAnimation {
     };
   }
 
+  /// Rahmen des Hauses – steht still.
+  static Map<String, Object?> _frameLayer(int ind, Rect box, {int? until}) => _layer(
+    ind,
+    'Rahmen',
+    [
+      _group('Rahmen', [_shape(Brand.house(), box), _stroke(Brand.white, Brand.frame * box.width)]),
+    ],
+    until: until,
+  );
+
+  /// Unter den Schichten: Glas, Schatten des Hauses, Kachel und ihr Schatten (Ebenen ab [ind]).
+  static List<Map<String, Object?>> _houseLayers(int ind, Rect box, {int? until}) {
+    final s = box.width;
+    final house = Brand.house();
+    return [
+      _layer(
+        ind,
+        'Glas',
+        [
+          _group('Spiegelung', [_shape(Brand.reflection(), box), _fill(Brand.white, opacity: 16)]),
+          _group('Glas', [
+            _shape(Brand.inside(), box),
+            _gradientFill(
+              start: Brand.at(box, const Offset(0.5, 0.18)),
+              end: Brand.at(box, const Offset(0.5, 0.83)),
+              colors: [(0, Brand.glass[0]), (1, Brand.glass[1])],
+            ),
+          ]),
+        ],
+        until: until,
+      ),
+      _layer(
+        ind + 1,
+        'Hausschatten',
+        [
+          _group('Rahmen', [_shape(house, box), _stroke(Brand.shadow, Brand.frame * s, opacity: Brand.shadowOpacity * 100)]),
+          _group('Fläche', [_shape(Brand.inside(), box), _shade(Brand.shadowOpacity)]),
+        ],
+        offset: Offset(0, Brand.shadowOffset * s),
+        blur: Brand.shadowBlur * s,
+        until: until,
+      ),
+      _layer(
+        ind + 2,
+        'Kachel',
+        [
+          _group('Licht', [
+            _path(Brand.squirclePoints(box)),
+            _gradientFill(
+              start: box.topLeft + Offset(s * 0.22, s * 0.08),
+              end: box.topLeft + Offset(s * 0.22 + s * 0.95, s * 0.08),
+              colors: [(0, Brand.white), (1, Brand.white)],
+              alphas: [(0, 0.12), (1, 0)],
+              radial: true,
+            ),
+          ]),
+          _group('Verlauf', [
+            _path(Brand.squirclePoints(box)),
+            _gradientFill(
+              start: box.topLeft + Offset(s * 0.1, 0),
+              end: box.bottomRight - Offset(s * 0.1, 0),
+              colors: [(0, Brand.gradient[0]), (0.5, Brand.gradient[1]), (1, Brand.gradient[2])],
+            ),
+          ]),
+        ],
+        until: until,
+      ),
+      _layer(
+        ind + 3,
+        'Kachelschatten',
+        [
+          _group('Schatten', [_path(Brand.squirclePoints(box)), _shade(0.26)]),
+        ],
+        offset: Offset(0, 0.03 * s),
+        blur: 0.05 * s,
+        until: until,
+      ),
+    ];
+  }
+
+  static Map<String, Object?> _liquid(Rect box, int i) =>
+      _liquidGroup(box, i, _fillKeys(box, i, start: _fillStart + i * _fillStagger, duration: _fillDuration));
+
   /// Schicht [i] fließt von unten ein: steigt mit sanftem Abbremsen, schwappt (Wellen und leichtes
-  /// Kippen, beides klingt ab) und kommt genau auf der Form des Icons zur Ruhe.
-  static Map<String, Object?> _liquid(Rect box, int i) {
+  /// Kippen, beides klingt ab) und kommt genau auf der Form des Icons zur Ruhe. Keyframes ab [start]
+  /// über [duration] ms; der letzte ist die fertige Schicht.
+  static List<(int, Map<String, Object?>, (double, double, double, double)?)> _fillKeys(Rect box, int i, {required int start, required int duration}) {
     final layer = Brand.layers[i];
-    final start = _fillStart + i * _fillStagger;
-    const bottom = 0.86;
     final phase = i * 1.7;
 
     BezierShape surface(double u) {
@@ -250,19 +287,27 @@ abstract final class LaunchAnimation {
         for (var k = 0; k < Brand.layerXs.length; k++)
           Offset(
             Brand.layerXs[k],
-            bottom +
-                (layer.top[k] - bottom) * rise +
+            _empty +
+                (layer.top[k] - _empty) * rise +
                 swell * (0.03 * math.sin(2 * math.pi * (1.3 * Brand.layerXs[k] - 2.2 * u) + phase) + 0.14 * (Brand.layerXs[k] - 0.5) * math.sin(2 * math.pi * 1.4 * u + phase)),
           ),
       ]).closedDownTo(0.95);
     }
 
     final keys = <(int, Map<String, Object?>, (double, double, double, double)?)>[];
-    final steps = (_fillDuration * fps / 1000 / _slosh).round();
+    final steps = (duration * fps / 1000 / _slosh).round();
     for (var k = 0; k <= steps; k++) {
       final u = k / steps;
-      keys.add((start + (u * _fillDuration).round(), _shapeValue(k == steps ? Brand.layerArea(i) : surface(u), box), k == steps ? null : _linear));
+      keys.add((start + (u * duration).round(), _shapeValue(k == steps ? Brand.layerArea(i) : surface(u), box), k == steps ? null : _linear));
     }
+    return keys;
+  }
+
+  /// Leere Schicht: flach unter dem Haus, wie vor dem Einfließen.
+  static BezierShape _drained() => BezierShape.smooth([for (final x in Brand.layerXs) Offset(x, _empty)]).closedDownTo(0.95);
+
+  static Map<String, Object?> _liquidGroup(Rect box, int i, List<(int, Map<String, Object?>, (double, double, double, double)?)> keys) {
+    final layer = Brand.layers[i];
     final top = layer.top.reduce(math.min);
     return _group('Schicht ${i + 1}', [
       {'ty': 'sh', 'ks': _animShape(keys)},
@@ -361,6 +406,7 @@ abstract final class LaunchAnimation {
     List<Map<String, Object?>>? masks,
     Offset offset = Offset.zero,
     double? blur,
+    int? until,
   }) => {
     'ddd': 0,
     'ind': ind,
@@ -386,7 +432,7 @@ abstract final class LaunchAnimation {
       ],
     'shapes': shapes,
     'ip': 0,
-    'op': _frame(duration),
+    'op': _frame(until ?? duration),
     'st': 0,
     'bm': 0,
   };

@@ -83,14 +83,17 @@ void main() {
 
   final launch = '${jsonEncode(LaunchAnimation.build())}\n';
 
-  test('launch_animation', () {
-    final file = File('assets/branding/launch_animation.json');
-    if (autoUpdateGoldenFiles) {
-      file.writeAsStringSync(launch);
-    } else {
-      expect(file.readAsStringSync(), launch, reason: 'Startanimation passt nicht mehr zum Code – mit --update-goldens neu erzeugen.');
-    }
-  });
+  // Startanimation und Animation des Pflicht-Updates (ForceUpdatePage).
+  for (final (name, json) in [('launch_animation', launch), ('update_animation', '${jsonEncode(UpdateAnimation.build())}\n')]) {
+    test(name, () {
+      final file = File('assets/branding/$name.json');
+      if (autoUpdateGoldenFiles) {
+        file.writeAsStringSync(json);
+      } else {
+        expect(file.readAsStringSync(), json, reason: '$name passt nicht mehr zum Code – mit --update-goldens neu erzeugen.');
+      }
+    });
+  }
 
   // Splash hell (#F2F2F7) und dunkel (#000000): Bild 0 der Startanimation, die leere Kachel. Das Bild
   // gilt als @4x (iOS 1x = ¼, Android xxxhdpi), 1152 px = 288 pt/dp – die Fläche, die Android 12

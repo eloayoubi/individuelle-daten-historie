@@ -52,6 +52,9 @@ import 'package:kostenkurve/features/shell/view/shell_page.dart';
 import 'package:kostenkurve/features/storage/data/storage_mode.dart';
 import 'package:kostenkurve/features/storage/view/cloud_paused_page.dart';
 import 'package:kostenkurve/features/storage/view/start_page.dart';
+import 'package:kostenkurve/features/update/data/app_release.dart';
+import 'package:kostenkurve/features/update/data/installed_app.dart';
+import 'package:kostenkurve/features/update/view/force_update_page.dart';
 import 'package:kostenkurve/l10n/generated/app_localizations.dart';
 
 import 'support/pump_app.dart';
@@ -128,6 +131,13 @@ void main() {
     ('register', const AuthPage()),
     ('sign in', const AuthPage(mode: AuthMode.signIn)),
     ('cloud paused', const CloudPausedPage()),
+    (
+      'force update',
+      const ForceUpdatePage(
+        installed: InstalledApp(version: '1.0.0', build: 11, channel: ReleaseChannel.testflight),
+        release: AppRelease(build: 12),
+      ),
+    ),
     ('privacy', const LegalPage(document: LegalDocument.privacy)),
     ('terms', const LegalPage(document: LegalDocument.terms)),
     ('imprint', const LegalPage(document: LegalDocument.imprint)),

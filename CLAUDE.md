@@ -43,7 +43,7 @@ cp -R supabase/.temp "$tmp/supabase/" && cp .env.local "$tmp/" && cp ios/fastlan
 
 Nur wenn der Nutzer ausdrücklich danach fragt: Ein Lauf schickt den Build an die externe TestFlight-Gruppe „Tester“ und benachrichtigt sie.
 
-**Auf dem Mac:** im Worktree von oben `cd "$tmp/ios" && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 fastlane beta` (optional `changelog:"Neu: …"`, `dry_run:true`, `skip_tests:true`). Läuft 10–20 Minuten, also im Hintergrund starten. Die Lane testet, baut, signiert, lädt hoch, gibt für „Tester“ frei und pusht den Tag `testflight/<nummer>`. Danach den Worktree entfernen.
+**Auf dem Mac:** im Worktree von oben `cd "$tmp/ios" && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 fastlane beta` (optional `changelog:"Neu: …"`, `dry_run:true`, `skip_tests:true`). Läuft 10–20 Minuten, also im Hintergrund starten. Die Lane testet, baut, signiert, lädt hoch, gibt für „Tester“ frei, pusht den Tag `testflight/<nummer>` und setzt das Pflicht-Update (wartet, bis Apple den Build für „Tester“ freigibt; ältere Builds sperren dann mit „Neue Version verfügbar“). Ohne Pflicht-Update: `force_update:false`. Danach den Worktree entfernen.
 
 **In der Cloud:** Der Build läuft auf GitHub Actions (`.github/workflows/testflight.yml` ruft `fastlane beta` auf einem macOS-Runner auf) und baut immer `main` von GitHub. Also erst committen und nach `main` pushen, dann:
 

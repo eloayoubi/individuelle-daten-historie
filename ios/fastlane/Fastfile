@@ -4,7 +4,9 @@
 #   cd ios && fastlane beta changelog:"Neu: …"           # mit eigenem Testhinweis
 #   cd ios && fastlane beta dry_run:true                 # nur bauen und signieren, nichts hochladen
 #   cd ios && fastlane beta skip_tests:true build_number:7
+#   cd ios && fastlane beta force_update:false           # ohne Pflicht-Update: ältere Builds laufen weiter
 #   cd ios && fastlane distribute build_number:6         # vorhandenen Build an die Gruppe Tester geben
+#   cd ios && fastlane force_update build_number:12      # Pflicht-Update von Hand (z. B. nach langer Beta-Prüfung)
 #   cd ios && fastlane check                             # API-Key prüfen, letzte Build-Nummer zeigen
 #   cd ios && fastlane metadata                          # Store-Texte und Screenshots hochladen (kein Binary, keine Einreichung)
 #   cd ios && fastlane metadata skip_screenshots:true    # nur Texte (oder skip_metadata:true: nur Screenshots)
@@ -13,6 +15,11 @@
 #
 # Version = pubspec.yaml (Teil vor dem +), Build-Nummer = höchste in App Store Connect + 1.
 # Testhinweis = Commit-Betreffs seit dem letzten Tag testflight/<nummer> (ohne chore/ci/test/docs).
+#
+# Pflicht-Update: Sobald der neue Build bei den Testern ist, trägt die Lane ihn in Supabase ein
+# (app_releases über `supabase db query --linked`); ältere Builds zeigen dann „Neue Version
+# verfügbar“ und lassen sich erst nach dem Update weiter benutzen. Lokal reicht der Login der
+# Supabase-CLI, auf GitHub das Secret SUPABASE_ACCESS_TOKEN.
 #
 # Signieren (Cloud-Signing, kein Zertifikat im Repo):
 #   lokal          über die in Xcode angemeldete Apple-ID des Teams
@@ -42,7 +49,7 @@ APP_NAME = "Kostenkurve"
 
 platform :ios do
   desc "Testet, baut und signiert die App, lädt sie zu TestFlight hoch und gibt sie der Tester-Gruppe frei"
-  desc "Optionen: changelog, build_number, skip_tests, dry_run"
+  desc "Optionen: changelog, build_number, skip_tests, dry_run, force_update (Standard true)"
   lane :beta do |options|
     sign_with_key = ENV["CI"] == "true" || ENV["ASC_SIGN_WITH_KEY"] == "1"
     api_key = asc_api_key(sign_with_key: sign_with_key)
@@ -102,13 +109,15 @@ platform :ios do
 
     tag_release(build_number: build_number)
     UI.success("Build #{version} (#{build_number}) ist bei #{ENV['TESTFLIGHT_GROUP']}")
+    publish_build(api_key: api_key, version: version, build_number: build_number) unless options[:force_update] == false
   end
 
-  desc "Gibt einen schon hochgeladenen Build der Tester-Gruppe frei. Optionen: build_number (Pflicht), changelog"
+  desc "Gibt einen schon hochgeladenen Build der Tester-Gruppe frei. Optionen: build_number (Pflicht), changelog, force_update"
   lane :distribute do |options|
     UI.user_error!("build_number fehlt, z. B. fastlane distribute build_number:6") unless options[:build_number]
+    api_key = asc_api_key
     upload_to_testflight(
-      api_key: asc_api_key,
+      api_key: api_key,
       distribute_only: true,
       app_platform: "ios",
       build_number: options[:build_number].to_s,
@@ -118,6 +127,14 @@ platform :ios do
       groups: [ENV.fetch("TESTFLIGHT_GROUP")],
       notify_external_testers: true,
     )
+    publish_build(api_key: api_key, version: pubspec_version, build_number: options[:build_number]) unless options[:force_update] == false
+  end
+
+  desc "Pflicht-Update von Hand: Builds vor build_number müssen aktualisieren – wartet, bis der Build bei den Testern ist"
+  desc "Optionen: build_number (Pflicht), app_version (Standard: pubspec.yaml)"
+  lane :force_update do |options|
+    UI.user_error!("build_number fehlt, z. B. fastlane force_update build_number:12") unless options[:build_number]
+    publish_build(api_key: asc_api_key, version: (options[:app_version] || pubspec_version).to_s, build_number: options[:build_number], strict: true)
   end
 
   desc "Prüft den API-Key und zeigt die letzte Build-Nummer in TestFlight"
@@ -220,6 +237,30 @@ platform :ios do
     end
   end
 
+  # Pflicht-Update: Builds vor diesem müssen aktualisieren (public.publish_app_build, die Nummer
+  # steigt nur). Erst wenn Apple den Build für externe Tester freigegeben hat – sonst sperrt die App
+  # Tester aus, die ihn noch gar nicht laden können. Wartet darauf höchstens FORCE_UPDATE_WAIT Minuten.
+  # Der Build ist dann schon verteilt; ein Fehler warnt nur (strict: true bricht ab) und lässt sich mit
+  # `fastlane force_update build_number:<nr>` nachholen.
+  private_lane :publish_build do |options|
+    build_number = Integer(options[:build_number].to_s)
+    begin
+      wait_until_testable(api_key: options[:api_key], version: options[:version], build_number: build_number)
+      url = ENV.fetch("TESTFLIGHT_URL")
+      UI.user_error!("TESTFLIGHT_URL ist kein TestFlight-Link: #{url}") unless url =~ %r{\Ahttps://testflight\.apple\.com/join/\w+\z}
+      Dir.chdir(ROOT) do
+        sh("npx", "--yes", "supabase", "db", "query", "--linked", "--project-ref", supabase_project_ref,
+           "select public.publish_app_build('testflight', #{build_number}, '#{url}')", log: false)
+      end
+      UI.success("Pflicht-Update: Builds vor #{build_number} müssen aktualisieren")
+    rescue StandardError => e
+      raise if options[:strict]
+      UI.important("Pflicht-Update für Build #{build_number} nicht gesetzt: #{e.message} – nachholen mit " \
+                   "fastlane force_update build_number:#{build_number}")
+      $stdout.puts("::warning title=Pflicht-Update fehlt::Build #{build_number} nicht eingetragen – fastlane force_update build_number:#{build_number}") if ENV["GITHUB_ACTIONS"] == "true"
+    end
+  end
+
   # Commit-Betreffs seit dem letzten TestFlight-Tag, ohne Merges und Routine-Commits.
   # Letzter Tag = höchste Nummer, die im gebauten Commit steckt. Vor dem ersten Build gibt es
   # keinen: dann die letzten 15 Commits. (Nicht über `git describe`: dessen Fehlermeldung landet
@@ -245,6 +286,31 @@ def pubspec_version
   version = File.read(File.join(ROOT, "pubspec.yaml"))[/^version:\s*([^+\s]+)/, 1]
   UI.user_error!("pubspec.yaml ohne version:") unless version
   version
+end
+
+# Wartet, bis externe Tester den Build laden können (Beta-Prüfung bestanden, an die Gruppe verteilt).
+# Builds derselben Version gibt Apple meist sofort frei, eine neue Version braucht die Beta-Prüfung.
+def wait_until_testable(api_key:, version:, build_number:)
+  Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: api_key)
+  app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+  deadline = Time.now + Integer(ENV.fetch("FORCE_UPDATE_WAIT", "20")) * 60
+  loop do
+    build = Spaceship::ConnectAPI::Build.all(app_id: app.id, version: version, build_number: build_number.to_s, includes: "buildBetaDetail").first
+    state = build&.build_beta_detail&.external_build_state
+    return if %w[IN_BETA_TESTING BETA_APPROVED].include?(state)
+    UI.user_error!("Build #{build_number} ist für Tester nicht freigegeben (#{state})") if %w[BETA_REJECTED EXPIRED PROCESSING_EXCEPTION].include?(state)
+    UI.user_error!("Build #{build_number} nach #{ENV.fetch('FORCE_UPDATE_WAIT', '20')} Minuten noch nicht bei den Testern (#{state || 'nicht gefunden'})") if Time.now > deadline
+    UI.message("Pflicht-Update wartet, bis die Tester Build #{build_number} laden können (#{state || 'noch nicht sichtbar'}) …")
+    sleep(30)
+  end
+end
+
+# Projekt-Ref aus SUPABASE_URL in .env.local (https://<ref>.supabase.co).
+def supabase_project_ref
+  url = File.read(File.join(ROOT, ".env.local"))[/^\s*SUPABASE_URL\s*=\s*(\S+)/, 1].to_s
+  ref = url[%r{\Ahttps://([a-z0-9]+)\.supabase\.co}, 1]
+  UI.user_error!("Projekt-Ref aus SUPABASE_URL in .env.local nicht lesbar (erwartet https://<ref>.supabase.co)") unless ref
+  ref
 end
 
 # Archiv und Export müssen dasselbe Team nutzen – sonst scheitert der Export erst nach dem
