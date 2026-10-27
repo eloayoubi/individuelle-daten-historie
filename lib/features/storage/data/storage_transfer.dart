@@ -128,7 +128,8 @@ class StorageTransfer {
       trackers[t.id] = tracker;
       for (final (j, f) in t.fields.indexed) {
         if (match != null && match.fields.any((r) => r.id == fields[f.id])) continue;
-        fields[f.id] = await remote.createField(tracker, FieldDraft.of(f), sort: j);
+        // Gesamtfeld vor seinen Teilen (Reihenfolge der Vorlage); fehlt es oben noch, zählt der Teil selbst.
+        fields[f.id] = await remote.createField(tracker, FieldDraft.of(f).withPartOf(fields[f.partOf]), sort: j);
       }
     }
     return {'id': existing.id, 'trackers': trackers, 'fields': fields};
@@ -143,7 +144,7 @@ class StorageTransfer {
         swatch: c.swatch,
         templateKey: c.templateKey,
         trackers: [
-          for (final t in c.trackers) TrackerDraft(name: t.name, fields: [for (final f in t.fields) FieldDraft.of(f)]),
+          for (final t in c.trackers) TrackerDraft.of(t),
         ],
       ),
     );

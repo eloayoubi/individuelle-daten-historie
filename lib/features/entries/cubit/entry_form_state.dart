@@ -40,6 +40,7 @@ class EntryFormState extends Equatable {
     this.meterChange = false,
     this.periodStart,
     this.periodEnd,
+    this.split = const {},
     this.saving = false,
     this.event,
   });
@@ -62,11 +63,28 @@ class EntryFormState extends Equatable {
       periodStart: period?.start ?? entry?.periodStart,
       periodEnd: period?.end ?? entry?.periodEnd,
       originalValues: entry?.values ?? const {},
+      split: _splitFor(tracker, entry),
       inputs: {
         for (final MapEntry(:key, :value) in (entry?.values ?? const <String, Object>{}).entries)
           key: value is num ? formatNumberInput(value, decimalSeparator: args.decimalSeparator) : value,
       },
     );
+  }
+
+  /// Aufteilung offen, wenn der Eintrag Teilbeträge trägt – neu: wenn der letzte Eintrag mit
+  /// Gesamt- oder Teilbetrag aufgeteilt war.
+  static Set<String> _splitFor(Tracker tracker, Entry? entry) => {
+    for (final f in tracker.fields)
+      if (tracker.isPart(f) && (entry ?? _latestWith(tracker, f.partOf!))?.values.containsKey(f.id) == true) f.partOf!,
+  };
+
+  static Entry? _latestWith(Tracker tracker, String totalId) {
+    final ids = {totalId, for (final p in tracker.partsOf(totalId)) p.id};
+    Entry? latest;
+    for (final e in tracker.entries) {
+      if (e.values.keys.any(ids.contains) && (latest == null || e.date.isAfter(latest.date))) latest = e;
+    }
+    return latest;
   }
 
   /// Vorhandener Eintrag: nach seiner Art. Neu: wie zuletzt erfasst, ohne Zählereintrag die Rechnung.
@@ -140,6 +158,10 @@ class EntryFormState extends Equatable {
   /// 2025): Verbrauch und Kosten verteilen sich über diese Tage. Beide `null` = kein Zeitraum.
   final DateTime? periodStart;
   final DateTime? periodEnd;
+
+  /// Gesamtfelder, deren Aufteilung offen ist (Warmmiete → Kaltmiete, Betriebskosten …). Nur dann
+  /// zählen die Eingaben der Teilbeträge.
+  final Set<String> split;
   final bool saving;
   final EntryFormEvent? event;
 
@@ -153,6 +175,28 @@ class EntryFormState extends Equatable {
     EntryFormMode.reading => [for (final f in tracker.entryFields) if (!f.isRate) f],
     EntryFormMode.contract => tracker.contractFields,
   };
+
+  /// Teilbetrag, der in diesem Formular unter seinem Gesamtfeld steht.
+  bool isPart(FieldDefinition f) => f.partOf != null && fields.any((total) => total.id == f.partOf);
+
+  /// Teilbeträge von [total] in diesem Formular.
+  List<FieldDefinition> partsOf(FieldDefinition total) => [for (final f in fields) if (f.partOf == total.id) f];
+
+  /// Eingabe zählt: kein Teilbetrag oder einer mit offener Aufteilung.
+  bool _counts(FieldDefinition f) => !isPart(f) || split.contains(f.partOf);
+
+  /// Summe der Teilbeträge von [total] (auf Cent gerundet), `null`, solange keiner eingetragen ist.
+  /// Ein leerer wiederkehrender Teil zählt mit seinem aktuellen Wert – leer heißt unverändert (bei
+  /// einer Mieterhöhung trägt man nur die neue Kaltmiete ein).
+  double? partSum(FieldDefinition total) {
+    final parts = partsOf(total);
+    if (!parts.any((p) => valueOf(p) is num)) return null;
+    var sum = 0.0;
+    for (final part in parts) {
+      if (valueOf(part) ?? (part.isRate ? previous(part)?.$2 : null) case final num v) sum += v;
+    }
+    return (sum * 100).round() / 100;
+  }
 
   /// Rechnung und Zählerstand lassen sich bei einem neuen Eintrag wechseln.
   bool get canSwitchMode => isNew && (mode == EntryFormMode.bill || mode == EntryFormMode.reading);
@@ -203,12 +247,14 @@ class EntryFormState extends Equatable {
   /// Zahlenfelder mit Eingabe, die sich nicht lesen lässt.
   Set<String> get invalid => {
     for (final f in fields)
-      if (inputs[f.id] case final String text when text.trim().isNotEmpty && f.kind.storage == FieldStorage.number && valueOf(f) == null) f.id,
+      if (inputs[f.id] case final String text when _counts(f) && text.trim().isNotEmpty && f.kind.storage == FieldStorage.number && valueOf(f) == null) f.id,
   };
 
+  /// Werte der Eingaben. Ohne Gesamtbetrag gilt bei offener Aufteilung die Summe der Teilbeträge.
   Map<String, Object> get values => {
     for (final f in fields)
-      if (valueOf(f) case final Object v) f.id: v,
+      if (_counts(f))
+        if (valueOf(f) ?? (split.contains(f.id) ? partSum(f) : null) case final Object v) f.id: v,
   };
 
   /// Eine Rechnung braucht Zeitraum und Verbrauch, sonst reicht ein beliebiger Wert.
@@ -272,6 +318,7 @@ class EntryFormState extends Equatable {
     String? note,
     bool? meterChange,
     ({DateTime? start, DateTime? end})? period,
+    Set<String>? split,
     bool? saving,
     EntryFormEvent? event,
   }) => EntryFormState(
@@ -288,10 +335,11 @@ class EntryFormState extends Equatable {
     meterChange: meterChange ?? this.meterChange,
     periodStart: period == null ? periodStart : period.start,
     periodEnd: period == null ? periodEnd : period.end,
+    split: split ?? this.split,
     saving: saving ?? this.saving,
     event: event,
   );
 
   @override
-  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, today, mode, inputs, originalValues, note, meterChange, periodStart, periodEnd, saving, event];
+  List<Object?> get props => [tracker, entryId, isNew, date, decimalSeparator, today, mode, inputs, originalValues, note, meterChange, periodStart, periodEnd, split, saving, event];
 }

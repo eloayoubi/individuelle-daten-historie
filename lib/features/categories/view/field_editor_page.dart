@@ -256,6 +256,22 @@ class _EditorViewState extends State<_EditorView> {
                   ),
                 ),
               ],
+              if (s.partTotals.isNotEmpty) ...[
+                SectionHeader(title: l10n.fieldPartOf),
+                AppListGroup(
+                  dividerIndent: Spacing.l,
+                  footer: l10n.fieldPartFooter,
+                  children: [
+                    for (final (id, title) in [(null, l10n.fieldPartNone), for (final t in s.partTotals) (t.id, t.name)])
+                      AppListRow(
+                        title: title,
+                        trailing: id == s.effectivePartOf ? Icon(CupertinoIcons.checkmark_alt, size: 20, color: c.accent) : null,
+                        chevron: false,
+                        onTap: () => cubit.setPartOf(id),
+                      ),
+                  ],
+                ),
+              ],
               if (s.summaries.isNotEmpty) ...[
                 SectionHeader(title: l10n.fieldSummary),
                 AppListGroup(

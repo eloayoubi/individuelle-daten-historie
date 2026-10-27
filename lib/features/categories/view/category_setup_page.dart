@@ -130,6 +130,10 @@ class _SetupViewState extends State<_SetupView> {
                             FieldRow(
                               field: field,
                               swatch: state.swatch,
+                              partOf: switch (tracker.parts[f]) {
+                                final int total => tracker.fields[total].name,
+                                null => null,
+                              },
                               trailing: AppSwitch(value: state.isIncluded(t, f), semanticLabel: field.name, onChanged: (_) => cubit.toggleField(t, f)),
                             ),
                         ],

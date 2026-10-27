@@ -193,9 +193,18 @@ abstract final class CategoryTemplates {
         icon: CategoryIcon.house,
         swatch: CategorySwatch.brown,
         trackers: [
+          // Viele kennen nur die Warmmiete: Sie zählt, Kaltmiete und Nebenkosten sind ihre Aufteilung.
           TrackerDraft(
             name: l.tplTrackerFlat,
-            fields: [recurring(l.tplFieldBaseRent), recurring(l.tplFieldAdvance), oneOff(l.tplFieldSettlement), text(l.tplFieldLandlord)],
+            fields: [
+              recurring(l.tplFieldWarmRent),
+              recurring(l.tplFieldBaseRent),
+              recurring(l.tplFieldOperatingCosts),
+              recurring(l.tplFieldHeatingCosts),
+              oneOff(l.tplFieldSettlement),
+              text(l.tplFieldLandlord),
+            ],
+            parts: const {1: 0, 2: 0, 3: 0},
           ),
         ],
       ),

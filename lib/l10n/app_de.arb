@@ -277,6 +277,17 @@
   "fieldKind": "Feldtyp",
   "fieldRole": "Zeitverhalten",
   "fieldRoleFooter": "Bestimmt, wie Verlauf, Kosten und Prognose mit dem Wert rechnen.",
+  "fieldPartOf": "Teil von",
+  "fieldPartNone": "Eigener Betrag",
+  "fieldPartOfName": "Teil von {total}",
+  "@fieldPartOfName": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "fieldPartFooter": "Ein Teilbetrag zählt nicht extra: Er zeigt, woraus sich der Gesamtbetrag zusammensetzt – etwa die Kaltmiete in der Warmmiete. Im Eintrag steht er unter „Aufteilen“.",
   "fieldKindLocked": "Passt nicht zu den gespeicherten Werten",
   "fieldUnit": "Einheit",
   "fieldUnitHint": "z. B. kWh",
@@ -355,7 +366,7 @@
   "tplWasser": "Wasser",
   "tplWasserHint": "Wasserzähler und Preis je Kubikmeter",
   "tplMiete": "Miete & Nebenkosten",
-  "tplMieteHint": "Kaltmiete, Vorauszahlung und Abrechnungen",
+  "tplMieteHint": "Warmmiete, auf Wunsch aufgeteilt, und Abrechnungen",
   "tplAuto": "Auto",
   "tplAutoHint": "Kilometerstand, Tanken, Versicherung, Steuer und HU",
   "tplInternet": "Internet & Mobilfunk",
@@ -380,8 +391,10 @@
   "tplFieldProvider": "Anbieter",
   "tplFieldContractEnd": "Vertragsende",
   "tplFieldWaterPrice": "Wasser & Abwasser",
+  "tplFieldWarmRent": "Warmmiete",
   "tplFieldBaseRent": "Kaltmiete",
-  "tplFieldAdvance": "Nebenkosten-Vorauszahlung",
+  "tplFieldOperatingCosts": "Betriebskosten",
+  "tplFieldHeatingCosts": "Heizkosten",
   "tplFieldSettlement": "Nachzahlung / Guthaben",
   "tplFieldLandlord": "Vermieter",
   "tplFieldFuel": "Tanken / Laden",
@@ -999,6 +1012,69 @@
   "entryPeriodTo": "Bis",
   "entryPeriodHint": "Nachzahlung oder Guthaben für einen Zeitraum: Der Betrag verteilt sich auf dessen Tage statt auf den Stichtag.",
   "entryPeriodInvalid": "Das Ende liegt vor dem Anfang.",
+  "entrySplit": "Aufteilen",
+  "entrySplitHint": "{parts} einzeln eintragen. Gezählt wird nur „{total}“.",
+  "@entrySplitHint": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "entrySplitAsTotal": "Zusammen {sum} – wird als „{total}“ gespeichert.",
+  "@entrySplitAsTotal": {
+    "placeholders": {
+      "sum": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "entrySplitMatches": "Zusammen {sum} – passt zu „{total}“.",
+  "@entrySplitMatches": {
+    "placeholders": {
+      "sum": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "entrySplitBelow": "Zusammen {sum} – {gap} weniger als „{total}“.",
+  "@entrySplitBelow": {
+    "placeholders": {
+      "sum": {
+        "type": "String"
+      },
+      "gap": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "entrySplitAbove": "Zusammen {sum} – {gap} mehr als „{total}“.",
+  "@entrySplitAbove": {
+    "placeholders": {
+      "sum": {
+        "type": "String"
+      },
+      "gap": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "entrySplitUseSum": "Summe übernehmen",
   "entryKindBill": "Rechnung",
   "entryKindReading": "Zählerstand",
   "entryBillConsumption": "Verbrauch",

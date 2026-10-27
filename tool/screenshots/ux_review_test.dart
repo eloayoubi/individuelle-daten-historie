@@ -61,6 +61,22 @@ void main() {
     (c) => c.id == 'c-auto',
   );
   final wasser = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-wasser');
+  final miete = MockCategoriesRepository.categories.firstWhere((c) => c.id == 'c-miete');
+  // Wohnung wie aus der Vorlage: Warmmiete, aufteilbar in Kaltmiete, Betriebs- und Heizkosten.
+  FieldDefinition rent(String id, String name, {String? partOf}) =>
+      FieldDefinition(id: id, name: name, kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Monat', partOf: partOf);
+  final flat = Tracker(
+    id: 't-warm',
+    name: 'Wohnung',
+    fields: [
+      rent('w', 'Warmmiete'),
+      rent('k', 'Kaltmiete', partOf: 'w'),
+      rent('b', 'Betriebskosten', partOf: 'w'),
+      rent('h', 'Heizkosten', partOf: 'w'),
+      const FieldDefinition(id: 'n', name: 'Nachzahlung / Guthaben', kind: FieldKind.currency, role: FieldRole.oneOffCost, unit: '€'),
+    ],
+  );
+  final flatSplit = flat.copyWith(entries: [Entry(id: 'e', date: DateTime.utc(2026), values: const {'w': 1100, 'k': 800, 'b': 180, 'h': 120})]);
   final screens = <String, (Widget Function(), double)>{
     'home': (() => const ShellView(), 932),
     'insights': (() => BlocProvider(create: (_) => ShellCubit()..select(ShellTab.insights), child: const ShellView()), 2400),
@@ -120,6 +136,8 @@ void main() {
       ),
       1200,
     ),
+    'form_miete': (() => EntryFormPage(args: EntryFormArgs(category: miete, tracker: flat)), 1100),
+    'form_miete_split': (() => EntryFormPage(args: EntryFormArgs(category: miete, tracker: flatSplit)), 1300),
     'price_history': (() => const PriceHistoryPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom'), fieldId: 'f-strom-ap'), 932),
     'entries_all': (() => const EntriesPage(args: TrackerArgs(categoryId: 'c-strom', trackerId: 't-strom')), 1400),
     'category_heizung': (() => const CategoryDetailPage(categoryId: 'c-heizung'), 1400),

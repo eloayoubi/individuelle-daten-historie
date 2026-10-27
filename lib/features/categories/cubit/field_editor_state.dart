@@ -28,6 +28,8 @@ class FieldEditorState extends Equatable {
     this.choices = const [],
     this.formula = '',
     this.summary,
+    this.partOf,
+    this.totals = const [],
     this.saving = false,
     this.event,
   });
@@ -50,7 +52,16 @@ class FieldEditorState extends Equatable {
     intervalMonths: field?.intervalMonths ?? 1,
     choices: field?.choices ?? const [],
     summary: field?.summary,
+    partOf: field?.partOf,
+    totals: tracker == null ? const [] : _totals(tracker, field),
   );
+
+  /// Mögliche Gesamtfelder: andere Beträge des Trackers, die selbst kein Teilbetrag sind. Ein Feld
+  /// mit eigenen Teilbeträgen wird nicht selbst Teil (eine Ebene, wie in der Datenbank).
+  static List<FieldDefinition> _totals(Tracker tracker, FieldDefinition? field) {
+    if (field != null && tracker.partsOf(field.id).isNotEmpty) return const [];
+    return [for (final f in tracker.fields) if (f.id != field?.id && f.kind == FieldKind.currency && f.partOf == null) f];
+  }
 
   /// Letzter Arbeitspreis eines Versorgungszählers mit Rechnungen: Ohne ihn wären die Rechnungen
   /// keine mehr (siehe [Tracker.isBill]).
@@ -99,6 +110,12 @@ class FieldEditorState extends Equatable {
 
   /// Gewählte Zusammenfassung für Kennzahlen; `null` = Standard des Zeitverhaltens.
   final FieldSummary? summary;
+
+  /// Gesamtfeld, wenn dieses Feld ein Teilbetrag ist (Kaltmiete in der Warmmiete).
+  final String? partOf;
+
+  /// Beträge des Trackers, in denen dieses Feld stecken kann (siehe [partTotals]).
+  final List<FieldDefinition> totals;
   final bool saving;
   final FieldEditorEvent? event;
 
@@ -131,6 +148,15 @@ class FieldEditorState extends Equatable {
   /// Gilt gerade: die gewählte, wenn sie passt, sonst die erste passende.
   FieldSummary? get effectiveSummary => summaries.contains(summary) ? summary : summaries.firstOrNull;
 
+  /// Gesamtfelder zur Wahl: nur bei wiederkehrenden und einmaligen Beträgen, mit demselben
+  /// Zeitverhalten.
+  List<FieldDefinition> get partTotals => kind == FieldKind.currency && (role == FieldRole.recurringCost || role == FieldRole.oneOffCost)
+      ? [for (final t in totals) if (t.role == role) t]
+      : const [];
+
+  /// Gewähltes Gesamtfeld, solange es passt; ohne Tracker bleibt es, wie es war.
+  String? get effectivePartOf => tracker == null || partTotals.any((t) => t.id == partOf) ? partOf : null;
+
   FieldDraft get draft {
     final meter = role == FieldRole.meterReading;
     return FieldDraft(
@@ -145,6 +171,7 @@ class FieldEditorState extends Equatable {
       choices: kind == FieldKind.choice ? choices : const [],
       formula: kind == FieldKind.formula ? formula.trim() : null,
       summary: summaries.contains(summary) ? summary : null,
+      partOf: effectivePartOf,
     );
   }
 
@@ -165,6 +192,7 @@ class FieldEditorState extends Equatable {
     List<String>? choices,
     String? formula,
     FieldSummary? Function()? summary,
+    String? Function()? partOf,
     bool? saving,
     FieldEditorEvent? event,
   }) => FieldEditorState(
@@ -185,10 +213,12 @@ class FieldEditorState extends Equatable {
     intervalMonths: intervalMonths ?? this.intervalMonths,
     choices: choices ?? this.choices,
     summary: summary == null ? this.summary : summary(),
+    partOf: partOf == null ? this.partOf : partOf(),
+    totals: totals,
     saving: saving ?? this.saving,
     event: event,
   );
 
   @override
-  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, keepsMeter, tracker, name, kind, role, unit, consumptionUnit, meterGroup, factorText, intervalMonths, choices, formula, summary, saving, event];
+  List<Object?> get props => [isNew, originalKind, hasValues, keepsBills, keepsMeter, tracker, name, kind, role, unit, consumptionUnit, meterGroup, factorText, intervalMonths, choices, formula, summary, partOf, totals, saving, event];
 }

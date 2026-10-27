@@ -100,6 +100,7 @@ class FieldDefinition extends Equatable {
     this.formula,
     this.summary,
     this.meterGroup,
+    this.partOf,
   });
 
   final String id;
@@ -133,6 +134,11 @@ class FieldDefinition extends Equatable {
   /// Zähler derselben Gruppe zusammen; `null` = ohne Gruppe.
   final String? meterGroup;
 
+  /// Teilbetrag: Id des Gesamtfelds, in dem dieser Betrag steckt (Kaltmiete in der Warmmiete). Er
+  /// zählt nicht extra, sondern zeigt nur die Aufteilung – solange es das Gesamtfeld gibt
+  /// ([Tracker.isPart]).
+  final String? partOf;
+
   /// Zusammenfassung für Kennzahlen: die gewählte, wenn sie passt, sonst der Standard des
   /// Zeitverhaltens; `null` bei Feldern ohne Zahlen oder ohne Verlauf.
   FieldSummary? get effectiveSummary {
@@ -151,7 +157,7 @@ class FieldDefinition extends Equatable {
   bool get isRate => role == FieldRole.unitPrice || role == FieldRole.recurringCost || role == FieldRole.instalment;
 
   @override
-  List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary, meterGroup];
+  List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary, meterGroup, partOf];
 }
 
 /// Ein Eintrag zu einem Datum; trägt Werte für einige oder alle Felder des [Tracker]s.
@@ -232,6 +238,13 @@ class Tracker extends Equatable {
 
   FieldDefinition? firstWithRole(FieldRole role) => withRole(role).firstOrNull;
 
+  /// Teilbetrag eines vorhandenen Gesamtfelds? Dann zählt er nicht extra. Ist das Gesamtfeld weg
+  /// (archiviert), zählt er wieder selbst.
+  bool isPart(FieldDefinition f) => f.partOf != null && fields.any((total) => total.id == f.partOf);
+
+  /// Teilbeträge von [fieldId] (Kaltmiete, Betriebskosten, Heizkosten in der Warmmiete).
+  List<FieldDefinition> partsOf(String fieldId) => [for (final f in fields) if (f.partOf == fieldId) f];
+
   /// Hat das Feld schon gespeicherte Werte? Dann darf sich sein Typ nur eingeschränkt ändern.
   bool hasValues(String fieldId) => entries.any((e) => e.values.containsKey(fieldId));
 
@@ -265,9 +278,9 @@ class Tracker extends Equatable {
   }
 
   /// Aktueller wiederkehrender Betrag (Preis eines Abos) zum Tag [today]: Feld und Wert des ersten
-  /// wiederkehrenden Betrags, `null` ohne Wert bis dahin.
+  /// wiederkehrenden Betrags, der kein Teilbetrag ist, `null` ohne Wert bis dahin.
   (FieldDefinition, num)? currentAmount(DateTime today) {
-    final field = firstWithRole(FieldRole.recurringCost);
+    final field = withRole(FieldRole.recurringCost).where((f) => !isPart(f)).firstOrNull;
     if (field == null) return null;
     Entry? latest;
     for (final e in entries) {

@@ -67,6 +67,9 @@ class EntryFormCubit extends Cubit<EntryFormState> {
 
   void setNote(String note) => emit(state.copyWith(note: note));
 
+  /// Aufteilung von [totalId] in Teilbeträge auf- oder zuklappen; die Eingaben bleiben dabei.
+  void setSplit(String totalId, bool open) => emit(state.copyWith(split: open ? {...state.split, totalId} : ({...state.split}..remove(totalId))));
+
   void setMeterChange(bool value) => emit(state.copyWith(meterChange: value));
 
   /// Zeitraum an: vorbelegt mit dem Kalenderjahr vor dem Stichtag (typisch für Abrechnungen).

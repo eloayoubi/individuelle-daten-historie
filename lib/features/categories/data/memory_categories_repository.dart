@@ -59,7 +59,7 @@ class MemoryCategoriesRepository implements CategoriesRepository {
       swatch: draft.swatch,
       templateKey: draft.templateKey,
       trackers: [
-        for (final t in draft.trackers) Tracker(id: id('t'), name: t.name, fields: [for (final f in t.fields) f.withId(id('f'))]),
+        for (final t in draft.trackers) _tracker(t),
       ],
     );
     // Neue Kategorien ans Ende der aktiven, vor die archivierten.
@@ -67,6 +67,15 @@ class MemoryCategoriesRepository implements CategoriesRepository {
     items.insert(firstArchived < 0 ? items.length : firstArchived, category);
     changed();
     return category.id;
+  }
+
+  Tracker _tracker(TrackerDraft t) {
+    final ids = [for (final _ in t.fields) id('f')];
+    String? total(int i) => switch (t.parts[i]) {
+      final int at => ids.elementAtOrNull(at),
+      null => null,
+    };
+    return Tracker(id: id('t'), name: t.name, fields: [for (final (i, f) in t.fields.indexed) f.withPartOf(total(i)).withId(ids[i])]);
   }
 
   @override

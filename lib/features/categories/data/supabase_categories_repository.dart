@@ -35,7 +35,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       'id, name, icon, swatch, template_key, archived_at, dashboard, '
       'category_members(user_id, role, sort, profiles(display_name)), '
       'trackers!trackers_category_id_fkey(id, name, sort, included_in, '
-      'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, summary, meter_group, sort), '
+      'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, summary, meter_group, part_of, sort), '
       'entries(id, occurred_on, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
 
   @override
@@ -75,7 +75,12 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
         'p_swatch': draft.swatch.name,
         'p_template_key': draft.templateKey,
         'p_trackers': [
-          for (final t in draft.trackers) {'name': t.name, 'fields': [for (final f in t.fields) _fieldJson(f)]},
+          for (final t in draft.trackers)
+            {
+              'name': t.name,
+              // Teilbeträge per Position: Die Ids vergibt erst die Datenbank.
+              'fields': [for (final (i, f) in t.fields.indexed) {..._fieldJson(f), 'part_of': t.parts[i]}],
+            },
         ],
       },
     );
@@ -306,6 +311,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     'formula': f.formula,
     'summary': f.summary?.name,
     'meter_group': f.meterGroup,
+    'part_of': f.partOf,
   };
 
   int _mySort(Map<String, dynamic> row) {
@@ -368,6 +374,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     formula: row['formula'] as String?,
     summary: FieldSummary.values.asNameMap()[row['summary']],
     meterGroup: row['meter_group'] as String?,
+    partOf: row['part_of'] as String?,
   );
 
   static Entry _entry(Map<String, dynamic> row) => Entry(

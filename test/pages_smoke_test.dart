@@ -173,6 +173,36 @@ void main() {
         expect(t.takeException(), isNull);
       });
 
+      testWidgets('Warmmiete: aufteilen, Positionen eintragen, Summe übernehmen', (t) async {
+        const warm = FieldDefinition(id: 'w', name: 'Warmmiete', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Monat');
+        const wohnung = Tracker(
+          id: 't-warm',
+          name: 'Wohnung',
+          fields: [
+            warm,
+            FieldDefinition(id: 'k', name: 'Kaltmiete', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Monat', partOf: 'w'),
+            FieldDefinition(id: 'b', name: 'Betriebskosten', kind: FieldKind.currency, role: FieldRole.recurringCost, unit: '€/Monat', partOf: 'w'),
+          ],
+        );
+        await pumpPage(t, EntryFormPage(args: EntryFormArgs(category: miete, tracker: wohnung)), theme: theme, size: const Size(390, 1400));
+        expect(find.text('Kaltmiete'), findsNothing);
+        expect(find.text('Kaltmiete und Betriebskosten einzeln eintragen. Gezählt wird nur „Warmmiete“.'), findsOneWidget);
+        await t.tap(find.byType(CupertinoSwitch).first);
+        await t.pumpAndSettle();
+        await t.enterText(find.byType(TextField).at(1), '800');
+        await t.enterText(find.byType(TextField).at(2), '250');
+        await t.pumpAndSettle();
+        expect(find.text('Zusammen 1.050,00 €/Monat – wird als „Warmmiete“ gespeichert.'), findsOneWidget);
+        await t.enterText(find.byType(TextField).first, '1100');
+        await t.pumpAndSettle();
+        expect(find.text('Zusammen 1.050,00 €/Monat – 50,00 €/Monat weniger als „Warmmiete“.'), findsOneWidget);
+        await t.tap(find.text('Summe übernehmen'));
+        await t.pumpAndSettle();
+        expect(find.text('1050'), findsOneWidget);
+        expect(find.text('Zusammen 1.050,00 €/Monat – passt zu „Warmmiete“.'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
       testWidgets('Schnellerfassung: neue Kategorie anlegen öffnet die Auswahl', (t) async {
         await pumpPage(t, const HomePage(), theme: theme, size: const Size(390, 1200));
         await t.tap(find.bySemanticsLabel('Eintrag erfassen'));

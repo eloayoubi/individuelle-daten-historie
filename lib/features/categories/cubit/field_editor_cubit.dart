@@ -61,6 +61,11 @@ class FieldEditorCubit extends Cubit<FieldEditorState> {
     if (state.summaries.contains(summary)) emit(state.copyWith(summary: () => summary));
   }
 
+  /// Teilbetrag von [totalId] oder eigener Betrag (`null`).
+  void setPartOf(String? totalId) {
+    if (totalId == null || state.partTotals.any((t) => t.id == totalId)) emit(state.copyWith(partOf: () => totalId));
+  }
+
   void addChoice(String choice) {
     final value = choice.trim();
     if (value.isEmpty || state.choices.contains(value)) return;

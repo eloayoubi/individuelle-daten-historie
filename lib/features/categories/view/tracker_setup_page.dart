@@ -130,7 +130,15 @@ class _Content extends StatelessWidget {
     final into = others.where((o) => o.id == tracker.includedIn).firstOrNull;
     Widget fields(List<FieldDefinition> list, String hint) => AppListGroup(
       footer: hint,
-      children: [for (final field in list) FieldRow.of(field, swatch: category.swatch, onTap: () => _openField(context, field))],
+      children: [
+        for (final field in list)
+          FieldRow.of(
+            field,
+            swatch: category.swatch,
+            partOf: tracker.fields.where((t) => t.id == field.partOf).firstOrNull?.name,
+            onTap: () => _openField(context, field),
+          ),
+      ],
     );
     return ListView(
       padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + Spacing.xxl),
