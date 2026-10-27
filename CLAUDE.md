@@ -40,9 +40,9 @@ Ist eine Aufgabe fertig umgesetzt, landet sie ohne Nachfrage auf `main` – comm
    main_dir=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
    cd "$main_dir"
    git worktree remove .claude/worktrees/<thema>
+   git pull --ff-only                  # Hauptordner auf den neuen Stand von main
    git branch -d <branch>
    git push origin --delete <branch>   # nur wenn der Branch gepusht war
-   git pull --ff-only                  # Hauptordner auf den neuen Stand von main
    ```
 
    Einen Worktree, den die Claude-App angelegt hat, nicht selbst entfernen – den räumt die App beim Archivieren weg; die Branches trotzdem löschen. Danach zeigen `git worktree list` und `git branch -a` nichts mehr von dieser Sitzung.
