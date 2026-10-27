@@ -1981,6 +1981,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackerName => 'Name';
 
   @override
+  String get trackerIcon => 'Symbol';
+
+  @override
+  String get trackerIconHint =>
+      'Pick the category’s symbol and it changes along with the category.';
+
+  @override
   String get trackerFieldsHistory => 'Values with history';
 
   @override
@@ -2369,6 +2376,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get metricsReset => 'Choose automatically';
+
+  @override
+  String get metricsReorderHint =>
+      'To change the order, touch and hold a tile in the overview and drag it to another spot.';
+
+  @override
+  String get dashboardMoveEarlier => 'Move earlier';
+
+  @override
+  String get dashboardMoveLater => 'Move later';
 
   @override
   String get metricsCostAll => 'Category costs';

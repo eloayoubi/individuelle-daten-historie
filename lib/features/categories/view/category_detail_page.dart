@@ -465,7 +465,7 @@ class _ItemList extends StatelessWidget {
             children: [
               for (final tracker in group.trackers)
                 AppListRow(
-                  leading: AppIconTile(icon: category.icon.data, color: c.swatch(category.swatch)),
+                  leading: AppIconTile(icon: tracker.iconIn(category).data, color: c.swatch(category.swatch)),
                   title: tracker.name,
                   subtitle: _deadline(context, tracker) ?? (tracker.currentAmount(today) == null ? l10n.itemNoAmount : null),
                   trailing: switch (tracker.currentAmount(today)) {

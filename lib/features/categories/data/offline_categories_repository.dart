@@ -256,6 +256,9 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Future<void> setTrackerIncludedIn(String id, String? categoryId) => _remote.setTrackerIncludedIn(id, categoryId);
 
   @override
+  Future<void> setTrackerIcon(String id, CategoryIcon? icon) => _remote.setTrackerIcon(id, icon);
+
+  @override
   Future<String> createField(String trackerId, FieldDraft draft, {required int sort}) => _remote.createField(trackerId, draft, sort: sort);
 
   @override

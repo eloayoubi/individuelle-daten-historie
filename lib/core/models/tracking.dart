@@ -76,8 +76,50 @@ extension FieldRoleSummaries on FieldRole {
   };
 }
 
-/// Symbol einer Kategorie; die Zuordnung zu Icons steht in `category_x.dart`.
-enum CategoryIcon { bolt, flame, drop, house, car, wifi, shield, play, cart, heart, star, doc }
+/// Symbol einer Kategorie oder eines Trackers; die Zuordnung zu Icons steht in `category_x.dart`.
+/// Gespeichert wird der Name – nur Kleinbuchstaben (Check `icon ~ '^[a-z]{1,20}$'` in der Datenbank),
+/// neue Symbole daher hinten anhängen und kleingeschrieben benennen.
+enum CategoryIcon {
+  bolt,
+  flame,
+  drop,
+  house,
+  car,
+  wifi,
+  shield,
+  play,
+  cart,
+  heart,
+  star,
+  doc,
+  sport,
+  music,
+  film,
+  tv,
+  game,
+  headphones,
+  book,
+  news,
+  cloud,
+  phone,
+  globe,
+  gift,
+  bag,
+  ticket,
+  paw,
+  capsule,
+  person,
+  briefcase,
+  building,
+  wrench,
+  lightbulb,
+  tree,
+  airplane,
+  bus,
+  tram,
+  creditcard,
+  money,
+}
 
 /// Farbe einer Kategorie aus Apples Systemfarben; die Werte stehen in `color_config.dart`.
 enum CategorySwatch { orange, red, blue, cyan, brown, green, purple, teal, pink, indigo, yellow, gray }
@@ -223,16 +265,22 @@ class Entry extends Equatable {
 
 /// Etwas, das verfolgt wird – ein Zähler, ein Vertrag, ein Auto – mit eigenen Feldern und Einträgen.
 class Tracker extends Equatable {
-  const Tracker({required this.id, required this.name, this.fields = const [], this.entries = const [], this.includedIn});
+  const Tracker({required this.id, required this.name, this.fields = const [], this.entries = const [], this.includedIn, this.icon});
 
   final String id;
   final String name;
   final List<FieldDefinition> fields;
   final List<Entry> entries;
 
+  /// Eigenes Symbol (Stremio, Fitnessfirst in den Abos); `null` = das der Kategorie ([iconIn]).
+  final CategoryIcon? icon;
+
   /// Kategorie, in deren Kosten dieser Tracker schon steckt (Wasser in den Nebenkosten). Seine
   /// Kosten werden dann gezeigt, aber in keiner Summe gezählt.
   final String? includedIn;
+
+  /// Symbol des Trackers: das eigene, sonst das der Kategorie.
+  CategoryIcon iconIn(Category category) => icon ?? category.icon;
 
   Iterable<FieldDefinition> withRole(FieldRole role) => fields.where((f) => f.role == role);
 
@@ -348,16 +396,17 @@ class Tracker extends Equatable {
     return latest?.values[fieldId];
   }
 
-  Tracker copyWith({String? name, List<FieldDefinition>? fields, List<Entry>? entries, String? Function()? includedIn}) => Tracker(
+  Tracker copyWith({String? name, List<FieldDefinition>? fields, List<Entry>? entries, String? Function()? includedIn, CategoryIcon? Function()? icon}) => Tracker(
     id: id,
     name: name ?? this.name,
     fields: fields ?? this.fields,
     entries: entries ?? this.entries,
     includedIn: includedIn == null ? this.includedIn : includedIn(),
+    icon: icon == null ? this.icon : icon(),
   );
 
   @override
-  List<Object?> get props => [id, name, fields, entries, includedIn];
+  List<Object?> get props => [id, name, fields, entries, includedIn, icon];
 }
 
 /// Eine andere Person, mit der eine Kategorie geteilt ist.

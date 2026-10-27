@@ -62,7 +62,7 @@ Features heute:
 - `shell`: Tab-Leiste, `ShellCubit`.
 - `onboarding`: erster Start ohne Kategorien – Willkommen, Vorlagen wählen, Erinnerungen.
 - `home`: Übersicht.
-- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite (je Tracker Verlauf, Wert eintragen und Details wie Anbieter oder Vertragsende), „Felder und Einstellungen“ je Tracker, Feld-Editor; dazu das Repository mit allen Schreibwegen: lokal `LocalCategoriesRepository` (Datei auf dem Gerät, Logik aus `MemoryCategoriesRepository`), in der Cloud die Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto) vor Supabase.
+- `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite (je Tracker Verlauf, Wert eintragen und Details wie Anbieter oder Vertragsende), „Felder und Einstellungen“ je Tracker (Name, eigenes Symbol, Felder), Feld-Editor; dazu das Repository mit allen Schreibwegen: lokal `LocalCategoriesRepository` (Datei auf dem Gerät, Logik aus `MemoryCategoriesRepository`), in der Cloud die Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto) vor Supabase.
 - `entries`: Eingabe-Formular aus den Feldern eines Trackers (mit Abrechnungszeitraum für Nachzahlungen), Verlauf je Tracker mit Graph, aktuelle Werte und Einträge („von Anna“ in geteilten Kategorien).
 - `attachments`: Belege (Fotos, PDFs) an Einträgen – Hochladen mit Plus, Ansehen für alle Mitglieder.
 - `reminders`: lokale Benachrichtigungen ans Ablesen und an Stichtage (`flutter_local_notifications`), an- und ausschaltbar in den Einstellungen.
@@ -80,7 +80,7 @@ Features heute:
 - `cost_engine.dart`: Verbrauch, Kosten nach Herkunft, Trend, Spanne, Abschläge.
 - `formula.dart`: eigener Parser für Formel-Felder.
 - `formulas.dart`: Formel-Werte je Eintrag (`verbrauch`, `tage`, `monate`, Feld-Kurznamen).
-- `dashboard_figures.dart`: Kennzahlen der Kategorie-Übersicht je Zeitraum (Dieser Monat … Gesamt, eigener Zeitraum) mit Vergleich zum Zeitraum davor. Jedes Feld mit Zahlen hat eine Auswertung (`FieldSummary`: Summe, Differenz = neuer minus alter Wert, Durchschnitt, letzter, kleinster, größter Wert), Standard aus dem Zeitverhalten. Welche Kennzahlen eine Kategorie zeigt, steht in `Category.dashboard` (für alle Mitglieder), ohne Wahl Kosten und Verbrauch je Gruppe von Zählern (Kaltwasser, Warmwasser) bzw. je Zähler; dazu wählbar alle Zähler zusammen und eigene Summen (`DashboardMetric.meters`).
+- `dashboard_figures.dart`: Kennzahlen der Kategorie-Übersicht je Zeitraum (Dieser Monat … Gesamt, eigener Zeitraum) mit Vergleich zum Zeitraum davor. Jedes Feld mit Zahlen hat eine Auswertung (`FieldSummary`: Summe, Differenz = neuer minus alter Wert, Durchschnitt, letzter, kleinster, größter Wert), Standard aus dem Zeitverhalten. Welche Kennzahlen eine Kategorie zeigt und in welcher Reihenfolge (Kachel gedrückt halten und ziehen), steht in `Category.dashboard` (für alle Mitglieder), ohne Wahl Kosten und Verbrauch je Gruppe von Zählern (Kaltwasser, Warmwasser) bzw. je Zähler; dazu wählbar alle Zähler zusammen und eigene Summen (`DashboardMetric.meters`).
 
 Ein Tracker kann seine Kosten einer anderen Kategorie zuordnen (`includedIn`, z. B. Wasser in den Nebenkosten): gezeigt, nie doppelt gezählt.
 

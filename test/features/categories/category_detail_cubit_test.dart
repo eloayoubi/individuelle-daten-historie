@@ -266,5 +266,48 @@ void main() {
         expect(cubit.state.figures.single.value, closeTo(0.329, 1e-9));
       },
     );
+
+    blocTest<CategoryDetailCubit, CategoryDetailState>(
+      'Kachel verschieben zeigt die neue Reihenfolge sofort und speichert sie für die Kategorie',
+      build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-strom', now: () => DateTime(2026, 10, 22)),
+      act: (cubit) async {
+        await cubit.load();
+        final moving = cubit.moveMetric(1, 0);
+        expect(cubit.state.figures.map((f) => f.metric), const [
+          DashboardMetric.field(trackerId: 't-strom', fieldId: 'f-strom-stand'),
+          DashboardMetric.cost(),
+        ]);
+        await moving;
+        await pumpEventQueue();
+        await cubit.moveMetric(0, 5);
+        await pumpEventQueue();
+      },
+      verify: (cubit) {
+        expect(cubit.state.category!.dashboard.metrics, const [
+          DashboardMetric.field(trackerId: 't-strom', fieldId: 'f-strom-stand'),
+          DashboardMetric.cost(),
+        ]);
+        expect(cubit.state.figures.first.metric, const DashboardMetric.field(trackerId: 't-strom', fieldId: 'f-strom-stand'));
+      },
+    );
   });
+
+  blocTest<CategoryDetailCubit, CategoryDetailState>(
+    'eigenes Symbol je Tracker, das der Kategorie heißt wieder ihr folgen',
+    build: () => CategoryDetailCubit(MockCategoriesRepository(), 'c-abos'),
+    act: (cubit) async {
+      await cubit.load();
+      final tracker = cubit.state.category!.trackers.first;
+      await cubit.setTrackerIcon(tracker, CategoryIcon.sport);
+      await pumpEventQueue();
+      expect(cubit.state.category!.trackers.first.icon, CategoryIcon.sport);
+      await cubit.setTrackerIcon(cubit.state.category!.trackers.first, cubit.state.category!.icon);
+      await pumpEventQueue();
+    },
+    verify: (cubit) {
+      final category = cubit.state.category!;
+      expect(category.trackers.first.icon, isNull);
+      expect(category.trackers.first.iconIn(category), category.icon);
+    },
+  );
 }

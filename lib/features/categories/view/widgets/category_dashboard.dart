@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/core.dart';
@@ -11,7 +13,8 @@ import '../../cubit/category_detail_cubit.dart';
 /// Übersicht einer Kategorie: Zeitraum wählen, darunter die Kennzahlen als Kacheln – Kosten,
 /// Verbrauch und jedes Feld nach seiner Auswertung (Summe, Differenz …). owner und editor wählen
 /// unter „Anpassen“, welche Kennzahlen erscheinen. Eine Kachel antippen öffnet den Verlauf ihres
-/// Trackers, bei Kosten und Verbrauch gleich im passenden Reiter.
+/// Trackers, bei Kosten und Verbrauch gleich im passenden Reiter; gedrückt halten und ziehen
+/// ändert die Reihenfolge.
 class CategoryDashboardSection extends StatelessWidget {
   const CategoryDashboardSection({super.key, required this.category, required this.state});
 
@@ -116,35 +119,145 @@ class CategoryDashboardSection extends StatelessWidget {
         else
           Padding(
             padding: Spacing.screen,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final width = (constraints.maxWidth - Spacing.m) / 2;
-                return Wrap(
-                  spacing: Spacing.m,
-                  runSpacing: Spacing.m,
-                  children: [
-                    for (final figure in state.figures)
-                      SizedBox(
-                        width: state.figures.length == 1 ? constraints.maxWidth : width,
-                        child: _FigureTile(category: category, figure: figure, period: state.period, onTap: () => _open(context, figure)),
-                      ),
-                  ],
-                );
-              },
-            ),
+            child: _FigureGrid(category: category, figures: state.figures, period: state.period, onOpen: (figure) => _open(context, figure)),
           ),
       ],
     );
   }
 }
 
+/// Kacheln zu zweit nebeneinander. owner und editor halten eine Kachel gedrückt und ziehen sie an
+/// eine andere Stelle; die übrigen rücken schon beim Ziehen nach, gespeichert wird beim Loslassen.
+class _FigureGrid extends StatefulWidget {
+  const _FigureGrid({required this.category, required this.figures, required this.period, required this.onOpen});
+
+  final Category category;
+  final List<DashboardFigure> figures;
+  final DashboardPeriod period;
+  final ValueChanged<DashboardFigure> onOpen;
+
+  @override
+  State<_FigureGrid> createState() => _FigureGridState();
+}
+
+class _FigureGridState extends State<_FigureGrid> {
+  /// Reihenfolge während des Ziehens als Positionen in [_FigureGrid.figures]; `null` ohne Ziehen.
+  List<int>? _order;
+
+  /// Position der gezogenen Kachel in [_FigureGrid.figures].
+  int? _dragged;
+
+  @override
+  void didUpdateWidget(_FigureGrid old) {
+    super.didUpdateWidget(old);
+    // Neu geladen (z. B. Änderung eines Mitglieds): Positionen passen nicht mehr zusammen.
+    if (_order != null && widget.figures.length != _order!.length) {
+      _order = null;
+      _dragged = null;
+    }
+  }
+
+  void _start(int i) => setState(() {
+    _dragged = i;
+    _order = [for (var j = 0; j < widget.figures.length; j++) j];
+  });
+
+  /// Die gezogene Kachel ist über Kachel [target]: dort einreihen, die übrigen rücken nach.
+  void _hover(int target) {
+    final order = _order, dragged = _dragged;
+    if (order == null || dragged == null || target == dragged) return;
+    final to = order.indexOf(target);
+    setState(() => order.insert(to, order.removeAt(order.indexOf(dragged))));
+  }
+
+  void _end() {
+    final order = _order, dragged = _dragged;
+    if (order == null || dragged == null) return;
+    // Erst die neue Reihenfolge in den Cubit (ändert die Kacheln sofort), dann das Ziehen beenden.
+    final to = order.indexOf(dragged);
+    if (to != dragged) context.read<CategoryDetailCubit>().moveMetric(dragged, to);
+    setState(() {
+      _order = null;
+      _dragged = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final figures = widget.figures;
+    final order = _order ?? [for (var i = 0; i < figures.length; i++) i];
+    final movable = widget.category.canEdit && figures.length > 1;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = figures.length == 1 ? constraints.maxWidth : (constraints.maxWidth - Spacing.m) / 2;
+        return Wrap(
+          spacing: Spacing.m,
+          runSpacing: Spacing.m,
+          children: [
+            for (final i in order)
+              SizedBox(
+                key: ValueKey(i),
+                width: width,
+                child: movable ? _movable(context, i, width) : _tile(i),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _tile(int i, {bool tappable = true}) {
+    final figure = widget.figures[i];
+    return _FigureTile(category: widget.category, figure: figure, period: widget.period, onTap: tappable ? () => widget.onOpen(figure) : null);
+  }
+
+  /// Kachel zum Ziehen und zugleich Ziel für andere Kacheln; dazu Bedienhilfen-Aktionen zum Verschieben.
+  Widget _movable(BuildContext context, int i, double width) {
+    final l10n = context.l10n;
+    final cubit = context.read<CategoryDetailCubit>();
+    final last = widget.figures.length - 1;
+    return Semantics(
+      customSemanticsActions: {
+        if (i > 0) CustomSemanticsAction(label: l10n.dashboardMoveEarlier): () => cubit.moveMetric(i, i - 1),
+        if (i < last) CustomSemanticsAction(label: l10n.dashboardMoveLater): () => cubit.moveMetric(i, i + 1),
+      },
+      child: DragTarget<int>(
+        onWillAcceptWithDetails: (details) {
+          _hover(i);
+          return true;
+        },
+        builder: (context, _, _) => LongPressDraggable<int>(
+          data: i,
+          onDragStarted: () => _start(i),
+          onDragEnd: (_) => _end(),
+          feedback: SizedBox(
+            width: width,
+            child: Material(
+              type: MaterialType.transparency,
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(Radii.card)),
+                  shadows: [BoxShadow(color: context.colors.shadow, blurRadius: 24, offset: const Offset(0, 8))],
+                ),
+                child: Transform.scale(scale: 1.04, child: _tile(i, tappable: false)),
+              ),
+            ),
+          ),
+          childWhenDragging: Opacity(opacity: 0.35, child: _tile(i, tappable: false)),
+          child: _tile(i),
+        ),
+      ),
+    );
+  }
+}
+
 class _FigureTile extends StatelessWidget {
-  const _FigureTile({required this.category, required this.figure, required this.period, required this.onTap});
+  const _FigureTile({required this.category, required this.figure, required this.period, this.onTap});
 
   final Category category;
   final DashboardFigure figure;
   final DashboardPeriod period;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +406,7 @@ class _MetricsSheetState extends State<MetricsSheet> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, Spacing.l),
-          child: AppText(l10n.metricsFooter, style: (t) => t.footnote, color: c.textSecondary),
+          child: AppText('${l10n.metricsFooter} ${l10n.metricsReorderHint}', style: (t) => t.footnote, color: c.textSecondary),
         ),
         Padding(
           padding: Spacing.screen,

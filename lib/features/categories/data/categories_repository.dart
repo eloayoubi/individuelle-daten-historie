@@ -246,6 +246,9 @@ abstract interface class CategoriesRepository {
   /// Kosten des Trackers stecken in einer anderen Kategorie (`null` = eigene Kosten).
   Future<void> setTrackerIncludedIn(String id, String? categoryId);
 
+  /// Eigenes Symbol des Trackers (`null` = das der Kategorie).
+  Future<void> setTrackerIcon(String id, CategoryIcon? icon);
+
   Future<String> createField(String trackerId, FieldDraft draft, {required int sort});
 
   Future<void> updateField(String id, FieldDraft draft);

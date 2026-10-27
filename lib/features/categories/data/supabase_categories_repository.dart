@@ -34,7 +34,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   static const _select =
       'id, name, icon, swatch, template_key, archived_at, dashboard, '
       'category_members(user_id, role, sort, profiles(display_name)), '
-      'trackers!trackers_category_id_fkey(id, name, sort, included_in, '
+      'trackers!trackers_category_id_fkey(id, name, sort, included_in, icon, '
       'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, summary, meter_group, part_of, sort), '
       'entries(id, occurred_on, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
 
@@ -126,6 +126,9 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
 
   @override
   Future<void> setTrackerIncludedIn(String id, String? categoryId) => _write(() => _api.table('trackers').update({'included_in': categoryId}).eq('id', id));
+
+  @override
+  Future<void> setTrackerIcon(String id, CategoryIcon? icon) => _write(() => _api.table('trackers').update({'icon': icon?.name}).eq('id', id));
 
   @override
   Future<void> archiveTracker(String id) =>
@@ -356,6 +359,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       id: row['id'] as String,
       name: row['name'] as String,
       includedIn: row['included_in'] as String?,
+      icon: CategoryIcon.values.asNameMap()[row['icon']],
       fields: [for (final f in fields) _field(f)],
       entries: [for (final e in (row['entries'] as List).cast<Map<String, dynamic>>()) _entry(e)],
     );

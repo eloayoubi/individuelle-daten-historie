@@ -94,6 +94,11 @@ class _Content extends StatelessWidget {
     }
   }
 
+  Future<void> _pickIcon(BuildContext context) async {
+    final cubit = context.read<CategoryDetailCubit>();
+    if (await TrackerIconSheet.show(context, category: category, tracker: tracker) case final CategoryIcon icon) await cubit.setTrackerIcon(tracker, icon);
+  }
+
   Future<void> _archive(BuildContext context) async {
     final cubit = context.read<CategoryDetailCubit>();
     final l10n = context.l10n;
@@ -155,6 +160,11 @@ class _Content extends StatelessWidget {
                 child: AppText(tracker.name, style: (t) => t.body, color: c.textSecondary, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               onTap: () => _rename(context),
+            ),
+            AppListRow(
+              title: l10n.trackerIcon,
+              trailing: AppIconTile(icon: tracker.iconIn(category).data, color: c.swatch(category.swatch)),
+              onTap: () => _pickIcon(context),
             ),
           ],
         ),

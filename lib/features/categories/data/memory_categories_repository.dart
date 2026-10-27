@@ -146,6 +146,12 @@ class MemoryCategoriesRepository implements CategoriesRepository {
   }
 
   @override
+  Future<void> setTrackerIcon(String id, CategoryIcon? icon) async {
+    await ready();
+    _updateTracker(id, (t) => t.copyWith(icon: () => icon));
+  }
+
+  @override
   Future<void> archiveTracker(String id) async {
     await ready();
     for (final c in [...items]) {

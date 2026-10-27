@@ -76,6 +76,9 @@ class StorageCategoriesRepository implements CategoriesRepository {
   Future<void> setTrackerIncludedIn(String id, String? categoryId) => _active.setTrackerIncludedIn(id, categoryId);
 
   @override
+  Future<void> setTrackerIcon(String id, CategoryIcon? icon) => _active.setTrackerIcon(id, icon);
+
+  @override
   Future<String> createField(String trackerId, FieldDraft draft, {required int sort}) => _active.createField(trackerId, draft, sort: sort);
 
   @override

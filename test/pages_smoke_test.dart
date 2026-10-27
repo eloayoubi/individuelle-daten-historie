@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/core/di/lookup.dart';
+import 'package:kostenkurve/core/extensions/category_x.dart';
 import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/core/theme/app_theme.dart';
 import 'package:kostenkurve/core/theme/dimensions.dart';
@@ -11,6 +12,7 @@ import 'package:kostenkurve/features/account/view/account_page.dart';
 import 'package:kostenkurve/features/auth/data/auth_repository.dart';
 import 'package:kostenkurve/features/auth/data/mock_auth_repository.dart';
 import 'package:kostenkurve/features/auth/view/auth_page.dart';
+import 'package:kostenkurve/features/categories/cubit/category_detail_cubit.dart';
 import 'package:kostenkurve/features/categories/cubit/field_editor_cubit.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/category_templates.dart';
@@ -258,6 +260,52 @@ void main() {
         await t.tap(find.bySemanticsLabel('Kategorie bearbeiten'));
         await t.pumpAndSettle();
         expect(find.text('Weiteren Tracker hinzufügen'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Übersicht: Kachel gedrückt halten und ziehen ändert die Reihenfolge', (t) async {
+        final id = mode == 'hell' ? 'c-strom' : 'c-internet';
+        await pumpPage(t, CategoryDetailPage(categoryId: id), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        final cubit = BlocProvider.of<CategoryDetailCubit>(t.element(find.byType(CategoryDashboardSection)));
+        final before = [for (final f in cubit.state.figures) f.metric];
+        expect(before.length, greaterThan(1));
+        // Die Mock-Daten gelten für alle Tests: danach wieder die Wahl der App.
+        final original = cubit.state.category!.dashboard;
+        addTearDown(() => lookup<CategoriesRepository>().updateDashboard(id, original));
+        final tiles = find.descendant(of: find.byType(CategoryDashboardSection), matching: find.byType(AppCard));
+
+        final drag = await t.startGesture(t.getCenter(tiles.first));
+        await t.pump(const Duration(milliseconds: 700)); // länger als ein langes Drücken
+        await drag.moveTo(t.getCenter(tiles.at(1)));
+        await t.pump();
+        await drag.moveBy(const Offset(4, 0));
+        await t.pump();
+        await drag.up();
+        await t.pumpAndSettle();
+
+        expect([for (final f in cubit.state.figures) f.metric], [before[1], before[0], ...before.skip(2)]);
+        expect(cubit.state.category!.dashboard.metrics, [before[1], before[0], ...before.skip(2)]);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Felder und Einstellungen: eigenes Symbol für ein Abo wählen', (t) async {
+        await pumpPage(t, const CategoryDetailPage(categoryId: 'c-abos'), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+        final cubit = BlocProvider.of<CategoryDetailCubit>(t.element(find.byType(CategoryDashboardSection)));
+        final tracker = cubit.state.category!.trackers.first;
+        final icon = mode == 'hell' ? CategoryIcon.sport : CategoryIcon.music;
+        addTearDown(() => lookup<CategoriesRepository>().setTrackerIcon(tracker.id, null));
+        await pumpPage(t, TrackerSetupPage(categoryId: 'c-abos', trackerId: tracker.id), theme: theme, size: const Size(390, 1400));
+        await t.pumpAndSettle();
+
+        await t.tap(find.text('Symbol'));
+        await t.pumpAndSettle();
+        await t.tap(find.byIcon(icon.data));
+        await t.pumpAndSettle();
+        final setup = BlocProvider.of<CategoryDetailCubit>(t.element(find.text('Symbol')));
+        expect(setup.state.category!.trackers.firstWhere((x) => x.id == tracker.id).icon, icon);
+        expect(find.byIcon(icon.data), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 

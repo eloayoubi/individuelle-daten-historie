@@ -282,3 +282,37 @@ class _TrackerSheetState extends State<TrackerSheet> {
     );
   }
 }
+
+/// Symbol eines Trackers wählen (Stremio, Fitnessfirst …) in der Farbe der Kategorie. Liefert das
+/// gewählte Symbol oder `null` bei Abbruch; das der Kategorie heißt: ihr folgen.
+class TrackerIconSheet extends StatelessWidget {
+  const TrackerIconSheet({super.key, required this.category, required this.tracker});
+
+  final Category category;
+  final Tracker tracker;
+
+  static Future<CategoryIcon?> show(BuildContext context, {required Category category, required Tracker tracker}) => AppSheet.show<CategoryIcon>(
+    context,
+    title: context.l10n.trackerIcon,
+    child: TrackerIconSheet(category: category, tracker: tracker),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.fromLTRB(Spacing.l, 0, Spacing.l, Spacing.xl),
+      children: [
+        AppCard(
+          color: c.surfaceRaised,
+          child: IconPicker(selected: tracker.iconIn(category), swatch: category.swatch, onSelect: (icon) => Navigator.of(context).pop(icon)),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Spacing.xs, Spacing.s, Spacing.xs, 0),
+          child: AppText(context.l10n.trackerIconHint, style: (t) => t.footnote, color: c.textSecondary),
+        ),
+      ],
+    );
+  }
+}

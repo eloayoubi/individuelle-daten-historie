@@ -113,6 +113,7 @@ class _Content extends StatelessWidget {
             overline: category.name,
             onBack: () => Navigator.of(context).pop(),
             actions: [
+              AppIconTile(icon: tracker.iconIn(category).data, color: c.swatch(category.swatch), size: Sizes.iconTileLarge),
               if (category.canEdit)
                 AppIconButton(
                   icon: CupertinoIcons.slider_horizontal_3,

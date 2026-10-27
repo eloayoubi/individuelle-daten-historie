@@ -3302,6 +3302,18 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get trackerName;
 
+  /// No description provided for @trackerIcon.
+  ///
+  /// In de, this message translates to:
+  /// **'Symbol'**
+  String get trackerIcon;
+
+  /// No description provided for @trackerIconHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Wählst du das Symbol der Kategorie, ändert es sich mit ihr.'**
+  String get trackerIconHint;
+
   /// No description provided for @trackerFieldsHistory.
   ///
   /// In de, this message translates to:
@@ -3997,6 +4009,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Automatisch wählen'**
   String get metricsReset;
+
+  /// No description provided for @metricsReorderHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Reihenfolge änderst du in der Übersicht: Kachel gedrückt halten und an eine andere Stelle ziehen.'**
+  String get metricsReorderHint;
+
+  /// No description provided for @dashboardMoveEarlier.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach vorne verschieben'**
+  String get dashboardMoveEarlier;
+
+  /// No description provided for @dashboardMoveLater.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach hinten verschieben'**
+  String get dashboardMoveLater;
 
   /// No description provided for @metricsCostAll.
   ///

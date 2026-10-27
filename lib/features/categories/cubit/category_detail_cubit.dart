@@ -70,6 +70,21 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
     await _run(() => _repository.updateDashboard(categoryId, category.dashboard.copyWith(metrics: () => metrics)));
   }
 
+  /// Kachel der Übersicht von [from] nach [to] verschieben (lange halten und ziehen). Legt die
+  /// Reihenfolge für alle Mitglieder fest – auch, wenn bisher die App gewählt hat. Die Seite zeigt
+  /// die neue Reihenfolge sofort; scheitert das Speichern, lädt sie den alten Stand.
+  Future<void> moveMetric(int from, int to) async {
+    final category = state.category;
+    if (category == null) return;
+    final metrics = [...DashboardFigures.shown(category)];
+    if (from == to || from < 0 || to < 0 || from >= metrics.length || to >= metrics.length) return;
+    metrics.insert(to, metrics.removeAt(from));
+    final dashboard = category.dashboard.copyWith(metrics: () => metrics);
+    emit(_withFigures(state.copyWith(category: category.copyWith(dashboard: dashboard))));
+    await _run(() => _repository.updateDashboard(categoryId, dashboard));
+    if (state.event?.kind == CategoryDetailEventKind.failed) await load();
+  }
+
   /// „Tracker hinzufügen“ unter „Wert eintragen“ wegklicken; danach geht es über „Bearbeiten“.
   Future<void> hideAddTracker() async {
     final category = state.category;
@@ -141,6 +156,13 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
     if (name.trim() != tracker.name) await _repository.renameTracker(tracker.id, name.trim());
     if (includedIn != tracker.includedIn) await _repository.setTrackerIncludedIn(tracker.id, includedIn);
   });
+
+  /// Eigenes Symbol des Trackers; das der Kategorie heißt „keins“, dann folgt er ihr.
+  Future<void> setTrackerIcon(Tracker tracker, CategoryIcon icon) {
+    final own = icon == state.category?.icon ? null : icon;
+    if (own == tracker.icon) return Future.value();
+    return _run(() => _repository.setTrackerIcon(tracker.id, own));
+  }
 
   /// Detail setzen ([value] `null` entfernt es).
   Future<void> saveDetail(Tracker tracker, FieldDefinition field, Object? value) => _run(() => _repository.saveDetail(tracker, field, value, now: _now()));

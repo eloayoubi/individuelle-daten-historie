@@ -36,6 +36,7 @@ Future<({String strom, String miete, String zaehler, String stand})> _fill(Categ
   await repo.saveEntry(zaehler.id, Entry(id: 'e1', date: DateTime.utc(2026, 1, 1), values: {stand: 1000, zaehler.fields[1].id: 0.32}));
   await repo.saveEntry(zaehler.id, Entry(id: 'e2', date: DateTime.utc(2026, 2, 1), values: {stand: 1200}));
   await repo.setTrackerIncludedIn(category.trackers[1].id, miete);
+  await repo.setTrackerIcon(category.trackers[1].id, CategoryIcon.drop);
   await repo.setCategoryArchived(miete, archived: true);
   return (strom: strom, miete: miete, zaehler: zaehler.id, stand: stand);
 }
@@ -110,6 +111,7 @@ void main() {
       expect(strom.trackers.first.entries.map((e) => e.id), ['e1', 'e2']);
       expect(strom.trackers.first.entries.first.values[ids.stand], 1000);
       expect(strom.trackers[1].includedIn, ids.miete);
+      expect((strom.trackers.first.icon, strom.trackers[1].icon), (null, CategoryIcon.drop));
       expect(categories.last.isArchived, isTrue);
       expect(strom.id, matches(RegExp(r'^[0-9a-f-]{36}$')), reason: 'Geräte-Ids sind UUIDs wie in der Cloud');
     });
@@ -188,6 +190,7 @@ void main() {
       expect(zaehler.entries.map((e) => e.id), [derivedId(zaehler.id, 'e1'), derivedId(zaehler.id, 'e2')], reason: 'Ids aus Tracker und Geräte-Id');
       expect(zaehler.entries.first.values, {zaehler.fields[0].id: 1000, zaehler.fields[1].id: 0.32});
       expect(strom.trackers[1].includedIn, categories.last.id);
+      expect((strom.trackers.first.icon, strom.trackers[1].icon), (null, CategoryIcon.drop));
       expect(categories.last.isArchived, isTrue);
       expect(strom.templateKey, 'strom');
       expect(await local.loadCategories(), isEmpty);

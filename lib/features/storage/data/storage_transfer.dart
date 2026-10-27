@@ -82,6 +82,7 @@ class StorageTransfer {
     for (final c in categories) {
       for (final t in c.trackers) {
         if (t.includedIn case final target? when categoryIds.containsKey(target)) await remote.setTrackerIncludedIn(trackerIds[t.id]!, categoryIds[target]);
+        if (t.icon != null) await remote.setTrackerIcon(trackerIds[t.id]!, t.icon);
       }
       if (!c.dashboard.isDefault) await remote.updateDashboard(categoryIds[c.id]!, c.dashboard.remap(trackerIds, fieldIds));
       if (c.isArchived) await remote.setCategoryArchived(categoryIds[c.id]!, archived: true);
