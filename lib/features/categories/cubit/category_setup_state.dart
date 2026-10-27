@@ -46,14 +46,7 @@ class CategorySetupState extends Equatable {
     swatch: swatch,
     templateKey: template?.key,
     trackers: [
-      for (final (t, tracker) in (template?.trackers ?? const <TrackerDraft>[]).indexed)
-        TrackerDraft(
-          name: tracker.name,
-          fields: [
-            for (final (f, field) in tracker.fields.indexed)
-              if (isIncluded(t, f)) field,
-          ],
-        ),
+      for (final (t, tracker) in (template?.trackers ?? const <TrackerDraft>[]).indexed) tracker.where((f) => isIncluded(t, f)),
     ],
   );
 

@@ -5,14 +5,17 @@ import '../../data/categories_repository.dart';
 
 /// Ein Feld als Listenzeile: Typ-Symbol, Name, Zeitverhalten und Einheit.
 class FieldRow extends StatelessWidget {
-  const FieldRow({super.key, required this.field, required this.swatch, this.trailing, this.onTap});
+  const FieldRow({super.key, required this.field, required this.swatch, this.partOf, this.trailing, this.onTap});
 
   /// Aus einer Vorlage (ohne Id) oder einem vorhandenen Feld.
-  factory FieldRow.of(FieldDefinition field, {Key? key, required CategorySwatch swatch, Widget? trailing, VoidCallback? onTap}) =>
-      FieldRow(key: key, field: FieldDraft.of(field), swatch: swatch, trailing: trailing, onTap: onTap);
+  factory FieldRow.of(FieldDefinition field, {Key? key, required CategorySwatch swatch, String? partOf, Widget? trailing, VoidCallback? onTap}) =>
+      FieldRow(key: key, field: FieldDraft.of(field), swatch: swatch, partOf: partOf, trailing: trailing, onTap: onTap);
 
   final FieldDraft field;
   final CategorySwatch swatch;
+
+  /// Name des Gesamtfelds bei einem Teilbetrag.
+  final String? partOf;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -29,6 +32,7 @@ class FieldRow extends StatelessWidget {
       subtitle: context.joinParts([
         field.role == FieldRole.info ? field.kind.label(context.l10n) : field.role.label(context.l10n),
         unit,
+        if (partOf case final total?) context.l10n.fieldPartOfName(total),
         // Nur eine selbst gewählte Auswertung; der Standard folgt aus dem Zeitverhalten.
         if (field.summary case final summary? when field.withId('').effectiveSummary == summary) summary.label(context.l10n),
       ]),

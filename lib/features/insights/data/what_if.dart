@@ -14,10 +14,11 @@ class WhatIf extends Equatable {
   double get delta => after - before;
 
   /// Felder, deren Wert sich durchspielen lässt: Arbeitspreis und wiederkehrende Kosten, ohne
-  /// Formel-Felder (die rechnet `Formulas.apply` neu und überschriebe den durchgespielten Wert).
+  /// Formel-Felder (die rechnet `Formulas.apply` neu und überschriebe den durchgespielten Wert) und
+  /// ohne Teilbeträge (die zählen nicht, ein neuer Wert änderte nichts).
   static List<FieldDefinition> priceFields(Tracker tracker) => [
     for (final f in tracker.fields)
-      if ((f.role == FieldRole.unitPrice || f.role == FieldRole.recurringCost) && f.kind != FieldKind.formula) f,
+      if ((f.role == FieldRole.unitPrice || f.role == FieldRole.recurringCost) && f.kind != FieldKind.formula && !tracker.isPart(f)) f,
   ];
 
   /// Wert des Felds, der heute gilt (letzter Eintrag bis heute), `null` ohne Eintrag.

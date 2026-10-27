@@ -93,6 +93,7 @@ abstract final class DataExport {
                       if (f.formula != null) 'formula': f.formula,
                       if (f.summary != null) 'summary': f.summary!.name,
                       if (f.meterGroup != null) 'meterGroup': f.meterGroup,
+                      if (f.partOf != null) 'partOf': f.partOf,
                     },
                 ],
                 'entries': [

@@ -412,6 +412,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Decides how history, costs and forecast use the value.';
 
   @override
+  String get fieldPartOf => 'Part of';
+
+  @override
+  String get fieldPartNone => 'Own amount';
+
+  @override
+  String fieldPartOfName(String total) {
+    return 'Part of $total';
+  }
+
+  @override
+  String get fieldPartFooter =>
+      'A partial amount doesn’t count on its own: it shows what the total is made of – like the base rent within the total rent. In an entry it appears under “Split up”.';
+
+  @override
   String get fieldKindLocked => 'Doesn\'t fit the saved values';
 
   @override
@@ -603,7 +618,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tplMiete => 'Rent & utilities';
 
   @override
-  String get tplMieteHint => 'Base rent, advance payments and statements';
+  String get tplMieteHint => 'Total rent, split up if you like, and statements';
 
   @override
   String get tplAuto => 'Car';
@@ -678,10 +693,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tplFieldWaterPrice => 'Water & sewage';
 
   @override
+  String get tplFieldWarmRent => 'Total rent';
+
+  @override
   String get tplFieldBaseRent => 'Base rent';
 
   @override
-  String get tplFieldAdvance => 'Utility advance payment';
+  String get tplFieldOperatingCosts => 'Service charges';
+
+  @override
+  String get tplFieldHeatingCosts => 'Heating costs';
 
   @override
   String get tplFieldSettlement => 'Balance due / credit';
@@ -1560,6 +1581,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entryPeriodInvalid => 'The end is before the start.';
+
+  @override
+  String get entrySplit => 'Split up';
+
+  @override
+  String entrySplitHint(String parts, String total) {
+    return 'Enter $parts separately. Only “$total” counts.';
+  }
+
+  @override
+  String entrySplitAsTotal(String sum, String total) {
+    return 'Together $sum – saved as “$total”.';
+  }
+
+  @override
+  String entrySplitMatches(String sum, String total) {
+    return 'Together $sum – matches “$total”.';
+  }
+
+  @override
+  String entrySplitBelow(String sum, String gap, String total) {
+    return 'Together $sum – $gap less than “$total”.';
+  }
+
+  @override
+  String entrySplitAbove(String sum, String gap, String total) {
+    return 'Together $sum – $gap more than “$total”.';
+  }
+
+  @override
+  String get entrySplitUseSum => 'Use the sum';
 
   @override
   String get entryKindBill => 'Bill';

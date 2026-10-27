@@ -740,6 +740,30 @@ abstract class AppLocalizations {
   /// **'Bestimmt, wie Verlauf, Kosten und Prognose mit dem Wert rechnen.'**
   String get fieldRoleFooter;
 
+  /// No description provided for @fieldPartOf.
+  ///
+  /// In de, this message translates to:
+  /// **'Teil von'**
+  String get fieldPartOf;
+
+  /// No description provided for @fieldPartNone.
+  ///
+  /// In de, this message translates to:
+  /// **'Eigener Betrag'**
+  String get fieldPartNone;
+
+  /// No description provided for @fieldPartOfName.
+  ///
+  /// In de, this message translates to:
+  /// **'Teil von {total}'**
+  String fieldPartOfName(String total);
+
+  /// No description provided for @fieldPartFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Ein Teilbetrag zählt nicht extra: Er zeigt, woraus sich der Gesamtbetrag zusammensetzt – etwa die Kaltmiete in der Warmmiete. Im Eintrag steht er unter „Aufteilen“.'**
+  String get fieldPartFooter;
+
   /// No description provided for @fieldKindLocked.
   ///
   /// In de, this message translates to:
@@ -1085,7 +1109,7 @@ abstract class AppLocalizations {
   /// No description provided for @tplMieteHint.
   ///
   /// In de, this message translates to:
-  /// **'Kaltmiete, Vorauszahlung und Abrechnungen'**
+  /// **'Warmmiete, auf Wunsch aufgeteilt, und Abrechnungen'**
   String get tplMieteHint;
 
   /// No description provided for @tplAuto.
@@ -1232,17 +1256,29 @@ abstract class AppLocalizations {
   /// **'Wasser & Abwasser'**
   String get tplFieldWaterPrice;
 
+  /// No description provided for @tplFieldWarmRent.
+  ///
+  /// In de, this message translates to:
+  /// **'Warmmiete'**
+  String get tplFieldWarmRent;
+
   /// No description provided for @tplFieldBaseRent.
   ///
   /// In de, this message translates to:
   /// **'Kaltmiete'**
   String get tplFieldBaseRent;
 
-  /// No description provided for @tplFieldAdvance.
+  /// No description provided for @tplFieldOperatingCosts.
   ///
   /// In de, this message translates to:
-  /// **'Nebenkosten-Vorauszahlung'**
-  String get tplFieldAdvance;
+  /// **'Betriebskosten'**
+  String get tplFieldOperatingCosts;
+
+  /// No description provided for @tplFieldHeatingCosts.
+  ///
+  /// In de, this message translates to:
+  /// **'Heizkosten'**
+  String get tplFieldHeatingCosts;
 
   /// No description provided for @tplFieldSettlement.
   ///
@@ -2629,6 +2665,48 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Das Ende liegt vor dem Anfang.'**
   String get entryPeriodInvalid;
+
+  /// No description provided for @entrySplit.
+  ///
+  /// In de, this message translates to:
+  /// **'Aufteilen'**
+  String get entrySplit;
+
+  /// No description provided for @entrySplitHint.
+  ///
+  /// In de, this message translates to:
+  /// **'{parts} einzeln eintragen. Gezählt wird nur „{total}“.'**
+  String entrySplitHint(String parts, String total);
+
+  /// No description provided for @entrySplitAsTotal.
+  ///
+  /// In de, this message translates to:
+  /// **'Zusammen {sum} – wird als „{total}“ gespeichert.'**
+  String entrySplitAsTotal(String sum, String total);
+
+  /// No description provided for @entrySplitMatches.
+  ///
+  /// In de, this message translates to:
+  /// **'Zusammen {sum} – passt zu „{total}“.'**
+  String entrySplitMatches(String sum, String total);
+
+  /// No description provided for @entrySplitBelow.
+  ///
+  /// In de, this message translates to:
+  /// **'Zusammen {sum} – {gap} weniger als „{total}“.'**
+  String entrySplitBelow(String sum, String gap, String total);
+
+  /// No description provided for @entrySplitAbove.
+  ///
+  /// In de, this message translates to:
+  /// **'Zusammen {sum} – {gap} mehr als „{total}“.'**
+  String entrySplitAbove(String sum, String gap, String total);
+
+  /// No description provided for @entrySplitUseSum.
+  ///
+  /// In de, this message translates to:
+  /// **'Summe übernehmen'**
+  String get entrySplitUseSum;
 
   /// No description provided for @entryKindBill.
   ///

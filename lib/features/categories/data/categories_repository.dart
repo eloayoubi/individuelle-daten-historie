@@ -18,6 +18,7 @@ class FieldDraft extends Equatable {
     this.formula,
     this.summary,
     this.meterGroup,
+    this.partOf,
   });
 
   factory FieldDraft.of(FieldDefinition f) => FieldDraft(
@@ -32,6 +33,7 @@ class FieldDraft extends Equatable {
     formula: f.formula,
     summary: f.summary,
     meterGroup: f.meterGroup,
+    partOf: f.partOf,
   );
 
   final String name;
@@ -46,6 +48,10 @@ class FieldDraft extends Equatable {
   final FieldSummary? summary;
   final String? meterGroup;
 
+  /// Id des Gesamtfelds bei einem Teilbetrag. In einem [TrackerDraft] gilt stattdessen
+  /// [TrackerDraft.parts], dort gibt es noch keine Ids.
+  final String? partOf;
+
   /// Gleicher Zähler mit anderem Namen und anderer Gruppe (leer = ohne).
   FieldDraft asMeter({required String name, String? group}) => FieldDraft(
     name: name.trim(),
@@ -59,6 +65,23 @@ class FieldDraft extends Equatable {
     formula: formula,
     summary: summary,
     meterGroup: group == null || group.trim().isEmpty ? null : group.trim(),
+    partOf: partOf,
+  );
+
+  /// Gleiches Feld als Teilbetrag von [total] (`null` = eigener Betrag).
+  FieldDraft withPartOf(String? total) => FieldDraft(
+    name: name,
+    kind: kind,
+    role: role,
+    unit: unit,
+    consumptionUnit: consumptionUnit,
+    factor: factor,
+    intervalMonths: intervalMonths,
+    choices: choices,
+    formula: formula,
+    summary: summary,
+    meterGroup: meterGroup,
+    partOf: total,
   );
 
   FieldDefinition withId(String id) => FieldDefinition(
@@ -74,21 +97,53 @@ class FieldDraft extends Equatable {
     formula: formula,
     summary: summary,
     meterGroup: meterGroup,
+    partOf: partOf,
   );
 
   @override
-  List<Object?> get props => [name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary, meterGroup];
+  List<Object?> get props => [name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary, meterGroup, partOf];
 }
 
 /// Ein Tracker mit seinen Feldern, wie er angelegt wird.
 class TrackerDraft extends Equatable {
-  const TrackerDraft({required this.name, this.fields = const []});
+  const TrackerDraft({required this.name, this.fields = const [], this.parts = const {}});
+
+  /// Vorhandener Tracker als Vorlage (Umzug in die Cloud): Teilbeträge per Position statt Id.
+  factory TrackerDraft.of(Tracker t) {
+    final index = {for (final (i, f) in t.fields.indexed) f.id: i};
+    return TrackerDraft(
+      name: t.name,
+      fields: [for (final f in t.fields) FieldDraft.of(f)],
+      parts: {
+        for (final (i, f) in t.fields.indexed)
+          if (index[f.partOf] case final int total) i: total,
+      },
+    );
+  }
 
   final String name;
   final List<FieldDraft> fields;
 
+  /// Teilbeträge: Position eines Felds in [fields] → Position seines Gesamtfelds.
+  final Map<int, int> parts;
+
+  /// Nur die Felder an Positionen, für die [keep] gilt (Vorlage mit abgewählten Feldern). Ein
+  /// Teilbetrag ohne sein Gesamtfeld zählt dann selbst.
+  TrackerDraft where(bool Function(int index) keep) {
+    final kept = [for (var i = 0; i < fields.length; i++) if (keep(i)) i];
+    final at = {for (final (n, i) in kept.indexed) i: n};
+    return TrackerDraft(
+      name: name,
+      fields: [for (final i in kept) fields[i]],
+      parts: {
+        for (final MapEntry(key: part, value: total) in parts.entries)
+          if ((at[part], at[total]) case (final int p, final int t)) p: t,
+      },
+    );
+  }
+
   @override
-  List<Object?> get props => [name, fields];
+  List<Object?> get props => [name, fields, parts];
 }
 
 /// Eine neue Kategorie – aus einer Vorlage oder leer.

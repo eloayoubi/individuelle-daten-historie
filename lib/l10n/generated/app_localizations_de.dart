@@ -415,6 +415,21 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bestimmt, wie Verlauf, Kosten und Prognose mit dem Wert rechnen.';
 
   @override
+  String get fieldPartOf => 'Teil von';
+
+  @override
+  String get fieldPartNone => 'Eigener Betrag';
+
+  @override
+  String fieldPartOfName(String total) {
+    return 'Teil von $total';
+  }
+
+  @override
+  String get fieldPartFooter =>
+      'Ein Teilbetrag zählt nicht extra: Er zeigt, woraus sich der Gesamtbetrag zusammensetzt – etwa die Kaltmiete in der Warmmiete. Im Eintrag steht er unter „Aufteilen“.';
+
+  @override
   String get fieldKindLocked => 'Passt nicht zu den gespeicherten Werten';
 
   @override
@@ -605,7 +620,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tplMiete => 'Miete & Nebenkosten';
 
   @override
-  String get tplMieteHint => 'Kaltmiete, Vorauszahlung und Abrechnungen';
+  String get tplMieteHint =>
+      'Warmmiete, auf Wunsch aufgeteilt, und Abrechnungen';
 
   @override
   String get tplAuto => 'Auto';
@@ -683,10 +699,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tplFieldWaterPrice => 'Wasser & Abwasser';
 
   @override
+  String get tplFieldWarmRent => 'Warmmiete';
+
+  @override
   String get tplFieldBaseRent => 'Kaltmiete';
 
   @override
-  String get tplFieldAdvance => 'Nebenkosten-Vorauszahlung';
+  String get tplFieldOperatingCosts => 'Betriebskosten';
+
+  @override
+  String get tplFieldHeatingCosts => 'Heizkosten';
 
   @override
   String get tplFieldSettlement => 'Nachzahlung / Guthaben';
@@ -1568,6 +1590,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get entryPeriodInvalid => 'Das Ende liegt vor dem Anfang.';
+
+  @override
+  String get entrySplit => 'Aufteilen';
+
+  @override
+  String entrySplitHint(String parts, String total) {
+    return '$parts einzeln eintragen. Gezählt wird nur „$total“.';
+  }
+
+  @override
+  String entrySplitAsTotal(String sum, String total) {
+    return 'Zusammen $sum – wird als „$total“ gespeichert.';
+  }
+
+  @override
+  String entrySplitMatches(String sum, String total) {
+    return 'Zusammen $sum – passt zu „$total“.';
+  }
+
+  @override
+  String entrySplitBelow(String sum, String gap, String total) {
+    return 'Zusammen $sum – $gap weniger als „$total“.';
+  }
+
+  @override
+  String entrySplitAbove(String sum, String gap, String total) {
+    return 'Zusammen $sum – $gap mehr als „$total“.';
+  }
+
+  @override
+  String get entrySplitUseSum => 'Summe übernehmen';
 
   @override
   String get entryKindBill => 'Rechnung';

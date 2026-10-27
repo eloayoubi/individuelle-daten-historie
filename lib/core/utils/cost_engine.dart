@@ -54,6 +54,8 @@ class CostParts {
 ///   Voraus eingetragene Beträge an ihrem Tag.
 /// - **Abschläge** ([FieldRole.instalment]) sind keine Kosten; [paid] summiert sie wie
 ///   wiederkehrende Beträge für den Abschlags-Check.
+/// - **Teilbeträge** ([FieldDefinition.partOf]) zählen nicht: Sie zeigen nur, woraus sich ihr
+///   Gesamtbetrag zusammensetzt.
 /// - **Formel-Felder** werden vorher je Eintrag ausgerechnet ([Formulas.apply]) und zählen dann
 ///   nach ihrem Zeitverhalten wie eingegebene Werte.
 /// - **Trend:** Liegen zwei volle Jahre Verbrauch vor, wird der Vorjahres-Verbrauch der Prognose
@@ -69,6 +71,8 @@ class CostEngine {
     final yearAgo = _today.subtract(const Duration(days: 365));
     var paidLastYear = 0.0;
     for (final field in tracker.fields) {
+      // Teilbeträge stecken schon im Gesamtbetrag (Kaltmiete in der Warmmiete).
+      if (tracker.isPart(field)) continue;
       final timeline = _timeline(tracker, field);
       if (timeline.isEmpty) continue;
       switch (field.role) {

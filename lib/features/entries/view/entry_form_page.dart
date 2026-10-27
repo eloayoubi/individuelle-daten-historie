@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/core.dart';
+import '../../../core/utils/numbers.dart';
 import '../../attachments/view/entry_attachments.dart';
 import '../../settings/data/review_prompter.dart';
 import '../../storage/cubit/storage_cubit.dart';
@@ -205,10 +206,12 @@ class _FormViewState extends State<_FormView> {
             padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.xl, Spacing.xl, 0),
             child: AppText(l10n.entryNoFields, style: (t) => t.subheadline, color: c.textSecondary),
           ),
-        for (final field in s.fields) ...[
-          const SizedBox(height: Spacing.l),
-          Padding(padding: Spacing.screen, child: _FieldInput(field: field, state: s, controller: _controllers[field.id], onPickDate: _pickDate)),
-        ],
+        for (final field in s.fields)
+          if (!s.isPart(field)) ...[
+            const SizedBox(height: Spacing.l),
+            Padding(padding: Spacing.screen, child: _FieldInput(field: field, state: s, controller: _controllers[field.id], onPickDate: _pickDate)),
+            if (s.partsOf(field) case final parts when parts.isNotEmpty) ..._split(context, s, field, parts),
+          ],
         if (s.hasMeter) ...[
           const SizedBox(height: Spacing.l),
           AppListGroup(
@@ -284,6 +287,59 @@ class _FormViewState extends State<_FormView> {
     );
   }
 
+  /// Schalter „Aufteilen“ unter einem Gesamtbetrag, offen darunter die Teilbeträge und ihre Summe.
+  List<Widget> _split(BuildContext context, EntryFormState s, FieldDefinition total, List<FieldDefinition> parts) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final cubit = context.read<EntryFormCubit>();
+    final open = s.split.contains(total.id);
+    final sum = open ? s.partSum(total) : null;
+    final entered = s.valueOf(total);
+    final (String, Color)? status = switch ((sum, entered)) {
+      (null, _) => null,
+      (final double all, final num given) when (all - given).abs() < 0.005 => (l10n.entrySplitMatches(context.fieldValue(total, all), total.name), c.success),
+      (final double all, final num given) when all < given =>
+        (l10n.entrySplitBelow(context.fieldValue(total, all), context.fieldValue(total, given - all), total.name), c.warning),
+      (final double all, final num given) => (l10n.entrySplitAbove(context.fieldValue(total, all), context.fieldValue(total, all - given), total.name), c.warning),
+      (final double all, _) => (l10n.entrySplitAsTotal(context.fieldValue(total, all), total.name), c.textSecondary),
+    };
+    return [
+      const SizedBox(height: Spacing.l),
+      AppListGroup(
+        dividerIndent: Spacing.l,
+        footer: open ? null : l10n.entrySplitHint(context.joinNames([for (final p in parts) p.name]), total.name),
+        children: [
+          AppListRow(
+            title: l10n.entrySplit,
+            trailing: AppSwitch(value: open, semanticLabel: l10n.entrySplit, onChanged: (on) => cubit.setSplit(total.id, on)),
+          ),
+        ],
+      ),
+      if (open) ...[
+        for (final part in parts) ...[
+          const SizedBox(height: Spacing.l),
+          Padding(padding: Spacing.screen, child: _FieldInput(field: part, state: s, controller: _controllers[part.id], onPickDate: _pickDate)),
+        ],
+        if (status case (final text, final color))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, 0),
+            child: AppText(text, style: (t) => t.footnote, color: color),
+          ),
+        if (sum != null && entered is num && (sum - entered).abs() >= 0.005)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.l, Spacing.xs, Spacing.l, 0),
+            child: AppButton(label: l10n.entrySplitUseSum, variant: AppButtonVariant.plain, onPressed: () => _useSum(cubit, s, total, sum)),
+          ),
+      ],
+    ];
+  }
+
+  /// Summe der Teilbeträge als Gesamtbetrag eintragen.
+  void _useSum(EntryFormCubit cubit, EntryFormState s, FieldDefinition total, double sum) {
+    final text = formatNumberInput(sum, decimalSeparator: s.decimalSeparator);
+    _controllers[total.id]?.text = text;
+    cubit.setText(total.id, text);
+  }
 }
 
 /// Eingabe für ein Feld, passend zum Feldtyp, darunter ein Hinweis (letzter Wert, Verbrauch seitdem,
