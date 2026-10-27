@@ -59,6 +59,12 @@ class StorageCubit extends Cubit<StorageState> {
     return StorageEventKind.local;
   });
 
+  /// Lokal gewählt und im Onboarding zurückgewischt: Wahl zurücknehmen, der Start-Bildschirm
+  /// erscheint wieder. Die Cloud bleibt – dort stehen Konto und Abo schon.
+  Future<void> backToStart() async {
+    if (_mode.mode == StorageMode.local) await _mode.set(null);
+  }
+
   /// In die Cloud wechseln, sobald das Abo läuft. Daten vom Gerät ziehen mit um; liegen im Konto
   /// schon Daten, fragt die App erst ([StorageEventKind.askUpload], dann erneut mit [upload]).
   /// `upload: false` lässt die Gerätedaten liegen.
