@@ -1,8 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/home/cubit/home_cubit.dart';
+import 'package:kostenkurve/features/home/data/home_categories_store.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockCategories extends Mock implements CategoriesRepository {}
@@ -87,4 +89,43 @@ void main() {
     act: (cubit) => cubit.load(),
     expect: () => [isA<HomeState>().having((s) => s.overview?.categories.map((c) => c.category.id), 'ids', isNot(contains('c-strom')))],
   );
+
+  group('Kategorien der Übersicht', () {
+    test('anfangs keine gewählt', () async {
+      final cubit = HomeCubit(MockCategoriesRepository(), now: now);
+      await cubit.load();
+      expect(cubit.state.overview?.categories, isNotEmpty);
+      expect(cubit.state.shown, isEmpty);
+    });
+
+    test('Auswahl zeigt die Kategorien in ihrer Reihenfolge und bleibt gespeichert', () async {
+      final pins = HomeCategoriesStore(MemoryJsonStore());
+      final cubit = HomeCubit(MockCategoriesRepository(), pins: pins, now: now);
+      await cubit.load();
+      await cubit.setPinned(['c-internet', 'c-strom', 'gibt-es-nicht']);
+      expect(cubit.state.shown.map((s) => s.category.id), ['c-internet', 'c-strom']);
+
+      final again = HomeCubit(MockCategoriesRepository(), pins: pins, now: now);
+      await again.load();
+      expect(again.state.shown.map((s) => s.category.id), ['c-internet', 'c-strom']);
+    });
+
+    test('Verschieben ändert die Reihenfolge, Verschiebe-Modus erst ab zwei Kategorien', () async {
+      final pins = HomeCategoriesStore(MemoryJsonStore());
+      final cubit = HomeCubit(MockCategoriesRepository(), pins: pins, now: now);
+      await cubit.load();
+      await cubit.setPinned(['c-strom']);
+      cubit.setReordering(true);
+      expect(cubit.state.reordering, isFalse);
+
+      await cubit.setPinned(['c-strom', 'c-internet', 'c-abos']);
+      cubit.setReordering(true);
+      expect(cubit.state.reordering, isTrue);
+      await cubit.reorder(0, 2);
+      expect(cubit.state.shown.map((s) => s.category.id), ['c-internet', 'c-abos', 'c-strom']);
+      expect(await pins.load(), ['c-internet', 'c-abos', 'c-strom']);
+      cubit.setReordering(false);
+      expect(cubit.state.reordering, isFalse);
+    });
+  });
 }

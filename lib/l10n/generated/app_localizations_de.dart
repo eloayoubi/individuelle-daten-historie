@@ -79,7 +79,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get homeCategories => 'Kategorien';
 
   @override
-  String get homeSeeAll => 'Alle';
+  String get homeCategoriesAddHint => 'Wähle, welche Kategorien hier stehen.';
+
+  @override
+  String get homeCategoriesPick => 'Kategorien auf der Übersicht';
+
+  @override
+  String get homeCategoriesPickHint =>
+      'Gilt auf diesem Gerät. Die Reihenfolge änderst du in der Übersicht: Kategorie gedrückt halten und ziehen.';
+
+  @override
+  String get homeCategoriesNew => 'Neue Kategorie anlegen';
 
   @override
   String get homeNext => 'Als Nächstes';

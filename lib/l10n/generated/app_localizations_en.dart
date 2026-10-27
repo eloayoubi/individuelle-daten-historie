@@ -79,7 +79,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCategories => 'Categories';
 
   @override
-  String get homeSeeAll => 'See all';
+  String get homeCategoriesAddHint => 'Choose which categories appear here.';
+
+  @override
+  String get homeCategoriesPick => 'Categories in the overview';
+
+  @override
+  String get homeCategoriesPickHint =>
+      'Applies on this device. To change the order, touch and hold a category in the overview and drag it.';
+
+  @override
+  String get homeCategoriesNew => 'Create new category';
 
   @override
   String get homeNext => 'Up next';

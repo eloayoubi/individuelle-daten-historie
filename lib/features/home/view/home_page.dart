@@ -9,11 +9,11 @@ import '../../categories/view/category_setup_page.dart';
 import '../../entries/view/entry_form_page.dart';
 import '../../entries/view/tracker_page.dart';
 import '../../reminders/cubit/reminders_cubit.dart';
-import '../../shell/cubit/shell_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../data/home_overview.dart';
 import 'widgets/category_rows.dart';
 import 'widgets/forecast_card.dart';
+import 'widgets/home_categories_sheet.dart';
 import 'widgets/quick_add_sheet.dart';
 import 'widgets/reminder_rows.dart';
 import 'widgets/start_card.dart';
@@ -36,7 +36,7 @@ class _HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) => switch ((state.status, state.overview)) {
-        (_, final HomeOverview overview) => _Content(overview: overview, sync: state.sync),
+        (_, final HomeOverview overview) => _Content(overview: overview, sync: state.sync, shown: state.shown, reordering: state.reordering),
         (HomeStatus.failure, null) => _Failure(onRetry: context.read<HomeCubit>().load),
         _ => const Center(child: CupertinoActivityIndicator()),
       },
@@ -45,10 +45,32 @@ class _HomeView extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.overview, required this.sync});
+  const _Content({required this.overview, required this.sync, required this.shown, required this.reordering});
 
   final HomeOverview overview;
   final SyncState sync;
+
+  /// Gewählte Kategorien unter „Kategorien“; leer: nur „Kategorie hinzufügen“.
+  final List<CategorySummary> shown;
+  final bool reordering;
+
+  /// Kategorien der Übersicht wählen – oder eine neue anlegen.
+  Future<void> _pickCategories(BuildContext context) async {
+    final cubit = context.read<HomeCubit>();
+    final choice = await HomeCategoriesSheet.show(
+      context,
+      categories: [for (final s in overview.categories) s.category],
+      selected: [for (final s in shown) s.category.id],
+    );
+    if (!context.mounted) return;
+    switch (choice) {
+      case HomeCategoriesPicked(:final ids):
+        await cubit.setPinned(ids);
+      case HomeCategoriesCreate():
+        await CategorySetupPage.start(context);
+      case null:
+    }
+  }
 
   /// Schnellerfassung: Tracker wählen, dann direkt ins Formular – oder eine neue Kategorie anlegen.
   Future<void> _quickAdd(BuildContext context) async {
@@ -117,8 +139,30 @@ class _Content extends StatelessWidget {
                 const SizedBox(height: Spacing.m),
                 YearToDateCard(overview: overview),
               ],
-              SectionHeader(title: l10n.homeCategories, action: l10n.homeSeeAll, onAction: () => context.read<ShellCubit>().select(ShellTab.categories)),
-              CategoryRows(summaries: overview.categories, onTap: (category) => CategoryDetailPage.open(context, category.id)),
+              SectionHeader(
+                title: l10n.homeCategories,
+                action: shown.isEmpty ? null : (reordering ? l10n.actionDone : l10n.actionEdit),
+                onAction: reordering ? () => cubit.setReordering(false) : () => _pickCategories(context),
+              ),
+              if (shown.isEmpty)
+                AppListGroup(
+                  children: [
+                    AppListRow(
+                      leading: AppIconTile(icon: CupertinoIcons.plus, color: context.colors.accent),
+                      title: l10n.categoriesAdd,
+                      subtitle: l10n.homeCategoriesAddHint,
+                      onTap: () => _pickCategories(context),
+                    ),
+                  ],
+                )
+              else
+                CategoryRows(
+                  summaries: shown,
+                  reordering: reordering,
+                  onTap: (category) => CategoryDetailPage.open(context, category.id),
+                  onReorderStart: () => cubit.setReordering(true),
+                  onReorder: cubit.reorder,
+                ),
               if (overview.reminders.isNotEmpty) ...[
                 SectionHeader(title: l10n.homeNext),
                 ReminderRows(reminders: overview.reminders, onTap: (r) => _openReminder(context, r)),

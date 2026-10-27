@@ -23,6 +23,7 @@ import '../../features/categories/data/supabase_categories_repository.dart';
 import '../../features/entries/cubit/entry_form_cubit.dart';
 import '../../features/entries/cubit/tracker_cubit.dart';
 import '../../features/home/cubit/home_cubit.dart';
+import '../../features/home/data/home_categories_store.dart';
 import '../../features/insights/cubit/insights_cubit.dart';
 import '../../features/insights/cubit/what_if_cubit.dart';
 import '../../features/onboarding/cubit/onboarding_cubit.dart';
@@ -145,7 +146,8 @@ Future<void> configureDependencies() async {
     ..registerFactory<OnboardingCubit>(() => OnboardingCubit(lookup<CategoriesRepository>(), FileJsonStore('onboarding')))
     ..registerFactory<ShellCubit>(ShellCubit.new)
     ..registerFactory<AppearanceCubit>(() => AppearanceCubit(lookup<AppearanceStore>()))
-    ..registerFactory<HomeCubit>(() => HomeCubit(lookup<CategoriesRepository>()))
+    ..registerLazySingleton<HomeCategoriesStore>(() => HomeCategoriesStore(FileJsonStore('home_categories')))
+    ..registerFactory<HomeCubit>(() => HomeCubit(lookup<CategoriesRepository>(), pins: lookup<HomeCategoriesStore>()))
     ..registerFactory<CategoriesCubit>(() => CategoriesCubit(lookup<CategoriesRepository>()))
     ..registerFactory<InsightsCubit>(() => InsightsCubit(lookup<CategoriesRepository>()))
     // Mit Parameter: lookup<…>(param1: …)

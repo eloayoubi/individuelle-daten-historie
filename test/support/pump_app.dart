@@ -8,6 +8,7 @@ import 'package:kostenkurve/core/theme/app_theme.dart';
 import 'package:kostenkurve/core/theme/text_styles.dart';
 import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/features/account/cubit/account_cubit.dart';
+import 'package:kostenkurve/features/home/data/home_categories_store.dart';
 import 'package:kostenkurve/features/categories/data/local_categories_repository.dart';
 import 'package:kostenkurve/features/plus/cubit/plus_cubit.dart';
 import 'package:kostenkurve/features/reminders/cubit/reminders_cubit.dart';
@@ -41,6 +42,10 @@ Future<void> ensureMockDependencies() async {
     ..registerLazySingleton<InviteLinks>(() => const NoInviteLinks())
     ..unregister<ReviewPrompter>()
     ..registerLazySingleton<ReviewPrompter>(() => const NoReviewPrompter());
+  // Übersicht: gewählte Kategorien im Speicher statt in einer Datei.
+  getIt
+    ..unregister<HomeCategoriesStore>()
+    ..registerLazySingleton<HomeCategoriesStore>(() => HomeCategoriesStore(MemoryJsonStore()));
 }
 
 Future<void> useMockCloud() => lookup<StorageModeStore>().set(StorageMode.cloud);

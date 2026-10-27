@@ -64,7 +64,10 @@
     }
   },
   "homeCategories": "Kategorien",
-  "homeSeeAll": "Alle",
+  "homeCategoriesAddHint": "Wähle, welche Kategorien hier stehen.",
+  "homeCategoriesPick": "Kategorien auf der Übersicht",
+  "homeCategoriesPickHint": "Gilt auf diesem Gerät. Die Reihenfolge änderst du in der Übersicht: Kategorie gedrückt halten und ziehen.",
+  "homeCategoriesNew": "Neue Kategorie anlegen",
   "homeNext": "Als Nächstes",
   "homePerMonth": "Ø {amount} pro Monat",
   "@homePerMonth": {

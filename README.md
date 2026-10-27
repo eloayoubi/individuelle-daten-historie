@@ -61,7 +61,7 @@ Features heute:
 - `storage`: Speicherort lokal oder Cloud – Start-Bildschirm mit der Wahl, `StartGate` (Start, „Cloud pausiert“, App), `StorageCategoriesRepository` (Weiche), `StorageTransfer` (Umzug hoch und runter, wiederholbar), `StorageCubit`, Umzugs-Overlay.
 - `shell`: Tab-Leiste, `ShellCubit`.
 - `onboarding`: erster Start ohne Kategorien – Willkommen, Vorlagen wählen, Erinnerungen.
-- `home`: Übersicht.
+- `home`: Übersicht; welche Kategorien dort stehen und in welcher Reihenfolge (gedrückt halten und ziehen), wählt man je Gerät (`HomeCategoriesStore`), anfangs keine.
 - `categories`: Kategorien-Tab, Vorlagen, Anlegen, Detailseite (je Tracker Verlauf, Wert eintragen und Details wie Anbieter oder Vertragsende), „Felder und Einstellungen“ je Tracker (Name, eigenes Symbol, Felder), Feld-Editor; dazu das Repository mit allen Schreibwegen: lokal `LocalCategoriesRepository` (Datei auf dem Gerät, Logik aus `MemoryCategoriesRepository`), in der Cloud die Offline-Schicht (`OfflineCategoriesRepository`: Cache zum Lesen, Warteschlange für Einträge, beides je Konto) vor Supabase.
 - `entries`: Eingabe-Formular aus den Feldern eines Trackers (mit Abrechnungszeitraum für Nachzahlungen), Verlauf je Tracker mit Graph, aktuelle Werte und Einträge („von Anna“ in geteilten Kategorien).
 - `attachments`: Belege (Fotos, PDFs) an Einträgen – Hochladen mit Plus, Ansehen für alle Mitglieder.

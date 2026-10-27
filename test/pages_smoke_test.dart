@@ -35,7 +35,11 @@ import 'package:kostenkurve/features/entries/view/entries_page.dart';
 import 'package:kostenkurve/features/entries/view/price_history_page.dart';
 import 'package:kostenkurve/features/entries/view/tracker_page.dart';
 import 'package:kostenkurve/features/entries/view/widgets/entry_table.dart';
+import 'package:kostenkurve/features/home/cubit/home_cubit.dart';
+import 'package:kostenkurve/features/home/data/home_categories_store.dart';
 import 'package:kostenkurve/features/home/view/home_page.dart';
+import 'package:kostenkurve/features/home/view/widgets/category_rows.dart';
+import 'package:kostenkurve/features/home/view/widgets/home_categories_sheet.dart';
 import 'package:kostenkurve/features/insights/view/insights_page.dart';
 import 'package:kostenkurve/features/home/view/widgets/quick_add_sheet.dart';
 import 'package:kostenkurve/features/home/view/widgets/start_card.dart';
@@ -205,11 +209,48 @@ void main() {
         expect(t.takeException(), isNull);
       });
 
+      testWidgets('Übersicht: Kategorien hinzufügen, dann gedrückt halten und verschieben', (t) async {
+        await pumpPage(t, const HomePage(), theme: theme, size: const Size(390, 1600));
+        await t.pumpAndSettle();
+        final cubit = BlocProvider.of<HomeCubit>(t.element(find.byType(SectionHeader).first));
+        addTearDown(() => lookup<HomeCategoriesStore>().save(const []));
+        expect(find.byType(CategoryRows), findsNothing);
+        expect(find.text('Bearbeiten'), findsNothing);
+
+        await t.tap(find.text('Kategorie hinzufügen'));
+        await t.pumpAndSettle();
+        expect(find.byType(HomeCategoriesSheet), findsOneWidget);
+        await t.tap(find.descendant(of: find.byType(HomeCategoriesSheet), matching: find.text('Strom')));
+        await t.tap(find.descendant(of: find.byType(HomeCategoriesSheet), matching: find.text('Internet & Mobilfunk')));
+        await t.tap(find.text('Speichern'));
+        await t.pumpAndSettle();
+        expect(find.byType(HomeCategoriesSheet), findsNothing);
+        expect(find.text('Bearbeiten'), findsOneWidget);
+        expect(cubit.state.shown.map((s) => s.category.id), ['c-strom', 'c-internet']);
+
+        final rows = find.descendant(of: find.byType(CategoryRows), matching: find.byType(AppListRow));
+        final drag = await t.startGesture(t.getCenter(rows.first));
+        await t.pump(const Duration(milliseconds: 700)); // länger als ein langes Drücken
+        expect(find.text('Fertig'), findsOneWidget, reason: 'langes Halten schaltet den Verschiebe-Modus ein');
+        for (var i = 0; i < 12; i++) {
+          await drag.moveBy(const Offset(0, 10));
+          await t.pump(const Duration(milliseconds: 16));
+        }
+        await drag.up();
+        await t.pumpAndSettle();
+        expect(cubit.state.shown.map((s) => s.category.id), ['c-internet', 'c-strom']);
+        expect(find.text('Fertig'), findsOneWidget);
+        await t.tap(find.text('Fertig'));
+        await t.pumpAndSettle();
+        expect(find.text('Bearbeiten'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
       testWidgets('Schnellerfassung: neue Kategorie anlegen öffnet die Auswahl', (t) async {
         await pumpPage(t, const HomePage(), theme: theme, size: const Size(390, 1200));
         await t.tap(find.bySemanticsLabel('Eintrag erfassen'));
         await t.pumpAndSettle();
-        await t.tap(find.text('Kategorie hinzufügen'));
+        await t.tap(find.descendant(of: find.byType(QuickAddSheet), matching: find.text('Kategorie hinzufügen')));
         await t.pumpAndSettle();
         expect(find.byType(QuickAddSheet), findsNothing);
         expect(find.byType(AddCategorySheet), findsOneWidget);

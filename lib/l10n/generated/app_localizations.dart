@@ -212,11 +212,29 @@ abstract class AppLocalizations {
   /// **'Kategorien'**
   String get homeCategories;
 
-  /// No description provided for @homeSeeAll.
+  /// No description provided for @homeCategoriesAddHint.
   ///
   /// In de, this message translates to:
-  /// **'Alle'**
-  String get homeSeeAll;
+  /// **'Wähle, welche Kategorien hier stehen.'**
+  String get homeCategoriesAddHint;
+
+  /// No description provided for @homeCategoriesPick.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorien auf der Übersicht'**
+  String get homeCategoriesPick;
+
+  /// No description provided for @homeCategoriesPickHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Gilt auf diesem Gerät. Die Reihenfolge änderst du in der Übersicht: Kategorie gedrückt halten und ziehen.'**
+  String get homeCategoriesPickHint;
+
+  /// No description provided for @homeCategoriesNew.
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Kategorie anlegen'**
+  String get homeCategoriesNew;
 
   /// No description provided for @homeNext.
   ///
