@@ -8,6 +8,7 @@ import 'package:lottie/lottie.dart';
 import '../core/di/lookup.dart';
 import '../core/extensions/context_extensions.dart';
 import '../core/theme/app_theme.dart';
+import '../core/widgets/app_keyboard_bar.dart';
 import '../features/account/cubit/account_cubit.dart';
 import '../features/categories/data/categories_repository.dart';
 import '../features/onboarding/view/onboarding_page.dart';
@@ -91,13 +92,14 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             // Statusleiste passend zum Design; beim Start liegt die Startanimation über allem, auch
-            // über einem Beitreten-Sheet aus einem Einladungslink.
+            // über einem Beitreten-Sheet aus einem Einladungslink. Die Tastaturleiste gilt für Seiten
+            // und Sheets.
             builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
               value: Theme.of(context).brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
               child: _SyncOnResume(
                 child: LaunchSplash(
                   composition: widget.launch,
-                  child: TransferOverlay(child: child!),
+                  child: TransferOverlay(child: AppKeyboardBar(child: child!)),
                 ),
               ),
             ),

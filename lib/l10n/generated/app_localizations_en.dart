@@ -205,6 +205,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionDone => 'Done';
 
   @override
+  String get keyboardPrevious => 'Previous field';
+
+  @override
+  String get keyboardNext => 'Next field';
+
+  @override
   String get errorSave => 'That didn\'t work. Please try again.';
 
   @override

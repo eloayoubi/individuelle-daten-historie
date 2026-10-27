@@ -157,6 +157,8 @@
   "actionArchive": "Archivieren",
   "actionEdit": "Bearbeiten",
   "actionDone": "Fertig",
+  "keyboardPrevious": "Vorheriges Feld",
+  "keyboardNext": "Nächstes Feld",
   "errorSave": "Das hat nicht geklappt. Bitte versuch es noch einmal.",
   "categoriesAdd": "Kategorie hinzufügen",
   "categoriesChooseTemplate": "Vorlage wählen",

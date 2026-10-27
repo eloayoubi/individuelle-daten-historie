@@ -398,6 +398,18 @@ abstract class AppLocalizations {
   /// **'Fertig'**
   String get actionDone;
 
+  /// No description provided for @keyboardPrevious.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorheriges Feld'**
+  String get keyboardPrevious;
+
+  /// No description provided for @keyboardNext.
+  ///
+  /// In de, this message translates to:
+  /// **'Nächstes Feld'**
+  String get keyboardNext;
+
   /// No description provided for @errorSave.
   ///
   /// In de, this message translates to:

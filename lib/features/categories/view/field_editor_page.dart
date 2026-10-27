@@ -312,7 +312,10 @@ class _EditorViewState extends State<_EditorView> {
                           onSubmitted: (_) => _addChoice(cubit),
                         ),
                       ),
-                      AppIconButton(icon: CupertinoIcons.plus, semanticLabel: l10n.fieldChoiceHint, filled: true, onPressed: () => _addChoice(cubit)),
+                      // Tastatur bleibt offen: gleich die nächste Option tippen.
+                      TextFieldTapRegion(
+                        child: AppIconButton(icon: CupertinoIcons.plus, semanticLabel: l10n.fieldChoiceHint, filled: true, onPressed: () => _addChoice(cubit)),
+                      ),
                     ],
                   ),
                 ),
@@ -378,16 +381,19 @@ class _FormulaEditor extends StatelessWidget {
       },
       _ => (null, c.textSecondary),
     };
-    Widget chips(Iterable<(String, int?)> items) => Wrap(
-      spacing: Spacing.s,
-      runSpacing: Spacing.s,
-      children: [
-        for (final (text, cursor) in items)
-          AppPressable(
-            onTap: () => onInsert(text, cursor),
-            child: AppChip(label: text, background: c.accentSoft, foreground: c.accent),
-          ),
-      ],
+    // Bausteine zählen zum Textfeld: Antippen setzt ein, ohne die Tastatur zu schließen.
+    Widget chips(Iterable<(String, int?)> items) => TextFieldTapRegion(
+      child: Wrap(
+        spacing: Spacing.s,
+        runSpacing: Spacing.s,
+        children: [
+          for (final (text, cursor) in items)
+            AppPressable(
+              onTap: () => onInsert(text, cursor),
+              child: AppChip(label: text, background: c.accentSoft, foreground: c.accent),
+            ),
+        ],
+      ),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -9,6 +9,10 @@ import '../theme/text_styles.dart';
 /// `color: context.colors.surfaceRaised`, sonst `surface` (Standard).
 ///
 /// Mit [label] wie eine Zeile in den iOS-Einstellungen: Beschriftung links, Wert rechtsbündig.
+///
+/// Ein Tipp außerhalb schließt die Tastatur – auch auf Knöpfe und beim Scrollen. Ausgenommen sind
+/// andere Textfelder und alles in einer `TextFieldTapRegion` (Tastaturleiste, Formel-Bausteine).
+/// Zahlenfelder bekommen auf iOS dazu die `AppKeyboardBar` mit „Fertig“.
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
@@ -66,6 +70,8 @@ class AppTextField extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
+      // Flutter schließt die Tastatur auf iPhone und Android beim Tipp daneben nicht von selbst.
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       textCapitalization: textCapitalization,

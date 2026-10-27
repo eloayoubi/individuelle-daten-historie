@@ -206,6 +206,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get actionDone => 'Fertig';
 
   @override
+  String get keyboardPrevious => 'Vorheriges Feld';
+
+  @override
+  String get keyboardNext => 'Nächstes Feld';
+
+  @override
   String get errorSave =>
       'Das hat nicht geklappt. Bitte versuch es noch einmal.';
 
