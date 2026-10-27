@@ -331,6 +331,17 @@ void main() {
       await cubit.close();
     });
 
+    test('Wahl zurücknehmen: lokal zurück zum Start-Bildschirm, die Cloud bleibt', () async {
+      final cubit = StorageCubit(mode, transfer, MockAuthRepository(), MockPlusRepository());
+      await cubit.chooseLocal();
+      await cubit.backToStart();
+      expect(mode.mode, isNull);
+      await mode.set(StorageMode.cloud);
+      await cubit.backToStart();
+      expect(mode.mode, StorageMode.cloud);
+      await cubit.close();
+    });
+
     test('Cloud aktivieren: Gerätedaten ziehen um', () async {
       await _fill(local);
       final cubit = StorageCubit(mode, transfer, MockAuthRepository(), MockPlusRepository());

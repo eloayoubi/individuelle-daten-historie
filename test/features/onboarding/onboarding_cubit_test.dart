@@ -44,6 +44,25 @@ void main() {
     await cubit.close();
   });
 
+  test('zurück: von den Vorlagen zum Willkommen, Auswahl bleibt; nach dem Anlegen nicht mehr', () async {
+    final cubit = OnboardingCubit(MockCategoriesRepository(seed: const []), MemoryJsonStore());
+    await cubit.load();
+    cubit
+      ..next()
+      ..toggle('miete')
+      ..back();
+    expect(cubit.state.step, OnboardingStep.welcome);
+    expect(cubit.state.selected, contains('miete'));
+    cubit.back();
+    expect(cubit.state.step, OnboardingStep.welcome);
+
+    cubit.next();
+    await cubit.create(templates);
+    cubit.back();
+    expect(cubit.state.step, OnboardingStep.reminders);
+    await cubit.close();
+  });
+
   test('schon Kategorien (anderes Gerät): kein Onboarding, gemerkt', () async {
     final store = MemoryJsonStore();
     final cubit = OnboardingCubit(MockCategoriesRepository(), store);

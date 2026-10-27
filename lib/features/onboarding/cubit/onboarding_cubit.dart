@@ -41,6 +41,12 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     if (state.step.index < OnboardingStep.values.length - 1) emit(state.copyWith(step: OnboardingStep.values[state.step.index + 1]));
   }
 
+  /// Von den Vorlagen zurück zum Willkommen, die Auswahl bleibt. Nach dem Anlegen geht es nicht mehr
+  /// zurück – die Kategorien gibt es dann schon.
+  void back() {
+    if (state.step == OnboardingStep.templates) emit(state.copyWith(step: OnboardingStep.welcome));
+  }
+
   void toggle(String key) =>
       emit(state.copyWith(selected: state.selected.contains(key) ? ({...state.selected}..remove(key)) : {...state.selected, key}));
 
