@@ -43,7 +43,8 @@ lib/
     widgets/             AppText, AppCard, AppButton, AppIconButton, AppChip, AppHeader, SectionHeader,
                          AppSheet, AppToast, PlaceholderPage, AppListGroup/AppListRow, AppIconTile,
                          AppSegmented, AppPressable, GlassSurface, AppTextField, AppSwitch, AppDialog,
-                         AppShare (Teilen-Sheet mit iPad-Ursprung)
+                         AppShare (Teilen-Sheet mit iPad-Ursprung), AppKeyboardBar (Fertig-Leiste über dem
+                         Zahlenblock auf iOS, im App-builder)
     network/             SupabaseApi (rpc, invoke, table, stream, onChanges, upload/download/remove),
                          SecureSessionStorage (Sitzung im Schlüsselbund)
     config/              Werte aus --dart-define (SUPABASE_URL, SUPABASE_ANON_KEY)

@@ -11,6 +11,7 @@ export 'app_dialog.dart';
 export 'app_header.dart';
 export 'app_icon_button.dart';
 export 'app_icon_tile.dart';
+export 'app_keyboard_bar.dart';
 export 'app_list.dart';
 export 'app_pressable.dart';
 export 'app_segmented.dart';

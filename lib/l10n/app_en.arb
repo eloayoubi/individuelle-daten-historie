@@ -50,6 +50,8 @@
   "actionArchive": "Archive",
   "actionEdit": "Edit",
   "actionDone": "Done",
+  "keyboardPrevious": "Previous field",
+  "keyboardNext": "Next field",
   "errorSave": "That didn't work. Please try again.",
   "categoriesAdd": "Add category",
   "categoriesChooseTemplate": "Choose a template",
