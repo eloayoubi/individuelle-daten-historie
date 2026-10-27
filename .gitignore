@@ -56,3 +56,6 @@ ios/fastlane/README.md
 ios/fastlane/Preview.html
 ios/fastlane/test_output
 *.p8
+
+# Claude-Code-Worktrees (je Sitzung einer, siehe CLAUDE.md)
+.claude/worktrees/

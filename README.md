@@ -115,7 +115,7 @@ supabase/scripts/test_local.sh                      # Migrationen + Seed + Tests
 
 Tests: Cubit-Tests je Feature (`test/features/`), Theme-Extensions und Kosten-Engine (`test/core/`), Smoke-Test aller Seiten mit Mock-Daten in Hell und Dunkel (`test/pages_smoke_test.dart`).
 
-Commit-Betreffs: Nutzer-Sichtbares auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:` / `ci:` / `test:` / `docs:`. Gearbeitet wird direkt auf `main`, ohne Feature-Branches; Ablauf steht in [CLAUDE.md](CLAUDE.md).
+Commit-Betreffs: Nutzer-Sichtbares auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:` / `ci:` / `test:` / `docs:`. Branches `feature/…`, `fix/…`, `chore/…`, je Sitzung in einem eigenen Worktree unter `.claude/worktrees/`; Ablauf bis `main` und Aufräumen steht in [CLAUDE.md](CLAUDE.md).
 
 ## Store
 

@@ -2,26 +2,59 @@
 
 Projektüberblick, Struktur, Code-Regeln und Commit-Konvention stehen in der `README.md`, Produkt und Fahrplan in `docs/IMPLEMENTIERUNGSPLAN.md`, das Backend in `supabase/README.md`. Hier nur, was jede Sitzung (lokal oder in der Cloud) zusätzlich wissen muss.
 
-## Immer auf `main` arbeiten
+## Branches und Worktrees
 
-Gearbeitet wird direkt auf `main` im Hauptordner `individuelle-daten-historie` – **keine** Feature-Branches, **keine** zusätzlichen Worktrees oder Ordner neben dem Repo (z. B. `../kk-…`). Steht der Hauptordner beim Start auf einem anderen Branch und ist sauber: `git switch main && git pull --ff-only`; liegen dort fremde Änderungen, den Nutzer fragen.
+Jede Sitzung arbeitet auf einem eigenen Branch in einem eigenen Worktree – so bearbeiten parallele Agenten nie dieselben Dateien. Der Hauptordner `individuelle-daten-historie` bleibt auf `main`: dort nicht arbeiten, kein `git checkout`/`git switch`.
 
-## Nach jeder Implementierung: auf `main` committen
+- **Ort:** Worktrees nur unter `.claude/worktrees/<thema>` im Repo (gitignored). **Nie** einen eigenen Ordner neben dem Repo oder sonst in `IdeaProjects` anlegen (früher `../kk-…`).
+- **Anlegen** – Branch-Namen `feature/…`, `fix/…`, `chore/…`, `ci/…`, `docs/…`:
 
-Ist eine Aufgabe fertig umgesetzt, landet sie ohne Nachfrage auf `main` – committen, pushen. Nicht bei reinen Fragen, Analysen oder Plänen, und nicht, wenn der Nutzer sagt, dass er selbst committet.
+  ```sh
+  git fetch origin
+  git worktree add -b feature/<thema> .claude/worktrees/<thema> origin/main
+  cd .claude/worktrees/<thema> && flutter pub get
+  ```
+
+  Für App-Läufe zusätzlich `.env.local` aus dem Hauptordner kopieren. Hat die Claude-App die Sitzung schon in einem eigenen Worktree gestartet, diesen nehmen.
+
+## Nach jeder Implementierung: nach `main` mergen und aufräumen
+
+Ist eine Aufgabe fertig umgesetzt, landet sie ohne Nachfrage auf `main` – committen, mergen, pushen, aufräumen. Nicht bei reinen Fragen, Analysen oder Plänen, und nicht, wenn der Nutzer sagt, dass er selbst committet.
 
 1. **Prüfen:** bei Dart-Änderungen `flutter analyze && flutter test`, bei neuen Migrationen `supabase/scripts/test_local.sh`. Schlägt etwas fehl und lässt sich nicht beheben: nicht committen, dem Nutzer melden.
-2. **Nur eigene Dateien stagen:** `git status` ansehen, die in dieser Sitzung geänderten Dateien einzeln mit `git add <pfad>` aufnehmen (kein `git add -A`/`git add .`). Mehrere Sitzungen arbeiten im selben Ordner: fremde, nicht committete Änderungen nicht stagen oder verwerfen.
-3. **Committen** direkt auf `main`. Betreff: Neues für Nutzer auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:`/`ci:`/`test:`/`docs:`.
-4. **Pushen:**
+2. **Nur eigene Dateien stagen:** `git status` ansehen, die in dieser Sitzung geänderten Dateien einzeln mit `git add <pfad>` aufnehmen (kein `git add -A`/`git add .`). Fremde, nicht committete Änderungen nicht stagen, stashen oder verwerfen.
+3. **Committen** auf dem eigenen Branch. Betreff: Neues für Nutzer auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:`/`ci:`/`test:`/`docs:`.
+4. **Nach `main` mergen und pushen** – im eigenen Worktree, nicht im Hauptordner:
 
    ```sh
-   git pull --rebase --autostash origin main
-   git push origin main
+   git fetch origin
+   git switch --detach origin/main
+   git merge --no-ff <branch> -m "Merge <branch>"
+   git push origin HEAD:main
    ```
 
-   `--autostash` legt fremde, nicht committete Änderungen kurz beiseite und stellt sie danach wieder her. Konflikte, die nicht eindeutig sind: `git rebase --abort`, den Nutzer fragen. Push abgelehnt, weil `main` inzwischen weiter ist: beide Befehle wiederholen. Cloud-Sitzungen, die auf einem vorgegebenen Branch starten: `git pull --rebase origin main`, dann `git push origin HEAD:main`.
-5. **Melden:** Commit kurz nennen.
+   Merge-Konflikte, die nicht eindeutig sind: `git merge --abort && git switch <branch>`, den Nutzer fragen. Push abgelehnt, weil `main` inzwischen weiter ist: ab `git fetch` wiederholen.
+5. **Aufräumen** – Pflicht, gleich nach dem Push:
+
+   ```sh
+   main_dir=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
+   cd "$main_dir"
+   git worktree remove .claude/worktrees/<thema>
+   git branch -d <branch>
+   git push origin --delete <branch>   # nur wenn der Branch gepusht war
+   git pull --ff-only                  # Hauptordner auf den neuen Stand von main
+   ```
+
+   Einen Worktree, den die Claude-App angelegt hat, nicht selbst entfernen – den räumt die App beim Archivieren weg; die Branches trotzdem löschen. Danach zeigen `git worktree list` und `git branch -a` nichts mehr von dieser Sitzung.
+6. **Melden:** Branch, Merge-Commit und dass aufgeräumt ist.
+
+**Cloud-Sitzungen** starten auf einem vorgegebenen Branch und dürfen keine Branches löschen. Dort per Pull Request über die REST-API mergen – GitHub löscht den Branch danach selbst („Automatically delete head branches“ ist an):
+
+```sh
+git push origin HEAD
+nr=$(gh api repos/eloayoubi/individuelle-daten-historie/pulls -f title="<Betreff>" -f head=<branch> -f base=main --jq .number)
+gh api -X PUT repos/eloayoubi/individuelle-daten-historie/pulls/$nr/merge -f merge_method=merge
+```
 
 Der Push auf `main` startet nichts: TestFlight-Build und Supabase-Migrationen laufen nur auf ausdrückliche Bitte (Abschnitte unten).
 
