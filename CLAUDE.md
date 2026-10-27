@@ -2,26 +2,26 @@
 
 Projektüberblick, Struktur, Code-Regeln und Commit-Konvention stehen in der `README.md`, Produkt und Fahrplan in `docs/IMPLEMENTIERUNGSPLAN.md`, das Backend in `supabase/README.md`. Hier nur, was jede Sitzung (lokal oder in der Cloud) zusätzlich wissen muss.
 
+## Immer auf `main` arbeiten
+
+Gearbeitet wird direkt auf `main` im Hauptordner `individuelle-daten-historie` – **keine** Feature-Branches, **keine** zusätzlichen Worktrees oder Ordner neben dem Repo (z. B. `../kk-…`). Steht der Hauptordner beim Start auf einem anderen Branch und ist sauber: `git switch main && git pull --ff-only`; liegen dort fremde Änderungen, den Nutzer fragen.
+
 ## Nach jeder Implementierung: auf `main` committen
 
-Ist eine Aufgabe fertig umgesetzt, landet sie ohne Nachfrage auf `main` – committen, mergen, pushen. Nicht bei reinen Fragen, Analysen oder Plänen, und nicht, wenn der Nutzer sagt, dass er selbst committet.
+Ist eine Aufgabe fertig umgesetzt, landet sie ohne Nachfrage auf `main` – committen, pushen. Nicht bei reinen Fragen, Analysen oder Plänen, und nicht, wenn der Nutzer sagt, dass er selbst committet.
 
 1. **Prüfen:** bei Dart-Änderungen `flutter analyze && flutter test`, bei neuen Migrationen `supabase/scripts/test_local.sh`. Schlägt etwas fehl und lässt sich nicht beheben: nicht committen, dem Nutzer melden.
-2. **Nur eigene Dateien stagen:** `git status` ansehen, die in dieser Sitzung geänderten Dateien einzeln mit `git add <pfad>` aufnehmen (kein `git add -A`/`git add .`). Fremde, nicht committete Änderungen nicht stagen, stashen oder verwerfen.
-3. **Committen** auf einem Branch mit sprechendem Namen (`feature/…`, `fix/…`, `chore/…`, `ci/…`); läuft die Sitzung schon auf einem passenden Branch, dort. Betreff: Neues für Nutzer auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:`/`ci:`/`test:`/`docs:`.
-4. **Nach `main` mergen und pushen** – in einem Wegwerf-Worktree, nicht per `git checkout main`: `main` ist oft schon in einem anderen Worktree ausgecheckt, und ein Checkout hier würde anderen Sitzungen im selben Ordner den Branch wechseln.
+2. **Nur eigene Dateien stagen:** `git status` ansehen, die in dieser Sitzung geänderten Dateien einzeln mit `git add <pfad>` aufnehmen (kein `git add -A`/`git add .`). Mehrere Sitzungen arbeiten im selben Ordner: fremde, nicht committete Änderungen nicht stagen oder verwerfen.
+3. **Committen** direkt auf `main`. Betreff: Neues für Nutzer auf Deutsch ohne Präfix (landet im TestFlight-Testhinweis), Internes mit `chore:`/`ci:`/`test:`/`docs:`.
+4. **Pushen:**
 
    ```sh
-   git fetch origin
-   tmp=$(mktemp -d)/main
-   git worktree add --detach "$tmp" origin/main
-   git -C "$tmp" merge --no-ff <branch> -m "Merge <branch>"
-   git -C "$tmp" push origin HEAD:main
-   git worktree remove "$tmp"
+   git pull --rebase --autostash origin main
+   git push origin main
    ```
 
-   Merge-Konflikte, die nicht eindeutig sind: `git -C "$tmp" merge --abort`, Worktree entfernen, den Nutzer fragen. Push abgelehnt, weil `main` inzwischen weiter ist: ab `git fetch` wiederholen. Das lokale `main` kann dabei veraltet bleiben – neue Branches daher von `origin/main` abzweigen.
-5. **Melden:** Branch und Merge-Commit kurz nennen.
+   `--autostash` legt fremde, nicht committete Änderungen kurz beiseite und stellt sie danach wieder her. Konflikte, die nicht eindeutig sind: `git rebase --abort`, den Nutzer fragen. Push abgelehnt, weil `main` inzwischen weiter ist: beide Befehle wiederholen. Cloud-Sitzungen, die auf einem vorgegebenen Branch starten: `git pull --rebase origin main`, dann `git push origin HEAD:main`.
+5. **Melden:** Commit kurz nennen.
 
 Der Push auf `main` startet nichts: TestFlight-Build und Supabase-Migrationen laufen nur auf ausdrückliche Bitte (Abschnitte unten).
 
@@ -30,7 +30,7 @@ Der Push auf `main` startet nichts: TestFlight-Build und Supabase-Migrationen la
 - **Sitzung auf dem Mac des Nutzers** (Arbeitsverzeichnis unter `/Users/…`): alles lokal ausführen – `fastlane beta` und `npx supabase db push`. **Keine** GitHub-Workflows (`testflight.yml`, `supabase.yml`) starten; die Runner bleiben den Cloud-Sitzungen vorbehalten. Ausnahme nur, wenn der Nutzer ausdrücklich den GitHub-Lauf will.
 - **Cloud-Sitzung** (kein Mac, Supabase per Proxy gesperrt): über die GitHub-Workflows.
 
-Lokal immer von einem frischen Stand von `origin/main` aus, nicht aus dem Hauptordner (der steht oft auf einem anderen Branch): Wegwerf-Worktree wie beim Merge, dazu die nicht eingecheckten Dateien aus dem Hauptordner kopieren – `supabase/.temp/` (Projekt-Link), `.env.local` (Supabase-Werte für den Build) und `ios/fastlane/.env` (ASC-Key). Inhalte dieser Dateien nicht ausgeben.
+Lokal immer von einem frischen Stand von `origin/main` aus, nicht aus dem Hauptordner (dort liegen oft nicht committete Änderungen anderer Sitzungen): Wegwerf-Worktree im Temp-Verzeichnis – nie in `IdeaProjects` – und danach wieder entfernen (`git worktree remove "$tmp"`), dazu die nicht eingecheckten Dateien aus dem Hauptordner kopieren – `supabase/.temp/` (Projekt-Link), `.env.local` (Supabase-Werte für den Build) und `ios/fastlane/.env` (ASC-Key). Inhalte dieser Dateien nicht ausgeben.
 
 ```sh
 git fetch origin
