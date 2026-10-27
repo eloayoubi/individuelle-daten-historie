@@ -4363,6 +4363,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{name} {date}'**
   String itemDeadline(String name, String date);
+
+  /// No description provided for @forceUpdateTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Version verfügbar'**
+  String get forceUpdateTitle;
+
+  /// No description provided for @forceUpdateBodyTestFlight.
+  ///
+  /// In de, this message translates to:
+  /// **'Kostenkurve wird gerade fast täglich besser. Lade den neuen Build in TestFlight, um weiterzumachen – deine Daten bleiben erhalten.'**
+  String get forceUpdateBodyTestFlight;
+
+  /// No description provided for @forceUpdateBodyAppStore.
+  ///
+  /// In de, this message translates to:
+  /// **'Diese Version wird nicht mehr unterstützt. Aktualisiere Kostenkurve im App Store, um weiterzumachen – deine Daten bleiben erhalten.'**
+  String get forceUpdateBodyAppStore;
+
+  /// No description provided for @forceUpdateTestFlight.
+  ///
+  /// In de, this message translates to:
+  /// **'In TestFlight aktualisieren'**
+  String get forceUpdateTestFlight;
+
+  /// No description provided for @forceUpdateAppStore.
+  ///
+  /// In de, this message translates to:
+  /// **'Im App Store aktualisieren'**
+  String get forceUpdateAppStore;
+
+  /// No description provided for @forceUpdateBuilds.
+  ///
+  /// In de, this message translates to:
+  /// **'Build {installed} → {latest}'**
+  String forceUpdateBuilds(String installed, String latest);
 }
 
 class _AppLocalizationsDelegate

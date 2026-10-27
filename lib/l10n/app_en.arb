@@ -717,5 +717,11 @@
   "itemAdded": "“{name}” added",
   "itemOtherGroup": "More",
   "itemNoAmount": "No amount yet",
-  "itemDeadline": "{name} {date}"
+  "itemDeadline": "{name} {date}",
+  "forceUpdateTitle": "New version available",
+  "forceUpdateBodyTestFlight": "Kostenkurve is getting better almost every day. Install the new build in TestFlight to keep going – your data stays where it is.",
+  "forceUpdateBodyAppStore": "This version is no longer supported. Update Kostenkurve in the App Store to keep going – your data stays where it is.",
+  "forceUpdateTestFlight": "Update in TestFlight",
+  "forceUpdateAppStore": "Update in the App Store",
+  "forceUpdateBuilds": "Build {installed} → {latest}"
 }

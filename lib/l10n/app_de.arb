@@ -1515,5 +1515,21 @@
         "type": "String"
       }
     }
+  },
+  "forceUpdateTitle": "Neue Version verfügbar",
+  "forceUpdateBodyTestFlight": "Kostenkurve wird gerade fast täglich besser. Lade den neuen Build in TestFlight, um weiterzumachen – deine Daten bleiben erhalten.",
+  "forceUpdateBodyAppStore": "Diese Version wird nicht mehr unterstützt. Aktualisiere Kostenkurve im App Store, um weiterzumachen – deine Daten bleiben erhalten.",
+  "forceUpdateTestFlight": "In TestFlight aktualisieren",
+  "forceUpdateAppStore": "Im App Store aktualisieren",
+  "forceUpdateBuilds": "Build {installed} → {latest}",
+  "@forceUpdateBuilds": {
+    "placeholders": {
+      "installed": {
+        "type": "String"
+      },
+      "latest": {
+        "type": "String"
+      }
+    }
   }
 }

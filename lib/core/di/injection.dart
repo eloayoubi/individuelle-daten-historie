@@ -44,6 +44,10 @@ import '../../features/storage/cubit/storage_cubit.dart';
 import '../../features/storage/data/storage_categories_repository.dart';
 import '../../features/storage/data/storage_mode.dart';
 import '../../features/storage/data/storage_transfer.dart';
+import '../../features/update/cubit/update_cubit.dart';
+import '../../features/update/data/app_release.dart';
+import '../../features/update/data/installed_app.dart';
+import '../../features/update/data/supabase_release_repository.dart';
 import '../config/app_config.dart';
 import '../network/supabase_api.dart';
 import '../utils/json_store.dart';
@@ -99,7 +103,8 @@ Future<void> configureDependencies() async {
       ..registerLazySingleton<PlusStore>(
         () => Platform.isIOS ? AppStorePlusStore(lookup<PlusRepository>(), () => lookup<AuthRepository>().userId) : const UnavailablePlusStore(),
       )
-      ..registerLazySingleton<AttachmentsRepository>(() => SupabaseAttachmentsRepository(lookup<SupabaseApi>(), lookup<AuthRepository>()));
+      ..registerLazySingleton<AttachmentsRepository>(() => SupabaseAttachmentsRepository(lookup<SupabaseApi>(), lookup<AuthRepository>()))
+      ..registerLazySingleton<ReleaseRepository>(() => SupabaseReleaseRepository(lookup<SupabaseApi>()));
   } else {
     getIt
       ..registerLazySingleton<AuthRepository>(MockAuthRepository.new)
@@ -120,7 +125,8 @@ Future<void> configureDependencies() async {
       ..registerLazySingleton<AppearanceStore>(MemoryAppearanceStore.new)
       ..registerLazySingleton<PlusRepository>(MockPlusRepository.new)
       ..registerLazySingleton<PlusStore>(() => MockPlusStore(lookup<PlusRepository>()))
-      ..registerLazySingleton<AttachmentsRepository>(MockAttachmentsRepository.new);
+      ..registerLazySingleton<AttachmentsRepository>(MockAttachmentsRepository.new)
+      ..registerLazySingleton<ReleaseRepository>(NoReleaseRepository.new);
   }
   getIt
     // Echte Benachrichtigungen auch im Mock-Modus; Tests tauschen gegen MemoryNotificationGateway.
@@ -135,6 +141,7 @@ Future<void> configureDependencies() async {
     ..registerFactory<AccountCubit>(() => AccountCubit(lookup<AuthRepository>()))
     ..registerFactory<StorageCubit>(() => StorageCubit(lookup<StorageModeStore>(), lookup<StorageTransfer>(), lookup<AuthRepository>(), lookup<PlusRepository>()))
     ..registerFactory<PlusCubit>(() => PlusCubit(lookup<PlusRepository>(), lookup<PlusStore>()))
+    ..registerFactory<UpdateCubit>(() => UpdateCubit(lookup<ReleaseRepository>(), InstalledApp.read))
     ..registerFactory<OnboardingCubit>(() => OnboardingCubit(lookup<CategoriesRepository>(), FileJsonStore('onboarding')))
     ..registerFactory<ShellCubit>(ShellCubit.new)
     ..registerFactory<AppearanceCubit>(() => AppearanceCubit(lookup<AppearanceStore>()))

@@ -73,6 +73,7 @@ Features heute:
 - `legal`: Datenschutz, Nutzungsbedingungen, Impressum aus `assets/legal/` (Markdown, DE/EN).
 - `settings`: Speicherort (Cloud aktivieren, anmelden, aufs Gerät holen), Konto und Abo, Darstellung, Erinnerungen, Datenexport (CSV + JSON), Rechtliches; Bewertungsbitte nach dem 3. Eintrag.
 - `auth`: Registrieren und Anmelden (Apple, 8-stelliger E-Mail-Code, kein Passwort) – `AuthPage` und `AuthRepository`.
+- `update`: Pflicht-Update – `ForceUpdateGate` legt über die ganze App „Neue Version verfügbar“ (Lottie-Animation, Link zu TestFlight), sobald `app_releases` einen neueren Build für den Vertriebsweg nennt (TestFlight oder App Store, aus `package_info_plus`). Nur Release-Builds; Debug, Simulator und Android nie. Geprüft beim Start und bei jeder Rückkehr in die App, ohne Netz bleibt alles offen.
 
 **Rechnen:** Rechenlogik liegt in `core/utils/`:
 
@@ -119,7 +120,7 @@ Commit-Betreffs: Nutzer-Sichtbares auf Deutsch ohne Präfix (landet im TestFligh
 ## Store
 
 - **Texte und Screenshots:** `ios/fastlane/metadata/` (DE/EN, Hinweise in `metadata/README.md`), Screenshots `ios/fastlane/screenshots/` (6,9″, je 5). Hochladen: `cd ios && fastlane metadata` (ohne Binary, reicht nichts zur Prüfung ein; bricht ab, solange `example.com`-Platzhalter drin sind).
-- **Neu erzeugen:** Icons, Startanimation (`assets/branding/launch_animation.json`, aus `tool/branding/launch_animation.dart`) und Splash-Bild `flutter test tool/branding/render_icon_test.dart --update-goldens && dart run flutter_launcher_icons` (danach das `sed` aus `flutter_launcher_icons.yaml`), Splash `dart run flutter_native_splash:create`, Screenshots `flutter test tool/screenshots/store_screenshots_test.dart --update-goldens`.
+- **Neu erzeugen:** Icons, Startanimation (`assets/branding/launch_animation.json`, aus `tool/branding/launch_animation.dart`), Animation des Pflicht-Updates (`assets/branding/update_animation.json`, aus `tool/branding/update_animation.dart`) und Splash-Bild `flutter test tool/branding/render_icon_test.dart --update-goldens && dart run flutter_launcher_icons` (danach das `sed` aus `flutter_launcher_icons.yaml`), Splash `dart run flutter_native_splash:create`, Screenshots `flutter test tool/screenshots/store_screenshots_test.dart --update-goldens`.
 - **Prüf-Screenshot des Abos:** `flutter test tool/screenshots/paywall_review_test.dart --update-goldens` (Paywall, 1290 × 2796, DE/EN nach `build/asc/`).
 - **Rechtstexte:** `assets/legal/*.md` – Platzhalter in eckigen Klammern (Name, Anschrift, E-Mail) vor dem Start ersetzen; dieselben Texte öffentlich hosten (Datenschutz-URL für App Store Connect).
 
@@ -144,11 +145,13 @@ cd ios && fastlane beta changelog:"Neu: …"           # eigener Testhinweis
 cd ios && fastlane beta dry_run:true                 # nur bauen und signieren
 cd ios && fastlane beta skip_tests:true build_number:7
 cd ios && fastlane distribute build_number:6         # vorhandenen Build an „Tester“ geben
+cd ios && fastlane force_update build_number:12      # Pflicht-Update von Hand nachholen
 cd ios && fastlane check                             # API-Key prüfen, letzte/nächste Build-Nummer
 ```
 
 - **Version** = `version:` in `pubspec.yaml` (Teil vor dem `+`); die **Build-Nummer** vergibt die Lane: höchste in App Store Connect + 1.
 - **Testhinweis** = Commit-Betreffs seit dem höchsten Tag `testflight/<nr>` im gebauten Stand, ohne Merges und ohne `chore`/`ci`/`test`/`docs` (vor dem ersten Tag die letzten 15 Commits). Nach dem Upload setzt und pusht die Lane den Tag `testflight/<nr>`.
+- **Pflicht-Update:** Ist der Build für „Tester“ freigegeben (die Lane wartet bis zu `FORCE_UPDATE_WAIT` Minuten), trägt sie ihn per `supabase db query --linked` in `app_releases` ein – ältere Builds zeigen dann „Neue Version verfügbar“. Ohne: `fastlane beta force_update:false` (GitHub: Haken `force_update` aus). Lokal braucht das den Login der Supabase-CLI, auf GitHub das Secret `SUPABASE_ACCESS_TOKEN`; scheitert es, warnt die Lane nur.
 - **Signieren:** Cloud-Signing – lokal über die in Xcode angemeldete Apple-ID, auf CI (oder mit `ASC_SIGN_WITH_KEY=1`) über den API-Key (Rolle Admin).
 - **Lokal nötig:** `ios/fastlane/.env` mit `ASC_KEY_ID`, `ASC_ISSUER_ID` (nicht im Git), Schlüssel unter `~/.appstoreconnect/private_keys/AuthKey_<ID>.p8`, `.env.local` mit den Supabase-Werten. Fastlane braucht eine UTF-8-Locale (`.env.default` setzt sie).
 - **Ohne Mac:** GitHub → Actions → TestFlight → Run workflow (`.github/workflows/testflight.yml`, macOS-Runner, dieselbe Lane, nur manueller Start). Secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`.

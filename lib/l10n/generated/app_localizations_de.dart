@@ -2593,4 +2593,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String itemDeadline(String name, String date) {
     return '$name $date';
   }
+
+  @override
+  String get forceUpdateTitle => 'Neue Version verfügbar';
+
+  @override
+  String get forceUpdateBodyTestFlight =>
+      'Kostenkurve wird gerade fast täglich besser. Lade den neuen Build in TestFlight, um weiterzumachen – deine Daten bleiben erhalten.';
+
+  @override
+  String get forceUpdateBodyAppStore =>
+      'Diese Version wird nicht mehr unterstützt. Aktualisiere Kostenkurve im App Store, um weiterzumachen – deine Daten bleiben erhalten.';
+
+  @override
+  String get forceUpdateTestFlight => 'In TestFlight aktualisieren';
+
+  @override
+  String get forceUpdateAppStore => 'Im App Store aktualisieren';
+
+  @override
+  String forceUpdateBuilds(String installed, String latest) {
+    return 'Build $installed → $latest';
+  }
 }

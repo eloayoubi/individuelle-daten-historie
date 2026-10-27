@@ -19,4 +19,7 @@ abstract final class AppConfig {
 
   /// Abos verwalten und kündigen (App Store).
   static const manageSubscriptionsUrl = 'https://apps.apple.com/account/subscriptions';
+
+  /// Öffentlicher TestFlight-Link (Gruppe „Tester“) – fürs Pflicht-Update, falls der Server keinen nennt.
+  static const testFlightUrl = 'https://testflight.apple.com/join/92YxVdPT';
 }

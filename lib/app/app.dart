@@ -22,6 +22,8 @@ import '../features/shell/view/shell_page.dart';
 import '../features/storage/cubit/storage_cubit.dart';
 import '../features/storage/view/cloud_flow.dart';
 import '../features/storage/view/start_gate.dart';
+import '../features/update/cubit/update_cubit.dart';
+import '../features/update/view/force_update_gate.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'launch_splash.dart';
 
@@ -68,7 +70,7 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
   @override
   Widget build(BuildContext context) {
     // Über dem MaterialApp, damit auch Sheets und gepushte Seiten Darstellung, Erinnerungen, Konto,
-    // Cloud-Abo und Speicherort sehen.
+    // Cloud-Abo und Speicherort sehen – und das Pflicht-Update über allem liegen kann.
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => lookup<AppearanceCubit>()..load()),
@@ -76,6 +78,7 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
         BlocProvider(create: (_) => lookup<AccountCubit>()..load()),
         BlocProvider(create: (_) => lookup<PlusCubit>()..load()),
         BlocProvider(create: (_) => lookup<StorageCubit>()..load()),
+        BlocProvider(create: (_) => lookup<UpdateCubit>()..check()),
       ],
       child: BlocListener<AccountCubit, AccountState>(
         // Anderes Konto (anmelden, abmelden, löschen): dessen Abo-Stand laden.
@@ -93,13 +96,13 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
             supportedLocales: AppLocalizations.supportedLocales,
             // Statusleiste passend zum Design; beim Start liegt die Startanimation über allem, auch
             // über einem Beitreten-Sheet aus einem Einladungslink. Die Tastaturleiste gilt für Seiten
-            // und Sheets.
+            // und Sheets. Danach sperrt ein veralteter Build die ganze App (Pflicht-Update).
             builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
               value: Theme.of(context).brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
               child: _SyncOnResume(
                 child: LaunchSplash(
                   composition: widget.launch,
-                  child: TransferOverlay(child: AppKeyboardBar(child: child!)),
+                  child: ForceUpdateGate(child: TransferOverlay(child: AppKeyboardBar(child: child!))),
                 ),
               ),
             ),
@@ -111,8 +114,8 @@ class _KostenkurveAppState extends State<KostenkurveApp> {
   }
 }
 
-/// Zurück in der App: offline erfasste Einträge senden und Erinnerungen auffrischen
-/// (z. B. nach Änderungen des Partners).
+/// Zurück in der App: offline erfasste Einträge senden, Erinnerungen auffrischen (z. B. nach
+/// Änderungen des Partners) und nach einem neueren Build fragen.
 class _SyncOnResume extends StatefulWidget {
   const _SyncOnResume({required this.child});
 
@@ -133,6 +136,7 @@ class _SyncOnResumeState extends State<_SyncOnResume> {
         lookup<CategoriesRepository>().sync();
         lookup<ReminderService>().reschedule();
         context.read<RemindersCubit>().load();
+        context.read<UpdateCubit>().check();
       },
     );
   }
