@@ -602,6 +602,17 @@ void main() {
         await t.pumpAndSettle();
         await t.enterText(find.widgetWithText(TextField, 'Preis'), '9,99');
         await t.pumpAndSettle();
+        // „Seit“: Schnellwahl über dem Rad, ohne Wahl heute.
+        final year = DateTime.now().year;
+        await t.tap(find.descendant(of: find.byType(ItemSheet), matching: find.text('Seit')));
+        await t.pumpAndSettle();
+        for (final label in ['Anfang des Monats', 'Anfang des Jahres', 'Heute', 'Individuell']) {
+          expect(find.text(label), findsOneWidget);
+        }
+        await t.tap(find.text('Anfang des Jahres'));
+        await t.pumpAndSettle();
+        expect(find.text('Anfang des Jahres'), findsNothing);
+        expect(find.descendant(of: find.byType(ItemSheet), matching: find.text('1.1.$year')), findsOneWidget);
         await t.tap(find.descendant(of: find.byType(ItemSheet), matching: find.widgetWithText(AppButton, 'Abo hinzufügen')));
         await t.pumpAndSettle();
         expect(find.byType(ItemSheet), findsNothing);

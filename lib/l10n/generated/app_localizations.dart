@@ -1412,6 +1412,30 @@ abstract class AppLocalizations {
   /// **'Datum wählen'**
   String get datePickerTitle;
 
+  /// No description provided for @datePresetMonthStart.
+  ///
+  /// In de, this message translates to:
+  /// **'Anfang des Monats'**
+  String get datePresetMonthStart;
+
+  /// No description provided for @datePresetYearStart.
+  ///
+  /// In de, this message translates to:
+  /// **'Anfang des Jahres'**
+  String get datePresetYearStart;
+
+  /// No description provided for @datePresetToday.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute'**
+  String get datePresetToday;
+
+  /// No description provided for @datePresetCustom.
+  ///
+  /// In de, this message translates to:
+  /// **'Individuell'**
+  String get datePresetCustom;
+
   /// No description provided for @entryNew.
   ///
   /// In de, this message translates to:

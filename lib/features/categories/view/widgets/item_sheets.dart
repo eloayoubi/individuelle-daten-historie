@@ -26,7 +26,12 @@ class _ItemSheetState extends State<ItemSheet> {
   final _amount = TextEditingController();
   String? _group;
   late int _interval = widget.item.defaultInterval;
-  DateTime _since = DateTime.now();
+  late DateTime _since = _today();
+
+  static DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
 
   /// Art selbst gewählt: Ein Vorschlag überschreibt sie nicht mehr.
   bool _groupPicked = false;
@@ -69,7 +74,7 @@ class _ItemSheetState extends State<ItemSheet> {
 
   Future<void> _pickSince() async {
     final now = DateTime.now();
-    final picked = await AppDateSheet.show(context, initial: _since, minimum: DateTime(2000), maximum: DateTime(now.year + 1, 12, 31));
+    final picked = await AppDateSheet.choose(context, title: context.l10n.itemSince, selected: _since, minimum: DateTime(2000), maximum: DateTime(now.year + 1, 12, 31));
     if (picked != null) setState(() => _since = picked);
   }
 

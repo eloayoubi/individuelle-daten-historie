@@ -772,6 +772,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get datePickerTitle => 'Choose date';
 
   @override
+  String get datePresetMonthStart => 'Start of the month';
+
+  @override
+  String get datePresetYearStart => 'Start of the year';
+
+  @override
+  String get datePresetToday => 'Today';
+
+  @override
+  String get datePresetCustom => 'Custom';
+
+  @override
   String get entryNew => 'New entry';
 
   @override
