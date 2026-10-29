@@ -278,6 +278,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setupColor => 'Colour';
 
   @override
+  String get vehicleDrive => 'Drive';
+
+  @override
+  String get vehicleDriveFuel => 'Petrol/diesel';
+
+  @override
+  String get vehicleDriveElectric => 'Electric';
+
+  @override
+  String get vehicleDriveHybrid => 'Hybrid';
+
+  @override
+  String get vehicleDriveHint =>
+      'Decides whether you log litres when refuelling, kWh when charging, or both.';
+
+  @override
   String get setupFields => 'Fields';
 
   @override
@@ -725,6 +741,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tplFieldFuelAmount => 'Amount (l or kWh)';
+
+  @override
+  String get tplFieldRefuel => 'Fuel';
+
+  @override
+  String get tplFieldCharge => 'Charging';
+
+  @override
+  String get tplFieldLitres => 'Refuelled';
+
+  @override
+  String get tplFieldKwh => 'Charged';
 
   @override
   String get tplFieldCarInsurance => 'Car insurance';

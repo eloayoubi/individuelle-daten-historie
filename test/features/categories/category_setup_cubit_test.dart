@@ -5,6 +5,7 @@ import 'package:kostenkurve/features/categories/cubit/category_setup_cubit.dart'
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/category_templates.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
+import 'package:kostenkurve/features/categories/data/vehicle_drive.dart';
 import 'package:kostenkurve/l10n/generated/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -20,6 +21,25 @@ void main() {
     expect((state.name, state.icon, state.swatch), ('Strom', CategoryIcon.bolt, CategorySwatch.orange));
     expect(state.draft.trackers.single.fields, hasLength(strom.trackers.single.fields.length));
   });
+
+  test('Auto: Antrieb wechselt die Mengen, abgewählte Felder bleiben abgewählt', () {
+    final auto = CategoryTemplates.all(lookupAppLocalizations(const Locale('de'))).firstWhere((t) => t.key == CategoryTemplates.autoKey);
+    final cubit = CategorySetupCubit(MockCategoriesRepository(), auto);
+    List<String> fields() => [for (final f in cubit.state.draft.trackers.single.fields) f.name];
+    expect(cubit.state.drive, VehicleDrive.fuel);
+    expect(fields(), containsAllInOrder(['Tanken', 'Getankt']));
+    cubit
+      ..toggleField(0, 5) // Werkstatt
+      ..setDrive(VehicleDrive.hybrid);
+    expect(fields(), containsAllInOrder(['Tanken / Laden', 'Getankt', 'Geladen']));
+    expect(fields(), isNot(contains('Werkstatt')));
+    cubit.setDrive(VehicleDrive.electric);
+    expect(fields(), isNot(contains('Getankt')));
+    expect(fields(), isNot(contains('Werkstatt')));
+    expect(cubit.state.draft.trackers.single.fields.firstWhere((f) => f.name == 'Geladen').unit, 'kWh');
+  });
+
+  test('ohne Fahrzeug kein Antrieb', () => expect(CategorySetupCubit(MockCategoriesRepository(), strom).state.drive, isNull));
 
   test('eigene Kategorie startet leer und ohne Tracker', () {
     final state = CategorySetupCubit(MockCategoriesRepository(), null).state;

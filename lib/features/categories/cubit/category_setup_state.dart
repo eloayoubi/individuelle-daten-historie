@@ -16,6 +16,7 @@ class CategorySetupState extends Equatable {
     required this.icon,
     required this.swatch,
     this.template,
+    this.drive,
     this.excluded = const {},
     this.saving = false,
     this.event,
@@ -31,6 +32,9 @@ class CategorySetupState extends Equatable {
   /// `null` = eigene Kategorie ohne Tracker.
   final CategoryTemplate? template;
 
+  /// Antrieb bei Fahrzeug-Vorlagen, sonst `null`.
+  final VehicleDrive? drive;
+
   /// Abgewählte Felder der Vorlage als (Tracker, Feld).
   final Set<(int, int)> excluded;
   final bool saving;
@@ -40,27 +44,38 @@ class CategorySetupState extends Equatable {
 
   bool isIncluded(int tracker, int field) => !excluded.contains((tracker, field));
 
+  /// Tracker der Vorlage, beim Fahrzeug zum gewählten Antrieb.
+  List<TrackerDraft> get trackers => template?.trackersFor(drive) ?? const [];
+
   CategoryDraft get draft => CategoryDraft(
     name: name.trim(),
     icon: icon,
     swatch: swatch,
     templateKey: template?.key,
     trackers: [
-      for (final (t, tracker) in (template?.trackers ?? const <TrackerDraft>[]).indexed) tracker.where((f) => isIncluded(t, f)),
+      for (final (t, tracker) in trackers.indexed) tracker.where((f) => isIncluded(t, f)),
     ],
   );
 
-  CategorySetupState copyWith({String? name, CategoryIcon? icon, CategorySwatch? swatch, Set<(int, int)>? excluded, bool? saving, CategorySetupEvent? event}) =>
-      CategorySetupState(
-        name: name ?? this.name,
-        icon: icon ?? this.icon,
-        swatch: swatch ?? this.swatch,
-        template: template,
-        excluded: excluded ?? this.excluded,
-        saving: saving ?? this.saving,
-        event: event,
-      );
+  CategorySetupState copyWith({
+    String? name,
+    CategoryIcon? icon,
+    CategorySwatch? swatch,
+    VehicleDrive? drive,
+    Set<(int, int)>? excluded,
+    bool? saving,
+    CategorySetupEvent? event,
+  }) => CategorySetupState(
+    name: name ?? this.name,
+    icon: icon ?? this.icon,
+    swatch: swatch ?? this.swatch,
+    template: template,
+    drive: drive ?? this.drive,
+    excluded: excluded ?? this.excluded,
+    saving: saving ?? this.saving,
+    event: event,
+  );
 
   @override
-  List<Object?> get props => [name, icon, swatch, template, excluded, saving, event];
+  List<Object?> get props => [name, icon, swatch, template, drive, excluded, saving, event];
 }

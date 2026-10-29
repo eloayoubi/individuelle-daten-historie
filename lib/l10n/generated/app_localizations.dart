@@ -518,6 +518,36 @@ abstract class AppLocalizations {
   /// **'Farbe'**
   String get setupColor;
 
+  /// No description provided for @vehicleDrive.
+  ///
+  /// In de, this message translates to:
+  /// **'Antrieb'**
+  String get vehicleDrive;
+
+  /// No description provided for @vehicleDriveFuel.
+  ///
+  /// In de, this message translates to:
+  /// **'Benzin/Diesel'**
+  String get vehicleDriveFuel;
+
+  /// No description provided for @vehicleDriveElectric.
+  ///
+  /// In de, this message translates to:
+  /// **'Elektro'**
+  String get vehicleDriveElectric;
+
+  /// No description provided for @vehicleDriveHybrid.
+  ///
+  /// In de, this message translates to:
+  /// **'Hybrid'**
+  String get vehicleDriveHybrid;
+
+  /// No description provided for @vehicleDriveHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Bestimmt, ob du beim Tanken Liter, beim Laden kWh oder beides einträgst.'**
+  String get vehicleDriveHint;
+
   /// No description provided for @setupFields.
   ///
   /// In de, this message translates to:
@@ -1321,6 +1351,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Menge (l oder kWh)'**
   String get tplFieldFuelAmount;
+
+  /// No description provided for @tplFieldRefuel.
+  ///
+  /// In de, this message translates to:
+  /// **'Tanken'**
+  String get tplFieldRefuel;
+
+  /// No description provided for @tplFieldCharge.
+  ///
+  /// In de, this message translates to:
+  /// **'Laden'**
+  String get tplFieldCharge;
+
+  /// No description provided for @tplFieldLitres.
+  ///
+  /// In de, this message translates to:
+  /// **'Getankt'**
+  String get tplFieldLitres;
+
+  /// No description provided for @tplFieldKwh.
+  ///
+  /// In de, this message translates to:
+  /// **'Geladen'**
+  String get tplFieldKwh;
 
   /// No description provided for @tplFieldCarInsurance.
   ///

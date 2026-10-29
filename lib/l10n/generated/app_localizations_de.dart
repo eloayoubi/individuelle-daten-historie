@@ -281,6 +281,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get setupColor => 'Farbe';
 
   @override
+  String get vehicleDrive => 'Antrieb';
+
+  @override
+  String get vehicleDriveFuel => 'Benzin/Diesel';
+
+  @override
+  String get vehicleDriveElectric => 'Elektro';
+
+  @override
+  String get vehicleDriveHybrid => 'Hybrid';
+
+  @override
+  String get vehicleDriveHint =>
+      'Bestimmt, ob du beim Tanken Liter, beim Laden kWh oder beides einträgst.';
+
+  @override
   String get setupFields => 'Felder';
 
   @override
@@ -731,6 +747,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tplFieldFuelAmount => 'Menge (l oder kWh)';
+
+  @override
+  String get tplFieldRefuel => 'Tanken';
+
+  @override
+  String get tplFieldCharge => 'Laden';
+
+  @override
+  String get tplFieldLitres => 'Getankt';
+
+  @override
+  String get tplFieldKwh => 'Geladen';
 
   @override
   String get tplFieldCarInsurance => 'Kfz-Versicherung';

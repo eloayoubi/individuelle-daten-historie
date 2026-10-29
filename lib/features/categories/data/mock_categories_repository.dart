@@ -86,7 +86,15 @@ class MockCategoriesRepository extends MemoryCategoriesRepository {
     Category(id: 'c-heizung', name: 'Heizung', icon: CategoryIcon.flame, swatch: CategorySwatch.red, trackers: [_gas]),
     Category(id: 'c-wasser', name: 'Wasser', icon: CategoryIcon.drop, swatch: CategorySwatch.blue, trackers: [_wasser]),
     Category(id: 'c-miete', name: 'Miete & Nebenkosten', icon: CategoryIcon.house, swatch: CategorySwatch.brown, trackers: [_wohnung], sharedWith: const [anna]),
-    Category(id: 'c-auto', name: 'Auto', icon: CategoryIcon.car, swatch: CategorySwatch.green, trackers: [_golf], sharedWith: const [anna]),
+    Category(
+      id: 'c-auto',
+      name: 'Auto',
+      icon: CategoryIcon.car,
+      swatch: CategorySwatch.green,
+      templateKey: 'auto',
+      trackers: [_golf],
+      sharedWith: const [anna],
+    ),
     Category(id: 'c-internet', name: 'Internet & Mobilfunk', icon: CategoryIcon.wifi, swatch: CategorySwatch.purple, trackers: [_glasfaser, _handy]),
     Category(id: 'c-versicherung', name: 'Versicherungen', icon: CategoryIcon.shield, swatch: CategorySwatch.teal, templateKey: 'versicherung', trackers: [_haftpflicht, _hausrat]),
     Category(

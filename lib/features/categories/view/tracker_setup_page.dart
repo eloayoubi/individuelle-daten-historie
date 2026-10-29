@@ -6,9 +6,12 @@ import '../../../core/core.dart';
 import '../../entries/view/tracker_page.dart';
 import '../cubit/category_detail_cubit.dart';
 import '../cubit/field_editor_cubit.dart';
+import '../data/category_templates.dart';
+import '../data/vehicle_drive.dart';
 import 'field_editor_page.dart';
 import 'widgets/category_sheets.dart';
 import 'widgets/field_row.dart';
+import 'widgets/vehicle_drive_picker.dart';
 
 /// Aufbau eines Trackers, getrennt von seinen Daten: Name und Kostenzuordnung, Felder nach
 /// „Werte mit Verlauf“ und „Details“, Feld hinzufügen, Tracker archivieren. Nur für owner und editor.
@@ -99,6 +102,26 @@ class _Content extends StatelessWidget {
     if (await TrackerIconSheet.show(context, category: category, tracker: tracker) case final CategoryIcon icon) await cubit.setTrackerIcon(tracker, icon);
   }
 
+  /// Antrieb wechseln: Mengenfelder anpassen. Fällt dabei ein Feld mit Werten weg, erst fragen.
+  Future<void> _setDrive(BuildContext context, VehicleDrive drive) async {
+    final cubit = context.read<CategoryDetailCubit>();
+    final l10n = context.l10n;
+    final changes = VehicleDrives.changes(tracker, drive, VehicleDriveNames.of(l10n));
+    for (final change in changes) {
+      if (change is! FieldArchived || !tracker.hasValues(change.id)) continue;
+      final field = tracker.fields.firstWhere((f) => f.id == change.id);
+      final confirmed = await AppDialog.confirm(
+        context,
+        title: l10n.fieldArchiveTitle(field.name),
+        message: l10n.fieldArchiveBody,
+        confirmLabel: l10n.fieldArchive,
+        destructive: true,
+      );
+      if (!confirmed || !context.mounted) return;
+    }
+    if (changes.isNotEmpty) await cubit.applyFieldChanges(tracker, changes);
+  }
+
   Future<void> _archive(BuildContext context) async {
     final cubit = context.read<CategoryDetailCubit>();
     final l10n = context.l10n;
@@ -168,6 +191,13 @@ class _Content extends StatelessWidget {
             ),
           ],
         ),
+        if (category.templateKey == CategoryTemplates.autoKey) ...[
+          SectionHeader(title: l10n.vehicleDrive),
+          Padding(
+            padding: Spacing.screen,
+            child: VehicleDrivePicker(drive: VehicleDrives.of(tracker), onChanged: (drive) => _setDrive(context, drive)),
+          ),
+        ],
         if (tracker.fields.isEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(Spacing.xxl, Spacing.xxl, Spacing.xxl, 0),

@@ -84,6 +84,22 @@ class FieldDraft extends Equatable {
     partOf: total,
   );
 
+  /// Gleiches Feld mit anderem Namen oder anderer Einheit.
+  FieldDraft copyWith({String? name, String? unit}) => FieldDraft(
+    name: name ?? this.name,
+    kind: kind,
+    role: role,
+    unit: unit ?? this.unit,
+    consumptionUnit: consumptionUnit,
+    factor: factor,
+    intervalMonths: intervalMonths,
+    choices: choices,
+    formula: formula,
+    summary: summary,
+    meterGroup: meterGroup,
+    partOf: partOf,
+  );
+
   FieldDefinition withId(String id) => FieldDefinition(
     id: id,
     name: name,

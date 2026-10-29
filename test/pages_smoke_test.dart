@@ -17,6 +17,7 @@ import 'package:kostenkurve/features/categories/cubit/field_editor_cubit.dart';
 import 'package:kostenkurve/features/categories/data/categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/category_templates.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
+import 'package:kostenkurve/features/categories/view/widgets/appearance_pickers.dart';
 import 'package:kostenkurve/features/categories/view/add_category_sheet.dart';
 import 'package:kostenkurve/features/categories/view/categories_page.dart';
 import 'package:kostenkurve/features/categories/view/category_detail_page.dart';
@@ -106,6 +107,8 @@ void main() {
     ('setup from template', CategorySetupPage(template: templates.first)),
     ('setup with two trackers', CategorySetupPage(template: templates.firstWhere((t) => t.key == 'internet'))),
     ('setup custom', const CategorySetupPage()),
+    ('setup car', CategorySetupPage(template: templates.firstWhere((t) => t.key == CategoryTemplates.autoKey))),
+    ('tracker setup car', const TrackerSetupPage(categoryId: 'c-auto', trackerId: 't-golf')),
     ('field editor new', const FieldEditorPage(args: FieldEditorArgs(trackerId: 't-gas'))),
     ('field editor meter', FieldEditorPage(args: FieldEditorArgs(trackerId: gas.id, field: gas.fields.first, hasValues: true))),
     ('entry form new', EntryFormPage(args: EntryFormArgs(category: strom, tracker: strom.trackers.single))),
@@ -583,6 +586,36 @@ void main() {
         expect(find.text('Noch keine Abos'), findsOneWidget);
         expect(find.widgetWithText(AppButton, 'Abo hinzufügen'), findsOneWidget);
         expect(find.text('Wert eintragen'), findsNothing);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('Neue Kategorie: Symbol und Farbe klappen auf, der Antrieb wechselt die Mengen', (t) async {
+        await pumpPage(t, CategorySetupPage(template: templates.firstWhere((x) => x.key == CategoryTemplates.autoKey)), theme: theme, size: const Size(390, 2000));
+        await t.pumpAndSettle();
+        expect(find.byType(IconPicker), findsNothing);
+        expect(find.byType(SwatchPicker), findsNothing);
+
+        await t.tap(find.text('Symbol'));
+        await t.pumpAndSettle();
+        expect(find.byType(IconPicker), findsOneWidget);
+        await t.tap(find.text('Farbe'));
+        await t.pumpAndSettle();
+        expect(find.byType(IconPicker), findsNothing);
+        expect(find.byType(SwatchPicker), findsOneWidget);
+        await t.tap(find.text('Farbe'));
+        await t.pumpAndSettle();
+        expect(find.byType(SwatchPicker), findsNothing);
+
+        expect(find.text('Getankt'), findsOneWidget);
+        expect(find.text('Geladen'), findsNothing);
+        await t.tap(find.text('Elektro'));
+        await t.pumpAndSettle();
+        expect(find.text('Getankt'), findsNothing);
+        expect(find.text('Geladen'), findsOneWidget);
+        await t.tap(find.text('Hybrid'));
+        await t.pumpAndSettle();
+        expect(find.text('Getankt'), findsOneWidget);
+        expect(find.text('Geladen'), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 

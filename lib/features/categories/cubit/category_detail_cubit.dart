@@ -10,6 +10,7 @@ import '../../entries/data/tracker_history.dart';
 import '../data/categories_repository.dart';
 import '../data/category_templates.dart';
 import '../data/tracker_details.dart';
+import '../data/vehicle_drive.dart';
 
 part 'category_detail_state.dart';
 
@@ -163,6 +164,22 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
     if (own == tracker.icon) return Future.value();
     return _run(() => _repository.setTrackerIcon(tracker.id, own));
   }
+
+  /// Felder anlegen, ändern und entfernen, z. B. beim Wechsel des Antriebs ([VehicleDrives.changes]).
+  /// Neue Felder kommen hinten dazu.
+  Future<void> applyFieldChanges(Tracker tracker, List<FieldChange> changes) => _run(() async {
+    var sort = tracker.fields.length;
+    for (final change in changes) {
+      switch (change) {
+        case FieldCreated(:final draft):
+          await _repository.createField(tracker.id, draft, sort: sort++);
+        case FieldUpdated(:final id, :final draft):
+          await _repository.updateField(id, draft);
+        case FieldArchived(:final id):
+          await _repository.archiveField(id);
+      }
+    }
+  });
 
   /// Detail setzen ([value] `null` entfernt es).
   Future<void> saveDetail(Tracker tracker, FieldDefinition field, Object? value) => _run(() => _repository.saveDetail(tracker, field, value, now: _now()));
