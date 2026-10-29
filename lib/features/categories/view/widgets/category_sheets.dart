@@ -161,14 +161,12 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
           ],
         ),
         const SizedBox(height: Spacing.l),
-        AppCard(
+        AppearancePicker(
+          icon: _icon,
+          swatch: _swatch,
           color: c.surfaceRaised,
-          child: IconPicker(selected: _icon, swatch: _swatch, onSelect: (icon) => setState(() => _icon = icon)),
-        ),
-        const SizedBox(height: Spacing.m),
-        AppCard(
-          color: c.surfaceRaised,
-          child: SwatchPicker(selected: _swatch, onSelect: (swatch) => setState(() => _swatch = swatch)),
+          onIcon: (icon) => setState(() => _icon = icon),
+          onSwatch: (swatch) => setState(() => _swatch = swatch),
         ),
         const SizedBox(height: Spacing.xl),
         AppButton(

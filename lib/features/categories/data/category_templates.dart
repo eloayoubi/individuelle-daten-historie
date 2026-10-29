@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import 'categories_repository.dart';
+import 'vehicle_drive.dart';
 
 /// Eine Startvorlage: Kategorie mit Trackern und Feldern, in der App-Sprache benannt.
 /// Herleitung der Auswahl: docs/IMPLEMENTIERUNGSPLAN.md, Abschnitte 3 und 4.
@@ -14,6 +15,7 @@ class CategoryTemplate extends Equatable {
     required this.swatch,
     required this.trackers,
     this.item,
+    this.drives = const {},
   });
 
   /// Landet als `template_key` in der Datenbank.
@@ -27,8 +29,14 @@ class CategoryTemplate extends Equatable {
   /// Kategorien aus vielen gleich gebauten Trackern (je Abo, je Versicherung): wie ein weiterer aussieht.
   final ItemTemplate? item;
 
+  /// Fahrzeuge: Tracker je Antrieb, beim Anlegen wählbar; leer bei anderen Vorlagen.
+  final Map<VehicleDrive, List<TrackerDraft>> drives;
+
+  /// Tracker zum gewählten Antrieb, ohne Wahl [trackers].
+  List<TrackerDraft> trackersFor(VehicleDrive? drive) => drives[drive] ?? trackers;
+
   @override
-  List<Object?> get props => [key, name, description, icon, swatch, trackers, item];
+  List<Object?> get props => [key, name, description, icon, swatch, trackers, item, drives];
 }
 
 /// Vorschläge einer Art („Streaming“: Netflix, Disney+ …). [name] `null` = ohne Art.
@@ -115,6 +123,9 @@ class ItemDraft extends Equatable {
 }
 
 abstract final class CategoryTemplates {
+  /// Vorlage „Auto“: Ihre Tracker haben einen Antrieb ([VehicleDrive]).
+  static const autoKey = 'auto';
+
   /// Bauplan für weitere Tracker der Vorlage [key] (Abos, Versicherungen), `null` bei anderen.
   static ItemTemplate? item(AppLocalizations l, String? key) => key == null ? null : all(l).where((t) => t.key == key).firstOrNull?.item;
 
@@ -134,6 +145,17 @@ abstract final class CategoryTemplates {
     FieldDraft deadline(String name) => FieldDraft(name: name, kind: FieldKind.date, role: FieldRole.deadline);
     FieldDraft text(String name) => FieldDraft(name: name, kind: FieldKind.text);
     final amountUnits = {1: l.unitPerMonth, 12: l.unitPerYear};
+    TrackerDraft car(VehicleDrive drive) => TrackerDraft(
+      name: l.tplTrackerCar,
+      fields: [
+        reading('km'),
+        ...VehicleDrives.fields(drive, VehicleDriveNames.of(l)),
+        recurring(l.tplFieldCarInsurance, interval: 12),
+        recurring(l.tplFieldCarTax, interval: 12),
+        oneOff(l.tplFieldWorkshop),
+        deadline(l.tplFieldInspection),
+      ],
+    );
 
     return [
       CategoryTemplate(
@@ -209,25 +231,13 @@ abstract final class CategoryTemplates {
         ],
       ),
       CategoryTemplate(
-        key: 'auto',
+        key: autoKey,
         name: l.tplAuto,
         description: l.tplAutoHint,
         icon: CategoryIcon.car,
         swatch: CategorySwatch.green,
-        trackers: [
-          TrackerDraft(
-            name: l.tplTrackerCar,
-            fields: [
-              reading('km'),
-              oneOff(l.tplFieldFuel),
-              FieldDraft(name: l.tplFieldFuelAmount, kind: FieldKind.number, role: FieldRole.snapshot),
-              recurring(l.tplFieldCarInsurance, interval: 12),
-              recurring(l.tplFieldCarTax, interval: 12),
-              oneOff(l.tplFieldWorkshop),
-              deadline(l.tplFieldInspection),
-            ],
-          ),
-        ],
+        trackers: [car(VehicleDrive.fuel)],
+        drives: {for (final drive in VehicleDrive.values) drive: [car(drive)]},
       ),
       CategoryTemplate(
         key: 'internet',

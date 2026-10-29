@@ -7,7 +7,8 @@ import 'app_text.dart';
 class AppSegmented<T extends Object> extends StatelessWidget {
   const AppSegmented({super.key, required this.value, required this.segments, required this.onChanged});
 
-  final T value;
+  /// `null` = noch nichts gewählt.
+  final T? value;
 
   /// Wert → Beschriftung, in Anzeigereihenfolge.
   final Map<T, String> segments;

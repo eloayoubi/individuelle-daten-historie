@@ -5,12 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/core.dart';
 import '../cubit/category_setup_cubit.dart';
 import '../data/category_templates.dart';
+import '../data/vehicle_drive.dart';
 import '../../sharing/view/join_sheet.dart';
 import '../../storage/view/cloud_flow.dart';
 import 'add_category_sheet.dart';
 import 'category_detail_page.dart';
 import 'widgets/appearance_pickers.dart';
 import 'widgets/field_row.dart';
+import 'widgets/vehicle_drive_picker.dart';
 
 /// Neue Kategorie: Name, Symbol, Farbe und – bei einer Vorlage – welche Felder mitkommen.
 /// Nach dem Anlegen geht es direkt in die Detailansicht der neuen Kategorie.
@@ -100,16 +102,18 @@ class _SetupViewState extends State<_SetupView> {
                       ],
                     ),
                   ),
-                  SectionHeader(title: l10n.setupSymbol),
+                  const SizedBox(height: Spacing.l),
                   Padding(
                     padding: Spacing.screen,
-                    child: AppCard(child: IconPicker(selected: state.icon, swatch: state.swatch, onSelect: cubit.setIcon)),
+                    child: AppearancePicker(icon: state.icon, swatch: state.swatch, onIcon: cubit.setIcon, onSwatch: cubit.setSwatch),
                   ),
-                  SectionHeader(title: l10n.setupColor),
-                  Padding(
-                    padding: Spacing.screen,
-                    child: AppCard(child: SwatchPicker(selected: state.swatch, onSelect: cubit.setSwatch)),
-                  ),
+                  if (state.drive case final VehicleDrive drive) ...[
+                    SectionHeader(title: l10n.vehicleDrive),
+                    Padding(
+                      padding: Spacing.screen,
+                      child: VehicleDrivePicker(drive: drive, onChanged: cubit.setDrive),
+                    ),
+                  ],
                   if (template == null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.l, Spacing.xl, 0),
@@ -117,14 +121,14 @@ class _SetupViewState extends State<_SetupView> {
                     )
                   else ...[
                     SectionHeader(title: l10n.setupFields),
-                    for (final (t, tracker) in template.trackers.indexed) ...[
-                      if (template.trackers.length > 1)
+                    for (final (t, tracker) in state.trackers.indexed) ...[
+                      if (state.trackers.length > 1)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(Spacing.xl, Spacing.s, Spacing.xl, Spacing.xs),
                           child: AppText(tracker.name.toUpperCase(), style: (t) => t.footnoteEmphasized, color: c.textSecondary),
                         ),
                       AppListGroup(
-                        footer: t == template.trackers.length - 1 ? l10n.setupFieldsHint : null,
+                        footer: t == state.trackers.length - 1 ? l10n.setupFieldsHint : null,
                         children: [
                           for (final (f, field) in tracker.fields.indexed)
                             FieldRow(
