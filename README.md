@@ -67,6 +67,7 @@ Features heute:
 - `attachments`: Belege (Fotos, PDFs) an Einträgen – Hochladen mit Plus, Ansehen für alle Mitglieder.
 - `reminders`: lokale Benachrichtigungen ans Ablesen und an Stichtage (`flutter_local_notifications`), an- und ausschaltbar in den Einstellungen.
 - `insights`: Auswertung des Jahres: Kosten je Monat und Kategorie, Jahresvergleich, Verbrauch, Prognose mit Spanne und Erklärung, Abschlags-Check, „Was wäre wenn“ mit neuen Preisen.
+- `radar`: Kosten-Radar auf der Übersicht – findet von selbst, wo Geld auf dem Spiel steht: Stichtag eines Vertrags in ≤ 45 Tagen (mit Kündigungsschreiben als Vorlage zum Teilen oder Kopieren), gestiegene Preise als Mehrkosten im Jahr, drohende Nachzahlung oder Guthaben, gestiegener Verbrauch. Gerechnet nur auf dem Gerät (`Radar.build`), „Ausblenden“ je Gerät (`RadarStore`). Regeln und Datenschutz: [Design](docs/superpowers/specs/2026-11-10-kosten-radar-design.md).
 - `sharing`: Kategorie teilen (Code, Link, QR), Mitglieder und Rollen, Einladung annehmen, Einladungslinks.
 - `plus`: Kostenkurve Cloud (technisch weiter `plus`) – Paywall „lokal kostenlos, Cloud 2 €/Monat“, StoreKit 2 (`in_app_purchase`), Stand aus `entitlements`.
 - `account`: Konto-Seite (Name, abmelden, löschen; anonymes Testkonto sichern).

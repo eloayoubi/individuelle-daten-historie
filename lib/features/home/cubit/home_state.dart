@@ -3,10 +3,33 @@ part of 'home_cubit.dart';
 enum HomeStatus { loading, ready, failure }
 
 class HomeState extends Equatable {
-  const HomeState({this.status = HomeStatus.loading, this.overview, this.sync = const SyncState(), this.pinned = const [], this.reordering = false});
+  const HomeState({
+    this.status = HomeStatus.loading,
+    this.overview,
+    this.radar,
+    this.radarExpanded = false,
+    this.sync = const SyncState(),
+    this.pinned = const [],
+    this.reordering = false,
+  });
+
+  /// So viele Funde zeigt die Übersicht, bis „Alle“ angetippt ist.
+  static const radarPreview = 3;
 
   final HomeStatus status;
   final HomeOverview? overview;
+
+  /// Funde des Radars ohne die ausgeblendeten; `null`, solange nichts geladen ist.
+  final Radar? radar;
+
+  /// Alle Funde zeigen statt der ersten [radarPreview].
+  final bool radarExpanded;
+
+  /// Funde, die die Übersicht gerade zeigt.
+  List<Finding> get shownFindings {
+    final all = radar?.findings ?? const <Finding>[];
+    return radarExpanded || all.length <= radarPreview ? all : all.sublist(0, radarPreview);
+  }
 
   /// Offline erfasste Einträge, die noch warten oder abgelehnt wurden.
   final SyncState sync;
@@ -23,14 +46,16 @@ class HomeState extends Equatable {
     return [for (final id in pinned) ?byId[id]];
   }
 
-  HomeState copyWith({HomeStatus? status, HomeOverview? overview, SyncState? sync, List<String>? pinned, bool? reordering}) => HomeState(
+  HomeState copyWith({HomeStatus? status, HomeOverview? overview, Radar? radar, bool? radarExpanded, SyncState? sync, List<String>? pinned, bool? reordering}) => HomeState(
     status: status ?? this.status,
     overview: overview ?? this.overview,
+    radar: radar ?? this.radar,
+    radarExpanded: radarExpanded ?? this.radarExpanded,
     sync: sync ?? this.sync,
     pinned: pinned ?? this.pinned,
     reordering: reordering ?? this.reordering,
   );
 
   @override
-  List<Object?> get props => [status, overview, sync, pinned, reordering];
+  List<Object?> get props => [status, overview, radar, radarExpanded, sync, pinned, reordering];
 }
