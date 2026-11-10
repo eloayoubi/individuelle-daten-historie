@@ -5,17 +5,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/utils/json_store.dart';
 import '../../categories/data/categories_repository.dart';
+import '../../radar/data/radar.dart';
+import '../../radar/data/radar_store.dart';
 import '../data/home_categories_store.dart';
 import '../data/home_overview.dart';
 
 part 'home_state.dart';
 
 /// Lädt alle Kategorien und rechnet daraus die Übersicht: Kosten bis heute, Prognose fürs
-/// nächste Jahr, die gewählten Kategorien und was als Nächstes ansteht – dazu den Stand der
-/// Offline-Warteschlange.
+/// nächste Jahr, die Funde des Radars, die gewählten Kategorien und was als Nächstes ansteht – dazu
+/// den Stand der Offline-Warteschlange.
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit(this._categories, {HomeCategoriesStore? pins, DateTime Function()? now})
+  HomeCubit(this._categories, {HomeCategoriesStore? pins, RadarStore? radar, DateTime Function()? now})
     : _pins = pins ?? HomeCategoriesStore(MemoryJsonStore()),
+      _radar = radar ?? RadarStore(MemoryJsonStore()),
       _now = now ?? DateTime.now,
       super(const HomeState()) {
     // Neue oder geänderte Kategorien (z. B. aus dem Kategorien-Tab) sofort übernehmen.
@@ -24,9 +27,14 @@ class HomeCubit extends Cubit<HomeState> {
 
   final CategoriesRepository _categories;
   final HomeCategoriesStore _pins;
+  final RadarStore _radar;
   final DateTime Function() _now;
   late final StreamSubscription<void> _subscription;
   bool _pinsLoaded = false;
+
+  /// Ausgeblendete Funde und die zuletzt geladenen Kategorien – „Ausblenden“ rechnet daraus neu.
+  Set<String>? _dismissed;
+  List<Category> _loaded = const [];
 
   Future<void> load() async {
     // Vorhandene Übersicht bleibt beim Neuladen stehen; nur nach einem Fehler wieder „lädt“.
@@ -34,9 +42,20 @@ class HomeCubit extends Cubit<HomeState> {
     try {
       final pinned = _pinsLoaded ? state.pinned : await _pins.load();
       _pinsLoaded = true;
+      final dismissed = _dismissed ??= await _radar.load();
       final categories = [for (final c in await _categories.loadCategories()) if (!c.isArchived) c];
       if (isClosed) return;
-      emit(state.copyWith(status: HomeStatus.ready, overview: HomeOverview.build(categories, _now()), sync: _categories.syncState, pinned: pinned));
+      _loaded = categories;
+      final now = _now();
+      emit(
+        state.copyWith(
+          status: HomeStatus.ready,
+          overview: HomeOverview.build(categories, now),
+          radar: _buildRadar(categories, now, dismissed),
+          sync: _categories.syncState,
+          pinned: pinned,
+        ),
+      );
     } catch (_) {
       if (!isClosed) emit(state.copyWith(status: HomeStatus.failure, sync: _categories.syncState));
     }
@@ -61,6 +80,32 @@ class HomeCubit extends Cubit<HomeState> {
     final ids = [...shown, for (final id in state.pinned) if (!shown.contains(id)) id];
     emit(state.copyWith(pinned: ids));
     await _pins.save(ids);
+  }
+
+  /// Alle Funde des Radars zeigen („Alle“) bzw. wieder nur die ersten („Weniger“).
+  void setRadarExpanded(bool expanded) => emit(state.copyWith(radarExpanded: expanded));
+
+  /// Fund ausblenden, je Gerät gemerkt. Er kommt wieder, sobald sich die Lage ändert ([Finding.id]).
+  Future<void> dismissFinding(String id) async {
+    if (isClosed) return;
+    final dismissed = _dismissed = {...?_dismissed, id};
+    final radar = _buildRadar(_loaded, _now(), dismissed);
+    emit(state.copyWith(radar: radar, radarExpanded: state.radarExpanded && radar.findings.length > HomeState.radarPreview));
+    try {
+      await _radar.dismiss(id);
+    } catch (_) {
+      // Speichern gescheitert (Speicher voll): Der Fund bleibt bis zum nächsten Start ausgeblendet.
+    }
+  }
+
+  /// Das Radar ist eine Zugabe: Scheitert es an unerwarteten Daten, bleibt es leer – die Übersicht
+  /// lädt trotzdem.
+  static Radar _buildRadar(List<Category> categories, DateTime now, Set<String> dismissed) {
+    try {
+      return Radar.build(categories, now, dismissed: dismissed);
+    } catch (_) {
+      return Radar(today: now);
+    }
   }
 
   /// Hinweis auf abgelehnte Einträge ausblenden.

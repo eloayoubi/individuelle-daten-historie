@@ -181,7 +181,7 @@ class Insights extends Equatable {
   }
 
   /// Monatserste in `[from, to)` – so viele Abschläge und Monatsbeträge fallen in den Zeitraum.
-  static double _months(DateTime from, DateTime to) {
+  static double monthStarts(DateTime from, DateTime to) {
     var months = 0.0;
     for (var d = DateTime.utc(from.year, from.month + (from.day == 1 ? 0 : 1)); d.isBefore(to); d = DateTime.utc(d.year, d.month + 1)) {
       months++;
@@ -288,7 +288,7 @@ class Insights extends Equatable {
                 paid: paid,
                 cost: engine.cost(from, yearEnd),
                 monthly: engine.instalmentOn(current ? today : DateTime.utc(year, 12, 31)),
-                months: _months(from, yearEnd),
+                months: monthStarts(from, yearEnd),
               ),
             );
           }

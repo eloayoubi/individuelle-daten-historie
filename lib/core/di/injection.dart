@@ -31,6 +31,7 @@ import '../../features/plus/cubit/plus_cubit.dart';
 import '../../features/plus/data/plus_repository.dart';
 import '../../features/plus/data/plus_store.dart';
 import '../../features/plus/data/supabase_plus_repository.dart';
+import '../../features/radar/data/radar_store.dart';
 import '../../features/reminders/cubit/reminders_cubit.dart';
 import '../../features/reminders/data/local_notification_gateway.dart';
 import '../../features/reminders/data/notification_gateway.dart';
@@ -147,7 +148,8 @@ Future<void> configureDependencies() async {
     ..registerFactory<ShellCubit>(ShellCubit.new)
     ..registerFactory<AppearanceCubit>(() => AppearanceCubit(lookup<AppearanceStore>()))
     ..registerLazySingleton<HomeCategoriesStore>(() => HomeCategoriesStore(FileJsonStore('home_categories')))
-    ..registerFactory<HomeCubit>(() => HomeCubit(lookup<CategoriesRepository>(), pins: lookup<HomeCategoriesStore>()))
+    ..registerLazySingleton<RadarStore>(() => RadarStore(FileJsonStore('radar_dismissed')))
+    ..registerFactory<HomeCubit>(() => HomeCubit(lookup<CategoriesRepository>(), pins: lookup<HomeCategoriesStore>(), radar: lookup<RadarStore>()))
     ..registerFactory<CategoriesCubit>(() => CategoriesCubit(lookup<CategoriesRepository>()))
     ..registerFactory<InsightsCubit>(() => InsightsCubit(lookup<CategoriesRepository>()))
     // Mit Parameter: lookup<…>(param1: …)

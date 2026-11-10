@@ -8,6 +8,9 @@ import '../../categories/view/category_detail_page.dart';
 import '../../categories/view/category_setup_page.dart';
 import '../../entries/view/entry_form_page.dart';
 import '../../entries/view/tracker_page.dart';
+import '../../radar/data/radar.dart';
+import '../../radar/view/finding_sheet.dart';
+import '../../radar/view/radar_rows.dart';
 import '../../reminders/cubit/reminders_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../data/home_overview.dart';
@@ -36,7 +39,15 @@ class _HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) => switch ((state.status, state.overview)) {
-        (_, final HomeOverview overview) => _Content(overview: overview, sync: state.sync, shown: state.shown, reordering: state.reordering),
+        (_, final HomeOverview overview) => _Content(
+          overview: overview,
+          sync: state.sync,
+          shown: state.shown,
+          reordering: state.reordering,
+          findings: state.shownFindings,
+          findingCount: state.radar?.findings.length ?? 0,
+          radarExpanded: state.radarExpanded,
+        ),
         (HomeStatus.failure, null) => _Failure(onRetry: context.read<HomeCubit>().load),
         _ => const Center(child: CupertinoActivityIndicator()),
       },
@@ -45,7 +56,15 @@ class _HomeView extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.overview, required this.sync, required this.shown, required this.reordering});
+  const _Content({
+    required this.overview,
+    required this.sync,
+    required this.shown,
+    required this.reordering,
+    required this.findings,
+    required this.findingCount,
+    required this.radarExpanded,
+  });
 
   final HomeOverview overview;
   final SyncState sync;
@@ -53,6 +72,28 @@ class _Content extends StatelessWidget {
   /// Gewählte Kategorien unter „Kategorien“; leer: nur „Kategorie hinzufügen“.
   final List<CategorySummary> shown;
   final bool reordering;
+
+  /// Funde des Radars, die gerade zu sehen sind, und wie viele es insgesamt gibt.
+  final List<Finding> findings;
+  final int findingCount;
+  final bool radarExpanded;
+
+  /// Fund antippen: Erklärung zeigen, dann Verlauf öffnen, Kündigung vorbereiten oder ausblenden.
+  Future<void> _openFinding(BuildContext context, Finding finding) async {
+    final cubit = context.read<HomeCubit>();
+    final action = await FindingSheet.show(context, finding);
+    if (!context.mounted) return;
+    switch (action) {
+      case FindingAction.open:
+        await TrackerPage.open(context, categoryId: finding.category.id, trackerId: finding.tracker.id);
+      case FindingAction.letter:
+        final copied = await CancellationSheet.show(context, category: finding.category, tracker: finding.tracker, today: overview.today);
+        if (copied && context.mounted) AppToast.show(context, context.l10n.radarLetterCopied);
+      case FindingAction.dismiss:
+        await cubit.dismissFinding(finding.id);
+      case null:
+    }
+  }
 
   /// Kategorien der Übersicht wählen – oder eine neue anlegen.
   Future<void> _pickCategories(BuildContext context) async {
@@ -138,6 +179,14 @@ class _Content extends StatelessWidget {
                 ForecastCard(overview: overview),
                 const SizedBox(height: Spacing.m),
                 YearToDateCard(overview: overview),
+              ],
+              if (findings.isNotEmpty) ...[
+                SectionHeader(
+                  title: l10n.radarTitle,
+                  action: findingCount <= HomeState.radarPreview ? null : (radarExpanded ? l10n.radarShowLess : l10n.radarShowAll(findingCount)),
+                  onAction: () => cubit.setRadarExpanded(!radarExpanded),
+                ),
+                RadarRows(findings: findings, onTap: (f) => _openFinding(context, f)),
               ],
               SectionHeader(
                 title: l10n.homeCategories,

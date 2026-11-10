@@ -2719,4 +2719,174 @@ class AppLocalizationsEn extends AppLocalizations {
   String forceUpdateBuilds(String installed, String latest) {
     return 'Build $installed → $latest';
   }
+
+  @override
+  String get radarTitle => 'Radar';
+
+  @override
+  String get radarFooter => 'Calculated on your device, from your entries.';
+
+  @override
+  String radarShowAll(int count) {
+    return 'All $count';
+  }
+
+  @override
+  String get radarShowLess => 'Less';
+
+  @override
+  String radarDeadlineTitle(String tracker, String field, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'in $days days',
+      one: 'tomorrow',
+      zero: 'today',
+    );
+    return '$tracker: $field $_temp0';
+  }
+
+  @override
+  String radarDeadlineSub(String amount) {
+    return '$amount at stake over the next 12 months';
+  }
+
+  @override
+  String radarDeadlineExplain(String field, String date, String amount) {
+    return '$field: $date. If the contract continues, it will cost about $amount over the next 12 months as things stand.';
+  }
+
+  @override
+  String radarPriceTitle(String tracker) {
+    return '$tracker got more expensive';
+  }
+
+  @override
+  String radarPriceTitleUpcoming(String tracker) {
+    return '$tracker is getting more expensive';
+  }
+
+  @override
+  String radarPriceSub(String amount, String when) {
+    return '$amount more per year · $when';
+  }
+
+  @override
+  String radarSince(String date) {
+    return 'since $date';
+  }
+
+  @override
+  String radarFrom(String date) {
+    return 'from $date';
+  }
+
+  @override
+  String radarPriceExplainRecurring(
+    String field,
+    String before,
+    String after,
+    String when,
+    String amount,
+  ) {
+    return '$field: $before → $after, $when. Over a year that adds up to $amount more.';
+  }
+
+  @override
+  String radarPriceExplainUnit(
+    String field,
+    String before,
+    String after,
+    String when,
+    String amount,
+  ) {
+    return '$field: $before → $after, $when. With your expected usage over the next 12 months that is about $amount more.';
+  }
+
+  @override
+  String radarUsageTitle(String tracker, String change) {
+    return '$tracker: $change usage';
+  }
+
+  @override
+  String radarUsageSub(String amount) {
+    return 'Last 90 days vs. the year before · about $amount more';
+  }
+
+  @override
+  String radarUsageExplain(
+    String date,
+    String after,
+    String before,
+    String amount,
+  ) {
+    return 'In the 90 days up to $date you used $after, compared with $before in the same period a year earlier. At the current price that is about $amount more.';
+  }
+
+  @override
+  String radarBackPaymentTitle(String tracker) {
+    return '$tracker: back payment ahead';
+  }
+
+  @override
+  String radarRefundTitle(String tracker) {
+    return '$tracker: refund in sight';
+  }
+
+  @override
+  String radarInstalmentSub(String amount, String suggested) {
+    return 'About $amount by year end · matching instalment $suggested';
+  }
+
+  @override
+  String radarInstalmentExplain(
+    String year,
+    String paid,
+    String cost,
+    String monthly,
+    String suggested,
+  ) {
+    return 'Instalments $year: $paid. Calculated costs: $cost, projected from today to December. You pay $monthly a month – $suggested would cover the costs.';
+  }
+
+  @override
+  String get radarHow => 'How this is calculated';
+
+  @override
+  String get radarOpen => 'Open history';
+
+  @override
+  String get radarLetter => 'Prepare cancellation';
+
+  @override
+  String get radarDismiss => 'Hide';
+
+  @override
+  String get radarLetterTitle => 'Cancellation letter';
+
+  @override
+  String get radarLetterHint =>
+      'A template: add your name and address, and check the notice period and required form in your contract. Nothing is sent until you share it.';
+
+  @override
+  String get radarLetterShare => 'Share';
+
+  @override
+  String get radarLetterCopy => 'Copy';
+
+  @override
+  String get radarLetterCopied => 'Copied to the clipboard';
+
+  @override
+  String get radarLetterSender =>
+      '[First and last name]\n[Street and number]\n[Postcode and city]';
+
+  @override
+  String radarLetterSubject(String contract) {
+    return 'Cancellation: $contract';
+  }
+
+  @override
+  String get radarLetterBody =>
+      'Dear Sir or Madam,\n\nI hereby cancel the contract named above with effect from the earliest possible date.\n\nPlease confirm in writing that you have received this cancellation and the date on which the contract ends.\n\nYours faithfully\n[First and last name]';
 }

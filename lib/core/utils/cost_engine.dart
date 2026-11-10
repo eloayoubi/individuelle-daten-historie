@@ -135,6 +135,15 @@ class CostEngine {
   /// letzten Rechnung, bei mehreren Zählern der späteste; `null` ohne bekannten Verbrauch.
   DateTime? get lastReading => _usages.values.map((u) => u.end).fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
 
+  /// Zeitraum `[measuredFrom, measuredUntil)`, in dem der Verbrauch aller Zähler bekannt ist (gemessen
+  /// oder aus Rechnungen, nicht hochgerechnet); `null` ohne bekannten Verbrauch.
+  DateTime? get measuredFrom => _usages.values.map((u) => u.first).fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
+
+  DateTime? get measuredUntil => _usages.values.map((u) => u.end).fold<DateTime?>(null, (a, b) => a == null || b.isBefore(a) ? b : a);
+
+  /// Arbeitspreis, der an [d] gilt; vor dem ersten Preis gilt der erste, ohne Preis 0.
+  double unitPriceOn(DateTime d) => _valueAt(_unitPrices, day(d), beforeFirst: _unitPrices.firstOrNull?.$2 ?? 0);
+
   /// Verbrauch bekannt: ab zwei Zählerständen an verschiedenen Tagen oder einer Rechnung (bei
   /// mehreren Zählern: bei mindestens einem).
   bool get hasMeter => _usages.isNotEmpty;
@@ -218,7 +227,7 @@ class CostEngine {
   }
 
   (double, double, double) _partsOn(DateTime d) => (
-    _rateOn(d) * _valueAt(_unitPrices, d, beforeFirst: _unitPrices.firstOrNull?.$2 ?? 0),
+    _rateOn(d) * unitPriceOn(d),
     _monthly(_recurring, d),
     d.isAfter(_today) ? _oneOffDaily + (_oneOffAhead[d] ?? 0) : _oneOff[d] ?? 0,
   );

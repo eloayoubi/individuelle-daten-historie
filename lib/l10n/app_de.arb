@@ -1628,5 +1628,237 @@
         "type": "String"
       }
     }
-  }
+  },
+  "radarTitle": "Radar",
+  "radarFooter": "Gerechnet auf deinem Gerät, aus deinen Einträgen.",
+  "radarShowAll": "Alle {count}",
+  "@radarShowAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "radarShowLess": "Weniger",
+  "radarDeadlineTitle": "{tracker}: {field} {days, plural, =0{heute} =1{morgen} other{in {days} Tagen}}",
+  "@radarDeadlineTitle": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      },
+      "field": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "radarDeadlineSub": "Es geht um {amount} in den nächsten 12 Monaten",
+  "@radarDeadlineSub": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "radarDeadlineExplain": "{field}: {date}. Läuft der Vertrag weiter, kostet er nach heutigem Stand rund {amount} in den nächsten 12 Monaten.",
+  "@radarDeadlineExplain": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "radarPriceTitle": "{tracker} ist teurer geworden",
+  "@radarPriceTitle": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      }
+    }
+  },
+  "radarPriceTitleUpcoming": "{tracker} wird teurer",
+  "@radarPriceTitleUpcoming": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      }
+    }
+  },
+  "radarPriceSub": "{amount} mehr im Jahr · {when}",
+  "@radarPriceSub": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "radarSince": "seit {date}",
+  "@radarSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "radarFrom": "ab {date}",
+  "@radarFrom": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "radarPriceExplainRecurring": "{field}: {before} → {after}, {when}. Aufs Jahr gerechnet sind das {amount} mehr.",
+  "@radarPriceExplainRecurring": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      },
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "radarPriceExplainUnit": "{field}: {before} → {after}, {when}. Mit deinem erwarteten Verbrauch der nächsten 12 Monate sind das rund {amount} mehr.",
+  "@radarPriceExplainUnit": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      },
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "radarUsageTitle": "{tracker}: {change} Verbrauch",
+  "@radarUsageTitle": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "radarUsageSub": "Letzte 90 Tage gegenüber dem Vorjahr · rund {amount} mehr",
+  "@radarUsageSub": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "radarUsageExplain": "In den 90 Tagen bis {date} waren es {after}, im selben Zeitraum ein Jahr zuvor {before}. Zum aktuellen Preis sind das rund {amount} mehr.",
+  "@radarUsageExplain": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      },
+      "before": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "radarBackPaymentTitle": "{tracker}: Nachzahlung droht",
+  "@radarBackPaymentTitle": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      }
+    }
+  },
+  "radarRefundTitle": "{tracker}: Guthaben in Sicht",
+  "@radarRefundTitle": {
+    "placeholders": {
+      "tracker": {
+        "type": "String"
+      }
+    }
+  },
+  "radarInstalmentSub": "Rund {amount} bis Jahresende · passender Abschlag {suggested}",
+  "@radarInstalmentSub": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "suggested": {
+        "type": "String"
+      }
+    }
+  },
+  "radarInstalmentExplain": "Abschläge {year}: {paid}. Gerechnete Kosten: {cost}, ab heute hochgerechnet bis Dezember. Du zahlst {monthly} im Monat – {suggested} würden die Kosten decken.",
+  "@radarInstalmentExplain": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "paid": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      },
+      "monthly": {
+        "type": "String"
+      },
+      "suggested": {
+        "type": "String"
+      }
+    }
+  },
+  "radarHow": "So gerechnet",
+  "radarOpen": "Verlauf öffnen",
+  "radarLetter": "Kündigung vorbereiten",
+  "radarDismiss": "Ausblenden",
+  "radarLetterTitle": "Kündigungsschreiben",
+  "radarLetterHint": "Eine Vorlage: Ergänze Namen und Anschrift und prüfe Frist und Form in deinem Vertrag. Verschickt wird nichts, bis du teilst.",
+  "radarLetterShare": "Teilen",
+  "radarLetterCopy": "Kopieren",
+  "radarLetterCopied": "In die Zwischenablage kopiert",
+  "radarLetterSender": "[Vorname Nachname]\n[Straße und Hausnummer]\n[PLZ und Ort]",
+  "radarLetterSubject": "Kündigung: {contract}",
+  "@radarLetterSubject": {
+    "placeholders": {
+      "contract": {
+        "type": "String"
+      }
+    }
+  },
+  "radarLetterBody": "Sehr geehrte Damen und Herren,\n\nhiermit kündige ich den oben genannten Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir schriftlich den Eingang der Kündigung und das Datum, zu dem der Vertrag endet.\n\nMit freundlichen Grüßen\n[Vorname Nachname]"
 }

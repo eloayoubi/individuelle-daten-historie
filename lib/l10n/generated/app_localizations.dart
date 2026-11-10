@@ -4603,6 +4603,227 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Build {installed} → {latest}'**
   String forceUpdateBuilds(String installed, String latest);
+
+  /// No description provided for @radarTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Radar'**
+  String get radarTitle;
+
+  /// No description provided for @radarFooter.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerechnet auf deinem Gerät, aus deinen Einträgen.'**
+  String get radarFooter;
+
+  /// No description provided for @radarShowAll.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle {count}'**
+  String radarShowAll(int count);
+
+  /// No description provided for @radarShowLess.
+  ///
+  /// In de, this message translates to:
+  /// **'Weniger'**
+  String get radarShowLess;
+
+  /// No description provided for @radarDeadlineTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker}: {field} {days, plural, =0{heute} =1{morgen} other{in {days} Tagen}}'**
+  String radarDeadlineTitle(String tracker, String field, int days);
+
+  /// No description provided for @radarDeadlineSub.
+  ///
+  /// In de, this message translates to:
+  /// **'Es geht um {amount} in den nächsten 12 Monaten'**
+  String radarDeadlineSub(String amount);
+
+  /// No description provided for @radarDeadlineExplain.
+  ///
+  /// In de, this message translates to:
+  /// **'{field}: {date}. Läuft der Vertrag weiter, kostet er nach heutigem Stand rund {amount} in den nächsten 12 Monaten.'**
+  String radarDeadlineExplain(String field, String date, String amount);
+
+  /// No description provided for @radarPriceTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker} ist teurer geworden'**
+  String radarPriceTitle(String tracker);
+
+  /// No description provided for @radarPriceTitleUpcoming.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker} wird teurer'**
+  String radarPriceTitleUpcoming(String tracker);
+
+  /// No description provided for @radarPriceSub.
+  ///
+  /// In de, this message translates to:
+  /// **'{amount} mehr im Jahr · {when}'**
+  String radarPriceSub(String amount, String when);
+
+  /// No description provided for @radarSince.
+  ///
+  /// In de, this message translates to:
+  /// **'seit {date}'**
+  String radarSince(String date);
+
+  /// No description provided for @radarFrom.
+  ///
+  /// In de, this message translates to:
+  /// **'ab {date}'**
+  String radarFrom(String date);
+
+  /// No description provided for @radarPriceExplainRecurring.
+  ///
+  /// In de, this message translates to:
+  /// **'{field}: {before} → {after}, {when}. Aufs Jahr gerechnet sind das {amount} mehr.'**
+  String radarPriceExplainRecurring(
+    String field,
+    String before,
+    String after,
+    String when,
+    String amount,
+  );
+
+  /// No description provided for @radarPriceExplainUnit.
+  ///
+  /// In de, this message translates to:
+  /// **'{field}: {before} → {after}, {when}. Mit deinem erwarteten Verbrauch der nächsten 12 Monate sind das rund {amount} mehr.'**
+  String radarPriceExplainUnit(
+    String field,
+    String before,
+    String after,
+    String when,
+    String amount,
+  );
+
+  /// No description provided for @radarUsageTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker}: {change} Verbrauch'**
+  String radarUsageTitle(String tracker, String change);
+
+  /// No description provided for @radarUsageSub.
+  ///
+  /// In de, this message translates to:
+  /// **'Letzte 90 Tage gegenüber dem Vorjahr · rund {amount} mehr'**
+  String radarUsageSub(String amount);
+
+  /// No description provided for @radarUsageExplain.
+  ///
+  /// In de, this message translates to:
+  /// **'In den 90 Tagen bis {date} waren es {after}, im selben Zeitraum ein Jahr zuvor {before}. Zum aktuellen Preis sind das rund {amount} mehr.'**
+  String radarUsageExplain(
+    String date,
+    String after,
+    String before,
+    String amount,
+  );
+
+  /// No description provided for @radarBackPaymentTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker}: Nachzahlung droht'**
+  String radarBackPaymentTitle(String tracker);
+
+  /// No description provided for @radarRefundTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'{tracker}: Guthaben in Sicht'**
+  String radarRefundTitle(String tracker);
+
+  /// No description provided for @radarInstalmentSub.
+  ///
+  /// In de, this message translates to:
+  /// **'Rund {amount} bis Jahresende · passender Abschlag {suggested}'**
+  String radarInstalmentSub(String amount, String suggested);
+
+  /// No description provided for @radarInstalmentExplain.
+  ///
+  /// In de, this message translates to:
+  /// **'Abschläge {year}: {paid}. Gerechnete Kosten: {cost}, ab heute hochgerechnet bis Dezember. Du zahlst {monthly} im Monat – {suggested} würden die Kosten decken.'**
+  String radarInstalmentExplain(
+    String year,
+    String paid,
+    String cost,
+    String monthly,
+    String suggested,
+  );
+
+  /// No description provided for @radarHow.
+  ///
+  /// In de, this message translates to:
+  /// **'So gerechnet'**
+  String get radarHow;
+
+  /// No description provided for @radarOpen.
+  ///
+  /// In de, this message translates to:
+  /// **'Verlauf öffnen'**
+  String get radarOpen;
+
+  /// No description provided for @radarLetter.
+  ///
+  /// In de, this message translates to:
+  /// **'Kündigung vorbereiten'**
+  String get radarLetter;
+
+  /// No description provided for @radarDismiss.
+  ///
+  /// In de, this message translates to:
+  /// **'Ausblenden'**
+  String get radarDismiss;
+
+  /// No description provided for @radarLetterTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Kündigungsschreiben'**
+  String get radarLetterTitle;
+
+  /// No description provided for @radarLetterHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Vorlage: Ergänze Namen und Anschrift und prüfe Frist und Form in deinem Vertrag. Verschickt wird nichts, bis du teilst.'**
+  String get radarLetterHint;
+
+  /// No description provided for @radarLetterShare.
+  ///
+  /// In de, this message translates to:
+  /// **'Teilen'**
+  String get radarLetterShare;
+
+  /// No description provided for @radarLetterCopy.
+  ///
+  /// In de, this message translates to:
+  /// **'Kopieren'**
+  String get radarLetterCopy;
+
+  /// No description provided for @radarLetterCopied.
+  ///
+  /// In de, this message translates to:
+  /// **'In die Zwischenablage kopiert'**
+  String get radarLetterCopied;
+
+  /// No description provided for @radarLetterSender.
+  ///
+  /// In de, this message translates to:
+  /// **'[Vorname Nachname]\n[Straße und Hausnummer]\n[PLZ und Ort]'**
+  String get radarLetterSender;
+
+  /// No description provided for @radarLetterSubject.
+  ///
+  /// In de, this message translates to:
+  /// **'Kündigung: {contract}'**
+  String radarLetterSubject(String contract);
+
+  /// No description provided for @radarLetterBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Sehr geehrte Damen und Herren,\n\nhiermit kündige ich den oben genannten Vertrag fristgerecht zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir schriftlich den Eingang der Kündigung und das Datum, zu dem der Vertrag endet.\n\nMit freundlichen Grüßen\n[Vorname Nachname]'**
+  String get radarLetterBody;
 }
 
 class _AppLocalizationsDelegate
