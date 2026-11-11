@@ -110,10 +110,12 @@ Nur wenn der Nutzer es will oder ein Build neue Migrationen braucht – die Prod
 ```sh
 cd "$tmp"
 supabase/scripts/test_local.sh        # muss grün sein
-npx --yes supabase db push --dry-run  # zeigt, was neu ist – ändert nichts
-npx --yes supabase db push --yes      # spielt ein
-npx --yes supabase migration list     # prüfen: neue Migration hat jetzt auch eine Remote-Spalte
+npx --yes supabase db push --remote --dry-run  # zeigt, was neu ist – ändert nichts
+npx --yes supabase db push --remote --yes      # spielt ein
+npx --yes supabase migration list --remote     # prüfen: neue Migration hat jetzt auch eine Remote-Spalte
 ```
+
+`--remote` ist Pflicht: Die Supabase-CLI (ab 3) zielt sonst auf den lokalen Stack und meldet `DbConnectError … 127.0.0.1:54322`. Scheitert der Aufruf mit `Failed to create login role … timeout`, ist das Projekt pausiert (`npx --yes supabase projects list` zeigt `INACTIVE`) – reaktivieren kann es nur der Nutzer im Dashboard. SQL gegen das Projekt (`supabase db query --remote`) führt die CLI nur mit `--yes` aus.
 
 Steht im Probelauf mehr als die eigene Migration (z. B. unveröffentlichte aus anderen Sitzungen), dem Nutzer die Liste zeigen und erst nach Rückmeldung einspielen.
 

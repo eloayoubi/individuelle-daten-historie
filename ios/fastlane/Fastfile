@@ -17,7 +17,7 @@
 # Testhinweis = Commit-Betreffs seit dem letzten Tag testflight/<nummer> (ohne chore/ci/test/docs).
 #
 # Pflicht-Update: Sobald der neue Build bei den Testern ist, trägt die Lane ihn in Supabase ein
-# (app_releases über `supabase db query --linked`); ältere Builds zeigen dann „Neue Version
+# (app_releases über `supabase db query --linked --yes`); ältere Builds zeigen dann „Neue Version
 # verfügbar“ und lassen sich erst nach dem Update weiter benutzen. Lokal reicht der Login der
 # Supabase-CLI, auf GitHub das Secret SUPABASE_ACCESS_TOKEN.
 #
@@ -249,7 +249,9 @@ platform :ios do
       url = ENV.fetch("TESTFLIGHT_URL")
       UI.user_error!("TESTFLIGHT_URL ist kein TestFlight-Link: #{url}") unless url =~ %r{\Ahttps://testflight\.apple\.com/join/\w+\z}
       Dir.chdir(ROOT) do
-        sh("npx", "--yes", "supabase", "db", "query", "--linked", "--project-ref", supabase_project_ref,
+        # --yes: Die Supabase-CLI (ab 3) führt SQL gegen das gehostete Projekt sonst nicht aus, wenn
+        # niemand am Terminal bestätigen kann (HostedMutationConsentRequiredError).
+        sh("npx", "--yes", "supabase", "db", "query", "--linked", "--project-ref", supabase_project_ref, "--yes",
            "select public.publish_app_build('testflight', #{build_number}, '#{url}')", log: false)
       end
       UI.success("Pflicht-Update: Builds vor #{build_number} müssen aktualisieren")
