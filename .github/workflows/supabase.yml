@@ -1,5 +1,5 @@
 # Spielt neue Migrationen aus supabase/migrations/ auf das Supabase-Projekt von Kostenkurve ein
-# (`supabase db push`). Vorher laufen alle Migrationen, Seed und Tests in einem
+# (`supabase db push --linked`). Vorher laufen alle Migrationen, Seed und Tests in einem
 # Wegwerf-Postgres auf dem Runner (supabase/scripts/test_local.sh).
 # Kein Mac nötig – Start z. B. aus einer Claude-Cloud-Sitzung:
 #   gh workflow run supabase.yml --ref main                     # nur anzeigen, was neu ist
@@ -61,12 +61,14 @@ jobs:
           [ -n "$SUPABASE_DB_PASSWORD" ] && args+=(--password "$SUPABASE_DB_PASSWORD")
           supabase link "${args[@]}"
 
+      # --linked nennt das Ziel ausdrücklich: CLI 2 nimmt das verknüpfte Projekt auch ohne, CLI 3 zielt
+      # ohne Angabe auf den lokalen Stack. (--remote kennt erst CLI 3; --linked verstehen beide.)
       - name: Neue Migrationen anzeigen
-        run: supabase db push --dry-run
+        run: supabase db push --linked --dry-run
 
       - name: Migrationen einspielen
         if: inputs.apply
-        run: supabase db push --yes
+        run: supabase db push --linked --yes
 
       # Nutzt die Verknüpfung von oben; verify_jwt & Co. kommen aus supabase/config.toml.
       - name: Edge Functions deployen
