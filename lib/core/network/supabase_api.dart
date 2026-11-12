@@ -12,6 +12,11 @@ abstract final class SupabaseBootstrap {
     url: AppConfig.supabaseUrl,
     publishableKey: AppConfig.supabaseAnonKey,
     authOptions: FlutterAuthClientOptions(
+      // Keine Sitzung aus Links: Angemeldet wird nur mit E-Mail-Code oder Apple, nie per Weiterleitung.
+      // Sonst gälte jeder Link `de.eloayoubi.kostenkurve://…#access_token=…` als Anmeldung – wer ihn
+      // verschickt, meldete den Empfänger in seinem eigenen Konto an – und jeder Einladungslink
+      // (`invite?code=…`) löste einen Code-Tausch aus.
+      detectSessionInUri: false,
       localStorage: SecureSessionStorage(key: SecureSessionStorage.keyFor(AppConfig.supabaseUrl), installMarker: FileJsonStore('install', strict: true)),
     ),
   );

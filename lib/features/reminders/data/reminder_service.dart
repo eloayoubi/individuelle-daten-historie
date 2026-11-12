@@ -12,9 +12,23 @@ import 'reminder_planner.dart';
 /// Hält die geplanten Erinnerungen aktuell: nach dem Start und nach jeder Änderung an den Daten
 /// (gebündelt), solange der Nutzer sie eingeschaltet hat. Die Wahl liegt auf dem Gerät.
 class ReminderService {
-  ReminderService(this._repository, this._gateway, this._store, {AppLocalizations Function()? texts, DateTime Function()? now, this.debounce = const Duration(seconds: 2)})
-    : _texts = texts ?? _systemTexts,
-      _now = now ?? DateTime.now;
+  ReminderService(
+    this._repository,
+    this._gateway,
+    this._store, {
+    AppLocalizations Function()? texts,
+    DateTime Function()? now,
+    this.userId,
+    this.debounce = const Duration(seconds: 2),
+  }) : _texts = texts ?? _systemTexts,
+       _now = now ?? DateTime.now;
+
+  /// Angemeldetes Konto (`null` abgemeldet); ohne Angabe gibt es keine Konten (Tests).
+  final String? Function()? userId;
+
+  /// Für welches Konto der Plan gilt, sobald einmal geplant wurde.
+  String? _plannedFor;
+  bool _planned = false;
 
   final CategoriesRepository _repository;
   final NotificationGateway _gateway;
@@ -62,6 +76,12 @@ class ReminderService {
     if (!await isEnabled()) return;
     try {
       final texts = _texts();
+      // Anderes Konto oder abgemeldet: Der alte Plan nennt Kategorien und Zähler des vorigen Kontos –
+      // er geht zuerst, auch wenn sich gleich nichts laden lässt.
+      final user = userId?.call();
+      if (_planned && user != _plannedFor) await _gateway.replaceAll(const [], channel: texts.notifyChannel);
+      _plannedFor = user;
+      _planned = true;
       // Läuft außerhalb der Oberfläche: Datumsformate der Sprache selbst laden.
       await initializeDateFormatting(texts.localeName);
       final categories = await _repository.loadCategories();

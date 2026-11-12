@@ -112,7 +112,8 @@ Die Publikation `supabase_realtime` enthält `categories`, `category_members`, `
 | Secret | Wert |
 |---|---|
 | `APPLE_BUNDLE_ID` | Bundle-ID der App, Standard `de.eloayoubi.kostenkurve` – zugleich `client_id` für Sign in with Apple |
-| `APPLE_ALLOW_SANDBOX` | `true` (Standard): Sandbox-Käufe aus TestFlight und App Review zählen; `false`: nur noch Production |
+| `APPLE_ALLOW_SANDBOX` | `true`: Sandbox-Käufe aus TestFlight zählen für alle (Testphase). Alles andere, auch nicht gesetzt: nur Production – zum Start im App Store so stellen, ein Sandbox-Kauf kostet nichts |
+| `APPLE_SANDBOX_USERS` | Nutzer-Ids (uuid, mit Komma), deren Sandbox-Käufe auch ohne `APPLE_ALLOW_SANDBOX` zählen: das Konto für Apples App-Prüfung und eigene Tester |
 | `APPLE_TEAM_ID` | Team-ID des Apple-Developer-Kontos (Membership) |
 | `APPLE_SIGNIN_KEY_ID` | Key-ID des Sign-in-with-Apple-Schlüssels |
 | `APPLE_SIGNIN_KEY` | Inhalt der `.p8`-Datei dieses Schlüssels (PEM; Zeilenumbrüche dürfen auch als `\n` dastehen) |

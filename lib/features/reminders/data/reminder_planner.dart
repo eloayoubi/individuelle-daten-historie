@@ -48,7 +48,9 @@ abstract final class ReminderPlanner {
           if (last != null) {
             var at = DateTime(last.year, last.month, last.day + readAfterDays, readHour);
             if (!at.isAfter(now)) at = _nextAt(now, readHour);
-            final days = DateTime(at.year, at.month, at.day).difference(DateTime(last.year, last.month, last.day)).inDays;
+            // In UTC zählen: Über die Zeitumstellung hat ein Tag 23 oder 25 Stunden, lokal gerechnet
+            // fehlte dann einer.
+            final days = DateTime.utc(at.year, at.month, at.day).difference(DateTime.utc(last.year, last.month, last.day)).inDays;
             planned.add(PlannedReminder(id: _id('read:${tracker.id}'), at: at, title: l10n.homeReadMeter(tracker.name), body: l10n.notifyReadBody(days)));
           }
         }

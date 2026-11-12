@@ -8,15 +8,12 @@
 // speichert das Abo und berechnet entitlements neu. Abgelaufene oder erstattete Transaktionen werden auch
 // gespeichert (plus = false). Die App beendet die Transaktion (completePurchase) erst nach einer Antwort 200.
 // Fehler: 400 invalid_transaction | wrong_app | wrong_environment | not_subscription | unknown_product,
-// 401 unauthorized, 403 wrong_user, 500 apply_failed.
-// Env: APPLE_BUNDLE_ID (Standard de.eloayoubi.kostenkurve), APPLE_ALLOW_SANDBOX (Standard true –
-// TestFlight und App Review kaufen im Sandbox; nach dem Start ggf. auf false).
+// 401 unauthorized, 403 wrong_user, 413 body_too_large, 500 apply_failed.
+// Env: APPLE_BUNDLE_ID, APPLE_ALLOW_SANDBOX, APPLE_SANDBOX_USERS – siehe _shared/store_env.ts. Sandbox-Käufe
+// (TestFlight, App-Prüfung) zählen nur, wenn sie ausdrücklich freigegeben sind.
 import { adminClient, corsHeaders, error, json, requireUser } from "../_shared/supabase.ts";
 import { JwsError, verifyAppleJws } from "../_shared/apple_jws.ts";
-
-const BUNDLE_ID = Deno.env.get("APPLE_BUNDLE_ID") ?? "de.eloayoubi.kostenkurve";
-const ALLOW_SANDBOX = (Deno.env.get("APPLE_ALLOW_SANDBOX") ?? "true") !== "false";
-const PLUS_PRODUCTS = ["de.eloayoubi.kostenkurve.plus.monthly", "de.eloayoubi.kostenkurve.plus.yearly"];
+import { BodyTooLarge, BUNDLE_ID, environmentAllowed, errorName, PLUS_PRODUCTS, readJson } from "../_shared/store_env.ts";
 
 const iso = (ms: unknown) => (typeof ms === "number" ? new Date(ms).toISOString() : null);
 
@@ -28,15 +25,16 @@ Deno.serve(async (req) => {
 
   let tx: Record<string, unknown>;
   try {
-    const { jws } = await req.json();
+    const { jws } = await readJson(req);
     tx = await verifyAppleJws(String(jws ?? ""));
   } catch (e) {
-    console.warn("verify-purchase: invalid transaction", e instanceof JwsError ? e.message : e);
+    if (e instanceof BodyTooLarge) return error("body_too_large", 413);
+    console.warn("verify-purchase: invalid transaction", e instanceof JwsError ? e.message : errorName(e));
     return error("invalid_transaction");
   }
 
   if (tx.bundleId !== BUNDLE_ID) return error("wrong_app");
-  if (tx.environment !== "Production" && !(ALLOW_SANDBOX && tx.environment === "Sandbox")) return error("wrong_environment");
+  if (!environmentAllowed(tx.environment, user)) return error("wrong_environment");
   if (tx.type !== "Auto-Renewable Subscription" || typeof tx.expiresDate !== "number") return error("not_subscription");
   if (!PLUS_PRODUCTS.includes(String(tx.productId))) return error("unknown_product");
   if (String(tx.appAccountToken ?? "").toLowerCase() !== user.toLowerCase()) return error("wrong_user", 403);
