@@ -38,7 +38,7 @@ Supabase-Werte nur in `.env.local`, App-Store-Schlüssel nur in `ios/fastlane/.e
    supabase functions deploy verify-purchase app-store-notifications delete-account apple-token health
    supabase secrets set APPLE_BUNDLE_ID=de.eloayoubi.kostenkurve APPLE_ALLOW_SANDBOX=true
    ```
-   `APPLE_ALLOW_SANDBOX=true` lässt Käufe aus TestFlight und Sandbox zu. Das kann so bleiben: Apple prüft die App vor der Freigabe mit Sandbox-Käufen.
+   `APPLE_ALLOW_SANDBOX=true` lässt Käufe aus TestFlight und Sandbox für alle zu – richtig für die Testphase. **Zum Start im App Store auf `false` setzen:** Ein Sandbox-Kauf kostet nichts, wer den öffentlichen TestFlight-Link hat, bekäme das Cloud-Abo sonst geschenkt. Damit Apples Prüfung (kauft im Sandbox) und eigene Tester weiter kaufen können, deren Konten freigeben: `supabase secrets set APPLE_ALLOW_SANDBOX=false APPLE_SANDBOX_USERS=<nutzer-id>,<nutzer-id>` (Nutzer-Id = `auth.users.id` des Prüfkontos, das in App Store Connect unter „App-Prüfung“ steht). Ohne gesetztes Secret gilt `false`.
 6. **App verbinden.** `cp .env.local.example .env.local` und zwei Werte eintragen, beide aus *Project Settings → API*:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY` (Publishable Key)

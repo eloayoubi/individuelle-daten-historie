@@ -238,6 +238,8 @@ Kostenkurve ist **kostenlos, solange die Daten auf dem Gerät bleiben**. Wer von
 | A09 Logging and Monitoring Failures | Keine Tokens, Codes oder E-Mail-Adressen in Logs; Edge Functions loggen nur Fehlercodes; Anmeldungen protokolliert Supabase Auth. |
 | A10 Server-Side Request Forgery | Der Server ruft nur feste Apple-Adressen auf, keine URLs aus Eingaben. |
 
+Audit vom 12.11.2026 mit behobenen und offenen Punkten (darunter zwei Schritte vor dem Start im App Store: Sandbox-Käufe sperren, `supabase config push`): [SECURITY_AUDIT_2026-11-12.md](SECURITY_AUDIT_2026-11-12.md).
+
 ## 9. Geschäftsmodell später: passende Angebote
 
 - **Auslöser:**

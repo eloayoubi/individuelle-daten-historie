@@ -10,12 +10,18 @@ double? parseNumber(String text, {required String decimalSeparator}) {
   if (t.isEmpty) return null;
   final other = decimalSeparator == ',' ? '.' : ',';
   if (t.contains(decimalSeparator)) {
+    // Beide Trenner, der Dezimaltrenner zuerst (`1,234.5` in einer deutschen App): nicht eindeutig –
+    // lieber keine Zahl als stillschweigend 1,2345.
+    if (t.contains(other) && t.indexOf(decimalSeparator) < t.lastIndexOf(other)) return null;
     t = t.replaceAll(other, '').replaceAll(decimalSeparator, '.');
   } else if (t.contains(other)) {
     final grouped = RegExp('^-?[1-9]\\d{0,2}(${RegExp.escape(other)}\\d{3})+\$').hasMatch(t);
     t = grouped ? t.replaceAll(other, '') : t.replaceAll(other, '.');
   }
-  return double.tryParse(t);
+  // `Infinity`, `NaN` und `1e999` liest double.tryParse als Zahl – speichern und rechnen lässt sich
+  // damit nicht.
+  final value = double.tryParse(t);
+  return value != null && value.isFinite ? value : null;
 }
 
 /// Zahl für ein Eingabefeld, ohne Tausenderpunkte und ohne überflüssige Nullen (`0,329`, `47100`).

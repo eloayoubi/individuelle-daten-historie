@@ -176,7 +176,11 @@ class FieldEditorState extends Equatable {
   }
 
   /// Kommazahl aus der Eingabe, mit Komma oder Punkt (`10,35` → 10.35).
-  static double? parseDecimal(String text) => double.tryParse(text.trim().replaceAll(' ', '').replaceAll(',', '.'));
+  /// Nur endliche Zahlen: `Infinity` und `NaN` liest double.tryParse auch.
+  static double? parseDecimal(String text) {
+    final value = double.tryParse(text.trim().replaceAll(' ', '').replaceAll(',', '.'));
+    return value != null && value.isFinite ? value : null;
+  }
 
   static String _formatFactor(double f) => f == f.roundToDouble() ? f.toInt().toString() : f.toString().replaceAll('.', ',');
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:in_app_review/in_app_review.dart';
 
 import '../../features/account/cubit/account_cubit.dart';
@@ -108,6 +109,9 @@ Future<void> configureDependencies() async {
       ..registerLazySingleton<AttachmentsRepository>(() => SupabaseAttachmentsRepository(lookup<SupabaseApi>(), lookup<AuthRepository>()))
       ..registerLazySingleton<ReleaseRepository>(() => SupabaseReleaseRepository(lookup<SupabaseApi>()));
   } else {
+    // Die Mocks schalten das Abo ohne Kauf frei und melden mit einem festen Code an – in einem
+    // ausgelieferten Build haben sie nichts zu suchen. Fehlen die Supabase-Werte, lieber gar nicht starten.
+    if (kReleaseMode) throw StateError('Release-Build ohne SUPABASE_URL und SUPABASE_ANON_KEY (--dart-define-from-file=.env.local)');
     getIt
       ..registerLazySingleton<AuthRepository>(MockAuthRepository.new)
       // Der Mock steht für die Cloud; lokal ist auch im Mock-Modus die Datei auf dem Gerät.
@@ -133,7 +137,9 @@ Future<void> configureDependencies() async {
   getIt
     // Echte Benachrichtigungen auch im Mock-Modus; Tests tauschen gegen MemoryNotificationGateway.
     ..registerLazySingleton<NotificationGateway>(LocalNotificationGateway.new)
-    ..registerLazySingleton<ReminderService>(() => ReminderService(lookup<CategoriesRepository>(), lookup<NotificationGateway>(), FileJsonStore('reminders')))
+    ..registerLazySingleton<ReminderService>(
+      () => ReminderService(lookup<CategoriesRepository>(), lookup<NotificationGateway>(), FileJsonStore('reminders'), userId: () => lookup<AuthRepository>().userId),
+    )
     ..registerFactory<RemindersCubit>(() => RemindersCubit(lookup<ReminderService>()))
     // Tests tauschen gegen NoInviteLinks und NoReviewPrompter.
     ..registerLazySingleton<InviteLinks>(AppInviteLinks.new)

@@ -4,6 +4,7 @@ import '../../../core/utils/ids.dart';
 import '../../../core/utils/json_store.dart';
 import '../../categories/data/categories_repository.dart';
 import '../../categories/data/local_categories_repository.dart';
+import '../../categories/data/offline_categories_repository.dart';
 
 /// Umzug der Daten zwischen Gerät und Cloud.
 ///
@@ -100,6 +101,12 @@ class StorageTransfer {
 
   Future<void> download() async {
     final categories = await cloud.loadCategories();
+    // Ohne Netz antwortet die Offline-Schicht aus dem Cache. Für den Umzug reicht das nicht: Danach
+    // gilt die Kopie auf dem Gerät als vollständig (ein anonymes Konto wird sogar gelöscht) – was seit
+    // dem letzten Abruf dazukam, wäre weg.
+    if (cloud case OfflineCategoriesRepository(servedFromServer: false)) {
+      throw StateError('Umzug aufs Gerät braucht den Stand vom Server');
+    }
     await local.merge([
       for (final c in categories)
         Category(

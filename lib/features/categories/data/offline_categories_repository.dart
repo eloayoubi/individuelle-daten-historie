@@ -121,15 +121,22 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   /// Einträge, die der Server beim letzten Senden zurückgehalten hat ([WriteHeld]).
   var _heldIds = <String>{};
 
+  /// Kam der letzte [loadCategories] vom Server – oder ohne Netz aus dem Cache? Wer danach etwas
+  /// Unumkehrbares tut (Umzug aufs Gerät, dann Konto löschen), darf sich nicht auf den Cache stützen.
+  bool get servedFromServer => _servedFromServer;
+  var _servedFromServer = false;
+
   @override
   Future<List<Category>> loadCategories() async {
     await _restore();
     _forgetOtherAccount();
+    _servedFromServer = false;
     if (_sendingNew > 0 && _cached != null) return _overlay(_cached!);
     await sync();
     final mark = _beginFetch();
     try {
       _cached = _endFetch(mark, await _remote.loadCategories());
+      _servedFromServer = true;
       _owner = _userId();
       _quietly(_persistCache());
     } catch (_) {
@@ -294,7 +301,9 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     }
     try {
       if (await _queueStore.read() case {'userId': final String? owner, 'writes': final List queued} when current == null || owner == current) {
-        _pending = [for (final q in queued.cast<Map<String, Object?>>()) PendingWrite.fromJson(q)];
+        // Je Eintrag: Ein einzelner unlesbarer (beschädigte Datei, unbekannte Art) kostet nicht die
+        // übrigen – die gäbe es nur hier, die nächste Änderung überschriebe die Datei ohne sie.
+        _pending = [for (final q in queued) ?_writeFrom(q)];
         _owner ??= owner;
       }
     } catch (_) {
@@ -303,6 +312,15 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     _owner ??= current;
     _scheduleRetry();
   }();
+
+  /// Wartende Änderung aus der Datei, `null` wenn sie sich nicht lesen lässt.
+  static PendingWrite? _writeFrom(Object? json) {
+    try {
+      return PendingWrite.fromJson((json! as Map).cast<String, Object?>());
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<void> _enqueue(PendingWrite write) async {
     await _restore();

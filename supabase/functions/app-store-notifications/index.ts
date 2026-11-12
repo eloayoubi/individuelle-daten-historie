@@ -10,14 +10,12 @@
 // sie tagelang. 500 nur, wenn die Datenbank scheitert (dann soll Apple es erneut versuchen).
 // In App Store Connect (App → App-Informationen → App-Store-Server-Benachrichtigungen, Version 2) für
 // Produktion und Sandbox eintragen: https://<projekt>.supabase.co/functions/v1/app-store-notifications
-// Env: APPLE_BUNDLE_ID, APPLE_ALLOW_SANDBOX (wie verify-purchase).
+// Die Transaktion in der Nachricht muss zur selben App und Umgebung gehören wie die Nachricht selbst.
+// Sandbox-Nachrichten, die nicht freigegeben sind (siehe _shared/store_env.ts), werden mit 200 ignoriert.
+// Env: APPLE_BUNDLE_ID, APPLE_ALLOW_SANDBOX, APPLE_SANDBOX_USERS (wie verify-purchase).
 import { adminClient, error, json } from "../_shared/supabase.ts";
 import { JwsError, verifyAppleJws } from "../_shared/apple_jws.ts";
-
-const BUNDLE_ID = Deno.env.get("APPLE_BUNDLE_ID") ?? "de.eloayoubi.kostenkurve";
-const ALLOW_SANDBOX = (Deno.env.get("APPLE_ALLOW_SANDBOX") ?? "true") !== "false";
-const PLUS_PRODUCTS = ["de.eloayoubi.kostenkurve.plus.monthly", "de.eloayoubi.kostenkurve.plus.yearly"];
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { BodyTooLarge, BUNDLE_ID, environmentAllowed, errorName, PLUS_PRODUCTS, readJson, UUID } from "../_shared/store_env.ts";
 
 const iso = (ms: unknown) => (typeof ms === "number" ? new Date(ms).toISOString() : null);
 
@@ -26,25 +24,38 @@ Deno.serve(async (req) => {
 
   let note: Record<string, unknown>;
   let tx: Record<string, unknown> | null = null;
+  let environment: unknown;
   try {
-    const { signedPayload } = await req.json();
+    const { signedPayload } = await readJson(req);
     note = await verifyAppleJws(String(signedPayload ?? ""));
     const data = (note.data ?? {}) as Record<string, unknown>;
     if (data.bundleId !== BUNDLE_ID) return error("wrong_app");
-    if (data.environment !== "Production" && !(ALLOW_SANDBOX && data.environment === "Sandbox")) return error("wrong_environment");
-    if (typeof data.signedTransactionInfo === "string") tx = await verifyAppleJws(data.signedTransactionInfo);
+    environment = data.environment;
+    if (environment !== "Production" && environment !== "Sandbox") return error("wrong_environment");
+    if (typeof data.signedTransactionInfo === "string") {
+      tx = await verifyAppleJws(data.signedTransactionInfo);
+      // Auch die Transaktion ist von Apple signiert – sie muss aber zu dieser Nachricht passen.
+      if (tx.bundleId !== BUNDLE_ID) return error("wrong_app");
+      if (tx.environment !== environment) return error("wrong_environment");
+    }
   } catch (e) {
-    console.warn("app-store-notifications: invalid payload", e instanceof JwsError ? e.message : e);
+    if (e instanceof BodyTooLarge) return error("body_too_large", 413);
+    console.warn("app-store-notifications: invalid payload", e instanceof JwsError ? e.message : errorName(e));
     return error("invalid_payload");
   }
 
   const kind = `${note.notificationType}${note.subtype ? `/${note.subtype}` : ""}`;
+  const token = String(tx?.appAccountToken ?? "");
+  // Echt, aber nicht freigegeben: 200, damit Apple die Nachricht nicht tagelang wiederholt.
+  if (!environmentAllowed(environment, UUID.test(token) ? token : null)) {
+    console.log("app-store-notifications: ignored", kind, "sandbox");
+    return json({ ok: true, ignored: true });
+  }
   if (!tx || !PLUS_PRODUCTS.includes(String(tx.productId)) || typeof tx.expiresDate !== "number") {
     console.log("app-store-notifications: ignored", kind, tx?.productId ?? "");
     return json({ ok: true, ignored: true });
   }
 
-  const token = String(tx.appAccountToken ?? "");
   const original = String(tx.originalTransactionId ?? tx.transactionId);
   const { data, error: e } = await adminClient().rpc("apply_plus_transaction", {
     p_user: UUID.test(token) ? token.toLowerCase() : null,

@@ -22,6 +22,15 @@ class ForceUpdatePage extends StatefulWidget {
   /// Erzeugt von `tool/branding/render_icon_test.dart` (UpdateAnimation).
   static const asset = 'assets/branding/update_animation.json';
 
+  /// Wohin „Aktualisieren“ führt: [url] vom Server (`app_releases.url`) nur, wenn es eine https-Adresse
+  /// bei Apple ist – diese Seite lässt sich nicht schließen, ein anderes Ziel (tel:, fremde Seite)
+  /// wäre eine Falle. Sonst der feste TestFlight-Link.
+  static Uri storeUri(String? url) {
+    const hosts = {'testflight.apple.com', 'apps.apple.com'};
+    final uri = url == null ? null : Uri.tryParse(url);
+    return uri != null && uri.scheme == 'https' && hosts.contains(uri.host) ? uri : Uri.parse(AppConfig.testFlightUrl);
+  }
+
   /// Marker im Lottie: Ring voll, Haus gefüllt, Haken gesetzt – das Bild bei „Weniger Bewegung“.
   static const still = 'fertig';
 
@@ -78,7 +87,7 @@ class _ForceUpdatePageState extends State<ForceUpdatePage> with TickerProviderSt
     }
   }
 
-  Future<void> _open() => launchUrl(Uri.parse(widget.release.url ?? AppConfig.testFlightUrl), mode: LaunchMode.externalApplication);
+  Future<void> _open() => launchUrl(ForceUpdatePage.storeUri(widget.release.url), mode: LaunchMode.externalApplication);
 
   /// Schritt [step] des Auftritts: blendet ein und steigt an seinen Platz.
   Widget _rising(int step, Widget child) {

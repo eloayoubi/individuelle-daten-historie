@@ -14,11 +14,15 @@ abstract interface class InviteLinks {
   /// Link zum Teilen.
   static String linkFor(String code) => '${AppConfig.appScheme}://invite?code=$code';
 
+  /// So sieht ein Code aus (der Server vergibt 10 Zeichen). Ein Link kann jeder schicken: Was nicht
+  /// passt, kommt gar nicht erst ins Beitreten-Sheet.
+  static final _code = RegExp(r'^[A-Z0-9]{4,16}$');
+
   /// Code aus einem Link, `null` wenn es keiner ist.
   static String? codeOf(Uri uri) {
     if (uri.scheme != AppConfig.appScheme || uri.host != 'invite') return null;
     final code = uri.queryParameters['code']?.trim().toUpperCase();
-    return code == null || code.isEmpty ? null : code;
+    return code != null && _code.hasMatch(code) ? code : null;
   }
 }
 

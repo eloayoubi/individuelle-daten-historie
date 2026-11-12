@@ -31,7 +31,7 @@ abstract final class DataExport {
       final num n => _number(n, labels.decimalSeparator),
       final DateTime d => _isoDay(d),
       final bool b => b ? labels.yes : labels.no,
-      _ => v.toString(),
+      _ => _text(v.toString()),
     };
     final lines = [labels.header.map(cell).join(sep)];
     for (final c in categories) {
@@ -45,13 +45,13 @@ abstract final class DataExport {
             final consumption = t.isBill(e) && f.role == FieldRole.meterReading;
             lines.add(
               [
-                c.name,
-                t.name,
+                _text(c.name),
+                _text(t.name),
                 _isoDay(e.date),
-                consumption ? labels.consumption : f.name,
+                consumption ? labels.consumption : _text(f.name),
                 value(v),
-                consumption ? f.usageUnit : (f.kind == FieldKind.percent ? '%' : f.unit ?? ''),
-                e.note ?? '',
+                _text(consumption ? f.usageUnit : (f.kind == FieldKind.percent ? '%' : f.unit ?? '')),
+                _text(e.note ?? ''),
                 if (e.hasPeriod) ...[_isoDay(e.periodStart!), _isoDay(e.periodEnd!)] else ...['', ''],
               ].map(cell).join(sep),
             );
@@ -121,6 +121,7 @@ abstract final class DataExport {
     final at = now ?? DateTime.now();
     final categories = await repository.loadCategories();
     final dir = await getTemporaryDirectory();
+    await _discardOld(dir);
     final name = 'kostenkurve-${_isoDay(at)}';
     final csvFile = File('${dir.path}/$name.csv');
     // BOM: Excel erkennt sonst die Umlaute nicht.
@@ -129,6 +130,25 @@ abstract final class DataExport {
     await jsonFile.writeAsString(const JsonEncoder.withIndent('  ').convert(json(categories, at)), flush: true);
     return [XFile(csvFile.path, mimeType: 'text/csv'), XFile(jsonFile.path, mimeType: 'application/json')];
   }
+
+  /// Frühere Exporte aus dem temporären Ordner löschen: Sie enthalten alle Daten im Klartext. Gleich
+  /// nach dem Teilen ginge das nicht – Android gibt die Datei erst später an die Ziel-App.
+  static Future<void> _discardOld(Directory dir) async {
+    final export = RegExp(r'kostenkurve-\d{4}-\d{2}-\d{2}\.(csv|json)$');
+    try {
+      await for (final file in dir.list()) {
+        if (file is File && export.hasMatch(file.path)) await file.delete();
+      }
+    } catch (_) {
+      // Aufräumen ist Zugabe; der neue Export überschreibt gleichnamige Dateien ohnehin.
+    }
+  }
+
+  /// Text aus der App für eine Tabellenzelle. Beginnt er mit `=`, `+`, `-`, `@`, Tab oder
+  /// Wagenrücklauf, läse eine Tabellenkalkulation ihn als Formel – in geteilten Kategorien stammen
+  /// Namen und Notizen auch von anderen. Ein Apostroph davor macht ihn zu Text. Zahlen laufen nicht
+  /// hier durch (ein negativer Betrag bleibt eine Zahl).
+  static String _text(String v) => v.isNotEmpty && '=+-@\t\r'.contains(v[0]) ? "'$v" : v;
 
   static String _number(num n, String decimalSeparator) {
     final text = n == n.roundToDouble() ? n.toInt().toString() : n.toString();
