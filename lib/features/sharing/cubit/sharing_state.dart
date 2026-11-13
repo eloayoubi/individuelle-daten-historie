@@ -23,10 +23,10 @@ class SharingState extends Equatable {
   final bool busy;
   final SharingEvent? event;
 
-  SharingState copyWith({bool? loaded, Category? category, MemberRole? inviteRole, String? inviteCode, bool clearCode = false, bool? busy, SharingEvent? event}) =>
+  SharingState copyWith({bool? loaded, Category? Function()? category, MemberRole? inviteRole, String? inviteCode, bool clearCode = false, bool? busy, SharingEvent? event}) =>
       SharingState(
         loaded: loaded ?? this.loaded,
-        category: category ?? this.category,
+        category: category == null ? this.category : category(),
         inviteRole: inviteRole ?? this.inviteRole,
         inviteCode: clearCode ? null : inviteCode ?? this.inviteCode,
         busy: busy ?? this.busy,

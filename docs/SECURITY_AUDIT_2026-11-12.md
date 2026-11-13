@@ -39,6 +39,19 @@ Fünf Durchgänge, jeder nur lesend: Datenbank (RLS, RPCs, Rechte), Edge Functio
 | 26 | Niedrig | Einladungscode 10 Zeichen. | 12 Zeichen (48 Bit) |
 | 27 | Niedrig | PDF wurde ganz eingelesen, bevor die Größe geprüft war. | Größe zuerst |
 
+## Dritte Runde – optionale Punkte (13.11.2026)
+
+| # | Befund | Behebung |
+|---|---|---|
+| 28 | „Abo hinzufügen“ legte Tracker und Felder in mehreren Aufrufen an; brach einer ab, blieb ein halber Tracker | RPC `create_tracker` legt Tracker und Felder in einer Transaktion an (Migration `20261114120000_tracker_create.sql`); App über `createTrackerWithFields` |
+| 29 | Zwei Einträge am selben Tag: Welcher als „letzter“ galt, hing von der Reihenfolge der Antwort ab (und `List.sort` ist in Dart nicht stabil) | Einträge kommen nach Tag, `created_at` und Id sortiert; `EntryOrder.byDate/newestFirst` sortiert mit Index; „letzter“ ist am selben Tag der zuletzt angelegte. Lokal und in der Warteschlange bleibt ein bearbeiteter Eintrag an seiner Stelle |
+| 30 | Neue Tracker und Felder bekamen `sort` = Anzahl sichtbarer, nach dem Archivieren doppelt | Trigger `next_sort`: neue Zeilen kommen hinter alle vorhandenen, auch archivierte |
+| 31 | Teilen-Seite zeigte eine inzwischen gelöschte Kategorie weiter | `SharingCubit.load` übernimmt auch `null` |
+| 32 | Abgewählte Felder kamen über einen Antrieb, bei dem es sie nicht gibt, zurück | `CategorySetupCubit` merkt sich Abwahlen über alle Antriebe (Betrag über Stelle, Art, Rolle und Einheit) |
+| 33 | Eintrag löschen ohne Cloud-Abo zählte als „abgelehnt“ und verschwand aus der Warteschlange | Darf die Rolle bearbeiten, fehlt nur das Abo: `WriteHeld`, der Eintrag wartet |
+
+Tests: `supabase/tests/tracker_create.sql`, `test/features/audit_optional_test.dart`, Ergänzungen in `category_setup_cubit_test.dart` und `supabase_categories_repository_test.dart`.
+
 ## Offen – braucht dich oder eine eigene Aufgabe
 
 | Thema | Warum offen |
@@ -47,10 +60,6 @@ Fünf Durchgänge, jeder nur lesend: Datenbank (RLS, RPCs, Rechte), Edge Functio
 | **`supabase config push`** | Bringt Punkt 18 und die Mail-Vorlagen nach Produktion; hängt am eigenen SMTP (Implementierungsplan M7) |
 | Rechtstexte mit Platzhaltern (`assets/legal/*.md`), `example.com` in den Store-Texten | Braucht deine Angaben (Name, Anschrift, E-Mail, URLs) |
 | Secrets der Workflows ohne geschütztes GitHub-Environment | Stellst du in GitHub ein (Settings → Environments, Freigabe erforderlich) |
-| „Abo hinzufügen“ legt Tracker und Felder in mehreren Schritten an; scheitert einer, bleibt ein halber Tracker | Bräuchte einen RPC wie `create_category`, der alles in einer Transaktion anlegt |
-| Zwei Einträge am selben Tag: Welcher als „letzter“ gilt, hängt von der Reihenfolge der Antwort ab | Bräuchte `created_at` in der Abfrage und eine feste Reihenfolge |
-| Neue Tracker und Felder bekommen `sort` = Anzahl sichtbarer; nach dem Archivieren kann das doppelt sein | Kosmetisch; `max(sort) + 1` wäre richtig |
-| Teilen-Seite zeigt eine inzwischen gelöschte Kategorie weiter; abgewählte Felder kommen beim Wechsel des Antriebs zurück; Löschen bei abgelaufenem Abo zählt als „abgelehnt“ statt „wartet“ | Niedrig, kein Datenverlust |
 | Einladungscode ohne Zähler für Fehlversuche | Raten ist bei 48 Bit und 7 Tagen Gültigkeit aussichtslos; ein Zähler wäre Zugabe |
 | Eigentümer löscht Konto: geteilte Kategorien verschwinden für alle | Dokumentiertes Verhalten; Übergabe der Eigentümerschaft wäre ein Feature |
 | Android: `allowBackup` an, Release fällt ohne `key.properties` auf den Debug-Schlüssel zurück | Backup bewusst gelassen (lokale Daten sind sonst mit dem Handy weg); Android-Release steht noch aus |

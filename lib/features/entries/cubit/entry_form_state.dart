@@ -82,7 +82,7 @@ class EntryFormState extends Equatable {
     final ids = {totalId, for (final p in tracker.partsOf(totalId)) p.id};
     Entry? latest;
     for (final e in tracker.entries) {
-      if (e.values.keys.any(ids.contains) && (latest == null || e.date.isAfter(latest.date))) latest = e;
+      if (e.values.keys.any(ids.contains) && (latest == null || !e.date.isBefore(latest.date))) latest = e;
     }
     return latest;
   }
@@ -270,7 +270,7 @@ class EntryFormState extends Equatable {
       if (e.id == entryId || !e.date.isBefore(date)) continue;
       if (f.role == FieldRole.meterReading && tracker.isBill(e)) continue;
       final value = e.values[f.id];
-      if (value != null && (last == null || e.date.isAfter(last.$1))) last = (e.date, value);
+      if (value != null && (last == null || !e.date.isBefore(last.$1))) last = (e.date, value);
     }
     return last;
   }

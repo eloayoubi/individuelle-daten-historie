@@ -55,13 +55,13 @@ class TrackerState extends Equatable {
   List<Entry> get entries => [
     for (final e in tracker?.records ?? const <Entry>[])
       if (!tracker!.isPriceChange(e)) e,
-  ]..sort((a, b) => b.date.compareTo(a.date));
+  ].newestFirst();
 
   /// Alle Werte eines Preises, neueste zuerst.
   List<Entry> priceHistory(FieldDefinition field) => [
     for (final e in tracker?.entries ?? const <Entry>[])
       if (e.values.containsKey(field.id)) e,
-  ]..sort((a, b) => b.date.compareTo(a.date));
+  ].newestFirst();
 
   /// [event] gilt nur für genau einen Zustand und fällt beim nächsten weg.
   TrackerState copyWith({HistoryMetric? metric, TrackerHistory? history, TrackerEvent? event}) => TrackerState(

@@ -416,7 +416,7 @@ class _TrackerGroup extends StatelessWidget {
     Entry? latest;
     for (final e in tracker.entries) {
       if (tracker.isBill(e) || e.number(meter.id) == null) continue;
-      if (latest == null || e.date.isAfter(latest.date)) latest = e;
+      if (latest == null || !e.date.isBefore(latest.date)) latest = e;
     }
     if (latest == null) return null;
     return '${context.fieldValue(meter, latest.number(meter.id)!)} · ${context.shortDate(latest.date)}';

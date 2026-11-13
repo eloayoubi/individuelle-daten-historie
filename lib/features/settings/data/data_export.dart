@@ -36,7 +36,7 @@ abstract final class DataExport {
     final lines = [labels.header.map(cell).join(sep)];
     for (final c in categories) {
       for (final t in c.trackers) {
-        final entries = [...t.entries]..sort((a, b) => a.date.compareTo(b.date));
+        final entries = t.entries.byDate();
         for (final e in entries) {
           for (final f in t.fields) {
             final v = e.values[f.id];
@@ -97,7 +97,7 @@ abstract final class DataExport {
                     },
                 ],
                 'entries': [
-                  for (final e in [...t.entries]..sort((a, b) => a.date.compareTo(b.date)))
+                  for (final e in t.entries.byDate())
                     {
                       'date': _isoDay(e.date),
                       'values': {

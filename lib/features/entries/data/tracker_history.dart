@@ -133,7 +133,7 @@ class TrackerHistory extends Equatable {
   /// Bei Versorgungszählern fehlen Preise und Beträge (die zeigt der Vertrag), und der Zählerstand
   /// kommt nur aus Ständen, nicht aus Rechnungen.
   static List<CurrentValue> currentValuesOf(Tracker tracker, DateTime today) {
-    final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
+    final sorted = tracker.entries.byDate();
     final readings = [for (final e in sorted) if (!tracker.isBill(e)) e];
     return [
       for (final field in tracker.fields)
@@ -146,7 +146,7 @@ class TrackerHistory extends Equatable {
   /// Änderung; Preise ohne Wert fehlen. Leer bei anderen Trackern.
   static List<CurrentValue> contractOf(Tracker tracker, DateTime today) {
     if (!tracker.isUtilityMeter) return const [];
-    final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
+    final sorted = tracker.entries.byDate();
     return [
       for (final field in tracker.contractFields)
         if (_current(sorted, field, today) case final CurrentValue value) value,

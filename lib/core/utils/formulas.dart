@@ -83,7 +83,7 @@ abstract final class Formulas {
   /// Ergebnis mit dem neuesten Eintrag, mit dem sich rechnen lässt (Vorschau im Editor).
   static double? preview(Formula formula, Tracker tracker) {
     final variables = variablesByEntry(tracker);
-    final sorted = tracker.records..sort((a, b) => b.date.compareTo(a.date));
+    final sorted = tracker.records.newestFirst();
     for (final e in sorted) {
       if (formula.evaluate(variables[e.id]!, window: _window(tracker, e, variables)) case final double v) return v;
     }
@@ -144,7 +144,7 @@ abstract final class Formulas {
     final keys = Formulas.keys(tracker);
     final meter = tracker.firstWithRole(FieldRole.meterReading);
     final numeric = [for (final f in tracker.fields) if (f.kind.storage == FieldStorage.number) f];
-    final sorted = [...tracker.entries]..sort((a, b) => a.date.compareTo(b.date));
+    final sorted = tracker.entries.byDate();
     final last = <String, double>{};
     DateTime? lastDate;
     (DateTime, double)? lastReading;

@@ -28,15 +28,28 @@ class CategorySetupCubit extends Cubit<CategorySetupState> {
 
   void setSwatch(CategorySwatch swatch) => emit(state.copyWith(swatch: swatch));
 
+  /// Abgewählte Felder über alle Antriebe hinweg: Ein Feld, das es beim aktuellen Antrieb nicht
+  /// gibt (Liter bei „Elektro“), bleibt abgewählt, wenn es beim nächsten Wechsel zurückkommt.
+  final _hidden = <(int, int, FieldDraft)>{};
+
+  /// Dasselbe Feld bei einem anderen Antrieb: gleicher Name, oder an gleicher Stelle mit gleicher
+  /// Art, Rolle und Einheit (der Betrag heißt je Antrieb anders: Tanken, Laden …).
+  static bool _same((int, int, FieldDraft) a, (int, int, FieldDraft) b) {
+    final (ta, ia, fa) = a;
+    final (tb, ib, fb) = b;
+    if (ta != tb) return false;
+    if (fa.name == fb.name) return true;
+    return ia == ib && fa.kind == fb.kind && fa.role == fb.role && fa.unit == fb.unit;
+  }
+
   /// Antrieb des Fahrzeugs: wechselt die Felder fürs Tanken und Laden. Abgewählte Felder bleiben
-  /// abgewählt, soweit es sie beim neuen Antrieb gibt.
+  /// abgewählt, auch über einen Antrieb hinweg, bei dem es sie nicht gibt.
   void setDrive(VehicleDrive drive) {
-    final before = state.trackers;
     final after = state.template?.trackersFor(drive) ?? const <TrackerDraft>[];
     final excluded = {
-      for (final (t, f) in state.excluded)
-        if (t < after.length)
-          if (after[t].fields.indexWhere((field) => field.name == before[t].fields[f].name) case final i when i >= 0) (t, i),
+      for (final (t, tracker) in after.indexed)
+        for (final (i, field) in tracker.fields.indexed)
+          if (_hidden.any((h) => _same(h, (t, i, field)))) (t, i),
     };
     emit(state.copyWith(drive: drive, excluded: excluded));
   }
@@ -45,7 +58,13 @@ class CategorySetupCubit extends Cubit<CategorySetupState> {
   void toggleField(int tracker, int field) {
     final key = (tracker, field);
     final excluded = {...state.excluded};
-    if (!excluded.remove(key)) excluded.add(key);
+    final entry = (tracker, field, state.trackers[tracker].fields[field]);
+    if (excluded.remove(key)) {
+      _hidden.removeWhere((h) => _same(h, entry));
+    } else {
+      excluded.add(key);
+      _hidden.add(entry);
+    }
     emit(state.copyWith(excluded: excluded));
   }
 

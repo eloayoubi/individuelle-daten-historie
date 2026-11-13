@@ -119,9 +119,9 @@ class CategoryDetailCubit extends Cubit<CategoryDetailState> {
   /// ab [ItemDraft.since] eintragen und die Art als Detail setzen.
   Future<void> addItem(ItemTemplate item, ItemDraft draft) => _run(() async {
     final name = draft.name.trim();
-    final trackerId = await _repository.createTracker(categoryId, name, sort: state.category?.trackers.length ?? 0);
     final fields = item.draftFields(interval: draft.interval);
-    final ids = [for (final (i, f) in fields.indexed) await _repository.createField(trackerId, f, sort: i)];
+    // Tracker und Felder in einem Schritt: Scheitert er, bleibt kein halbes Abo zurück.
+    final (tracker: trackerId, fields: ids) = await _repository.createTrackerWithFields(categoryId, TrackerDraft(name: name, fields: fields));
     if (draft.amount case final double amount) {
       await _repository.saveEntry(trackerId, Entry(id: newId(), date: CostEngine.day(draft.since), values: {ids.first: amount}));
     }

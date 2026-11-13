@@ -80,7 +80,7 @@ abstract final class ReminderPlanner {
   static Entry? _latest(Tracker tracker, String fieldId) {
     Entry? latest;
     for (final e in tracker.entries) {
-      if (e.values.containsKey(fieldId) && (latest == null || e.date.isAfter(latest.date))) latest = e;
+      if (e.values.containsKey(fieldId) && (latest == null || !e.date.isBefore(latest.date))) latest = e;
     }
     return latest;
   }

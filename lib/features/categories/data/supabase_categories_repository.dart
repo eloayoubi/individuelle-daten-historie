@@ -38,7 +38,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       'category_members(user_id, role, sort, profiles(display_name)), '
       'trackers!trackers_category_id_fkey(id, name, sort, included_in, icon, '
       'fields(id, name, kind, role, unit, consumption_unit, factor, interval_months, choices, formula, summary, meter_group, part_of, sort), '
-      'entries(id, occurred_on, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
+      'entries(id, occurred_on, created_at, note, meter_change, period_start, period_end, created_by, entry_values(field_id, num, txt, dat, flag)))';
 
   @override
   Stream<void> get changes => _changes.stream;
@@ -131,6 +131,19 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   });
 
   @override
+  Future<({String tracker, List<String> fields})> createTrackerWithFields(String categoryId, TrackerDraft draft) => _write(() async {
+    final result = await _api.rpc<Map<String, dynamic>>(
+      'create_tracker',
+      params: {
+        'p_category': categoryId,
+        'p_name': draft.name,
+        'p_fields': [for (final (i, f) in draft.fields.indexed) {..._fieldJson(f), 'part_of': draft.parts[i]}],
+      },
+    );
+    return (tracker: result['tracker'] as String, fields: [for (final id in result['fields'] as List) id as String]);
+  });
+
+  @override
   Future<void> renameTracker(String id, String name) => _write(() => _api.table('trackers').update({'name': name}).eq('id', id));
 
   @override
@@ -197,6 +210,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
           delete: () async => confirmDeleted(
             await _api.table('entries').delete().eq('id', entryId).select('id'),
             () async => await _api.table('entries').select('id').eq('id', entryId).maybeSingle() != null,
+            mayEdit: () => _mayEditTracker(trackerId),
           ),
           remove: (paths) => _api.remove(AttachmentsRepository.bucket, paths),
         ),
@@ -299,9 +313,30 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
 
   /// RLS lässt verbotenes Löschen nicht scheitern, es trifft nur keine Zeile. Ist nichts gelöscht
   /// und die Zeile noch da ([stillThere]), war es nicht erlaubt; ist sie schon weg, ist es erledigt.
+  /// Darf der Nutzer nach seiner Rolle bearbeiten ([mayEdit]), fehlt nur das Cloud-Abo – das kann
+  /// wiederkommen, darum [WriteHeld] statt [WriteRejected].
   @visibleForTesting
-  static Future<void> confirmDeleted(List<Object?> deleted, Future<bool> Function() stillThere) async {
-    if (deleted.isEmpty && await stillThere()) throw const WriteRejected('delete_not_allowed');
+  static Future<void> confirmDeleted(List<Object?> deleted, Future<bool> Function() stillThere, {Future<bool> Function()? mayEdit}) async {
+    if (deleted.isEmpty && await stillThere()) {
+      var held = false;
+      try {
+        held = await mayEdit?.call() ?? false;
+      } catch (_) {
+        // Rolle nicht feststellbar: wie bisher abgelehnt.
+      }
+      if (held) throw const WriteHeld('cloud_required');
+      throw const WriteRejected('delete_not_allowed');
+    }
+  }
+
+  /// Bin ich owner oder editor der Kategorie des Trackers (unabhängig vom Abo)?
+  Future<bool> _mayEditTracker(String trackerId) async {
+    final me = _auth.userId;
+    if (me == null) return false;
+    final tracker = await _api.table('trackers').select('category_id').eq('id', trackerId).maybeSingle();
+    if (tracker == null) return false;
+    final member = await _api.table('category_members').select('role').eq('category_id', tracker['category_id'] as String).eq('user_id', me).maybeSingle();
+    return member != null && const {'owner', 'editor'}.contains(member['role']);
   }
 
   static String _isoDay(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -373,7 +408,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       includedIn: row['included_in'] as String?,
       icon: CategoryIcon.values.asNameMap()[row['icon']],
       fields: [for (final f in fields) _field(f)],
-      entries: [for (final e in (row['entries'] as List).cast<Map<String, dynamic>>()) _entry(e)],
+      entries: [for (final e in [...(row['entries'] as List).cast<Map<String, dynamic>>()]..sort(_byCreation)) _entry(e)],
     );
   }
 
@@ -428,6 +463,16 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   }
 
   static int _bySort(Map<String, dynamic> a, Map<String, dynamic> b) => ((a['sort'] as num?) ?? 0).compareTo((b['sort'] as num?) ?? 0);
+
+  /// Tag, dann Zeitpunkt des Anlegens, dann Id: Bei zwei Einträgen am selben Tag gilt der zuletzt
+  /// angelegte als neuester, unabhängig von der Reihenfolge der Antwort.
+  static int _byCreation(Map<String, dynamic> a, Map<String, dynamic> b) {
+    for (final key in const ['occurred_on', 'created_at', 'id']) {
+      final c = ((a[key] as String?) ?? '').compareTo((b[key] as String?) ?? '');
+      if (c != 0) return c;
+    }
+    return 0;
+  }
 
   /// Postgres-Enums sind snake_case (`meter_reading`), Dart-Enums camelCase (`meterReading`).
   static T _enum<T extends Enum>(List<T> values, String raw, T fallback) {
