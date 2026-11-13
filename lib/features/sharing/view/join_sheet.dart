@@ -46,7 +46,15 @@ class _JoinSheetState extends State<JoinSheet> {
       AppToast.show(context, context.l10n.joinDone, icon: CupertinoIcons.person_2_fill);
       Navigator.of(context).pop(id);
     } on WriteRejected catch (e) {
-      if (mounted) setState(() => _error = e.message == WriteRejected.cloudRequired ? context.l10n.joinOwnerNoCloud : context.l10n.joinInvalid);
+      if (mounted) {
+        setState(
+          () => _error = switch (e.message) {
+            WriteRejected.cloudRequired => context.l10n.joinOwnerNoCloud,
+            WriteRejected.tooManyAttempts => context.l10n.joinTooMany,
+            _ => context.l10n.joinInvalid,
+          },
+        );
+      }
     } catch (_) {
       if (mounted) setState(() => _error = context.l10n.errorSave);
     } finally {

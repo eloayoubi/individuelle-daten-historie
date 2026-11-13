@@ -976,6 +976,7 @@
   "joinDone": "Beigetreten",
   "joinInvalid": "Code unbekannt, abgelaufen oder schon benutzt.",
   "joinOwnerNoCloud": "Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.",
+  "joinTooMany": "Zu viele falsche Codes. Versuch es in einer Stunde noch einmal.",
   "joinBody": "Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.",
   "joinHint": "Code, z. B. K7Q2M9X4TA",
   "joinAction": "Beitreten",
@@ -989,7 +990,7 @@
   },
   "accountDelete": "Konto löschen",
   "accountDeleteTitle": "Konto und alle Daten löschen?",
-  "accountDeleteBody": "Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.",
+  "accountDeleteBody": "Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht. Geteilte Kategorien übernimmt jemand, mit dem du sie teilst – deine Belege darin werden gelöscht. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.",
   "accountDeletePending": "{count, plural, =1{Achtung: 1 Eintrag ist noch nicht gesendet und geht mit dem Konto verloren.} other{Achtung: {count} Einträge sind noch nicht gesendet und gehen mit dem Konto verloren.}}",
   "@accountDeletePending": {
     "placeholders": {

@@ -36,7 +36,7 @@ Teilst du eine Kategorie, sehen die eingeladenen Personen deren Inhalte einschli
 
 ## Speicherdauer und Löschen
 
-Lokale Daten liegen nur auf deinem Gerät; du löschst sie, indem du die App löschst. Cloud-Daten speichern wir, solange dein Konto besteht. In der App unter Einstellungen › Konto › Konto löschen löschst du dein Konto sofort: dein Konto, deine eigenen Kategorien mit allen Einträgen und Belegen sowie deine Mitgliedschaften. Einträge, die du in Kategorien anderer erfasst hast, bleiben dort ohne deinen Namen. Kopien in Sicherungen werden nach spätestens 30 Tagen überschrieben.
+Lokale Daten liegen nur auf deinem Gerät; du löschst sie, indem du die App löschst. Cloud-Daten speichern wir, solange dein Konto besteht. In der App unter Einstellungen › Konto › Konto löschen löschst du dein Konto sofort: dein Konto, deine eigenen Kategorien mit allen Einträgen und Belegen sowie deine Mitgliedschaften. Hast du eine Kategorie geteilt, übernimmt sie eine Person, mit der du sie teilst; deine Belege darin werden gelöscht. Einträge, die du in Kategorien anderer erfasst hast, bleiben dort ohne deinen Namen. Kopien in Sicherungen werden nach spätestens 30 Tagen überschrieben.
 
 ## Deine Rechte
 

@@ -44,6 +44,14 @@ void main() {
     expect(find.text('Code unbekannt, abgelaufen oder schon benutzt.'), findsNothing);
   });
 
+  testWidgets('zu viele Fehlversuche: Hinweis auf die Sperre', (t) async {
+    invites.error = const WriteRejected(WriteRejected.tooManyAttempts);
+    await pumpPage(t, const JoinSheet(code: 'K7Q2M9X4TA'));
+    await t.tap(find.text('Beitreten'));
+    await t.pump();
+    expect(find.text('Zu viele falsche Codes. Versuch es in einer Stunde noch einmal.'), findsOneWidget);
+  });
+
   testWidgets('Enter auf der Tastatur: nicht mit zu kurzem Code und nicht doppelt', (t) async {
     await pumpPage(t, const JoinSheet());
     await t.enterText(find.byType(EditableText), 'ABC');
@@ -59,7 +67,7 @@ void main() {
     await t.pump();
     expect(invites.calls, 1);
     invites
-      ..error = const WriteRejected('invalid_invite')
+      ..error = const WriteRejected(WriteRejected.invalidInvite)
       ..gate!.complete();
     await t.pump();
   });

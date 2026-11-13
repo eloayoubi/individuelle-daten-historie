@@ -108,11 +108,7 @@ begin
   assert (select count(*) from public.categories) = 1, 'Strom ist jetzt sichtbar';
   assert public.category_role('10000000-0000-4000-8000-000000000001') = 'viewer', 'als viewer';
 
-  begin
-    perform public.accept_category_invite(current_setting('test.invite'));
-    raise exception 'Code ließ sich zweimal einlösen';
-  exception when no_data_found then null;
-  end;
+  assert public.accept_category_invite(current_setting('test.invite')) is null, 'Code lässt sich nur einmal einlösen';
 
   delete from public.category_members where category_id = '10000000-0000-4000-8000-000000000001' and user_id = auth.uid();
   assert found, 'Mitglieder können eine Kategorie verlassen';

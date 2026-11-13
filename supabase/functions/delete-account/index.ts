@@ -2,8 +2,9 @@
 // Antwort: { "deleted": true }
 //
 // Löscht das Konto des angemeldeten Nutzers endgültig. Zuerst die Dateien im Bucket „attachments“: alles
-// unter den eigenen Kategorien (<category_id>/…, auch was Mitglieder dort hochgeladen haben) und die eigenen
-// Belege in fremden, geteilten Kategorien. Dann den Auth-Nutzer – das kaskadiert profiles → categories →
+// unter den eigenen, nicht geteilten Kategorien (<category_id>/…) und die eigenen Belege in geteilten
+// Kategorien. Geteilte eigene Kategorien übernimmt das dienstälteste Mitglied (editor vor viewer, Trigger
+// profiles_hand_over). Dann den Auth-Nutzer – das kaskadiert profiles → nicht geteilte categories →
 // Tracker, Felder, Einträge, Werte, Belege, Mitgliedschaften, Einladungen sowie entitlements und
 // store_transactions. Eigene Einträge in fremden Kategorien bleiben (created_by = null).
 // Dateien zuerst: Scheitert der Storage, bleibt das Konto bestehen und die App kann es erneut versuchen.
@@ -37,7 +38,11 @@ Deno.serve(async (req) => {
 
   try {
     const paths = new Set<string>();
-    for (const category of await column(admin, "categories", "id", "owner_id", user)) {
+    // Geteilte Kategorien gehen beim Löschen an ein anderes Mitglied über (Trigger
+    // profiles_hand_over) – deren Dateien bleiben, bis auf die eigenen Belege (zweite Schleife).
+    const owned = await column(admin, "categories", "id", "owner_id", user);
+    const shared = await sharedCategories(admin, owned, user);
+    for (const category of owned.filter((id) => !shared.has(id))) {
       for (const path of await listFiles(admin, category)) paths.add(path);
     }
     for (const path of await column(admin, "attachments", "storage_path", "created_by", user)) paths.add(path);
@@ -101,6 +106,18 @@ function jwtSubject(authorization: string): string | null {
   } catch {
     return null;
   }
+}
+
+/// Eigene Kategorien, in denen noch jemand anderes Mitglied ist.
+async function sharedCategories(admin: SupabaseClient, owned: string[], user: string): Promise<Set<string>> {
+  const shared = new Set<string>();
+  for (let i = 0; i < owned.length; i += 100) {
+    const { data, error: e } = await admin.from("category_members").select("category_id")
+      .in("category_id", owned.slice(i, i + 100)).neq("user_id", user);
+    if (e) throw e;
+    for (const row of (data ?? []) as { category_id: string }[]) shared.add(row.category_id);
+  }
+  return shared;
 }
 
 /// Alle Werte einer Spalte mit filter = user, seitenweise (PostgREST liefert höchstens max_rows Zeilen).

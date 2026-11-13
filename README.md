@@ -127,7 +127,7 @@ Commit-Betreffs: Nutzer-Sichtbares auf Deutsch ohne Präfix (landet im TestFligh
 
 ## Android-Release
 
-`android/key.properties` (nicht im Git) mit `storeFile`, `storePassword`, `keyAlias`, `keyPassword`; ohne die Datei signiert Release mit dem Debug-Schlüssel. Schlüssel anlegen:
+`android/key.properties` (nicht im Git) mit `storeFile`, `storePassword`, `keyAlias`, `keyPassword`; ohne die Datei signiert Release mit dem Debug-Schlüssel (nur für `flutter run --release`), ein App Bundle (`flutter build appbundle`) bricht ab. Schlüssel anlegen:
 
 ```sh
 keytool -genkey -v -keystore ~/keys/kostenkurve-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload

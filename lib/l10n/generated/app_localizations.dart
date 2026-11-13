@@ -2534,6 +2534,12 @@ abstract class AppLocalizations {
   /// **'Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.'**
   String get joinOwnerNoCloud;
 
+  /// No description provided for @joinTooMany.
+  ///
+  /// In de, this message translates to:
+  /// **'Zu viele falsche Codes. Versuch es in einer Stunde noch einmal.'**
+  String get joinTooMany;
+
   /// No description provided for @joinBody.
   ///
   /// In de, this message translates to:
@@ -2573,7 +2579,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountDeleteBody.
   ///
   /// In de, this message translates to:
-  /// **'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.'**
+  /// **'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht. Geteilte Kategorien übernimmt jemand, mit dem du sie teilst – deine Belege darin werden gelöscht. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.'**
   String get accountDeleteBody;
 
   /// No description provided for @accountDeletePending.

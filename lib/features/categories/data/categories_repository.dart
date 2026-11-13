@@ -185,6 +185,12 @@ class WriteRejected implements Exception {
   /// Kategorie gerade kein Cloud-Abo hat (Beitreten, Server-Fehler P0064).
   static const cloudRequired = 'cloud_required';
 
+  /// Einladungscode unbekannt, abgelaufen oder schon benutzt.
+  static const invalidInvite = 'invalid_invite';
+
+  /// Zu viele falsche Einladungscodes (10 je Stunde, Server-Fehler P0065).
+  static const tooManyAttempts = 'too_many_attempts';
+
   final String message;
 
   @override

@@ -24,7 +24,7 @@ class MockCategoriesRepository extends MemoryCategoriesRepository {
 
   @override
   Future<String> acceptInvite(String code) async {
-    if (code.trim().toUpperCase() != demoInvite) throw const WriteRejected('invalid_invite');
+    if (code.trim().toUpperCase() != demoInvite) throw const WriteRejected(WriteRejected.invalidInvite);
     final existing = items.where((c) => c.id == 'c-ferien').firstOrNull;
     if (existing != null) return existing.id;
     const owner = CategoryMember(userId: '00000000-0000-4000-8000-000000000002', name: 'Anna', role: MemberRole.owner);

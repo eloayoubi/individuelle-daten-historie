@@ -52,6 +52,16 @@ Fünf Durchgänge, jeder nur lesend: Datenbank (RLS, RPCs, Rechte), Edge Functio
 
 Tests: `supabase/tests/tracker_create.sql`, `test/features/audit_optional_test.dart`, Ergänzungen in `category_setup_cubit_test.dart` und `supabase_categories_repository_test.dart`.
 
+## Vierte Runde – Restpunkte (13.11.2026)
+
+| # | Befund | Behebung |
+|---|---|---|
+| 34 | Einladungscode ohne Zähler für Fehlversuche | Höchstens 10 Fehlversuche je Nutzer und Stunde (`invite_attempts`, Fehler P0065, in der App „Zu viele falsche Codes“). Ein ungültiger Code liefert `null` statt eines Fehlers, sonst rollte der Fehler den Zähler zurück. Ein Treffer setzt ihn zurück |
+| 35 | Eigentümer löscht Konto: geteilte Kategorien verschwanden für alle | Trigger `profiles_hand_over`: Geteilte Kategorien gehen an das dienstälteste Mitglied (editor vor viewer). `delete-account` löscht deren Dateien nicht mehr, nur die eigenen Belege darin. Löschtext in der App und Datenschutzerklärung angepasst |
+| 36 | Android: Release fiel ohne `key.properties` auf den Debug-Schlüssel zurück; Backup sicherte `flutter_secure_storage`, dessen Schlüssel im Keystore beim Wiederherstellen fehlen | `bundleRelease` bricht ohne `key.properties` ab (`flutter run --release` geht weiter). Backup bleibt an, schließt aber die Secure-Storage-Dateien aus (`backup_rules.xml`, `data_extraction_rules.xml`) |
+
+Migration `20261115120000_invite_attempts_handover.sql`, Test `supabase/tests/invite_attempts_handover.sql`.
+
 ## Offen – braucht dich oder eine eigene Aufgabe
 
 | Thema | Warum offen |
@@ -60,9 +70,6 @@ Tests: `supabase/tests/tracker_create.sql`, `test/features/audit_optional_test.d
 | **`supabase config push`** | Bringt Punkt 18 und die Mail-Vorlagen nach Produktion; hängt am eigenen SMTP (Implementierungsplan M7) |
 | Rechtstexte mit Platzhaltern (`assets/legal/*.md`), `example.com` in den Store-Texten | Braucht deine Angaben (Name, Anschrift, E-Mail, URLs) |
 | Secrets der Workflows ohne geschütztes GitHub-Environment | Stellst du in GitHub ein (Settings → Environments, Freigabe erforderlich) |
-| Einladungscode ohne Zähler für Fehlversuche | Raten ist bei 48 Bit und 7 Tagen Gültigkeit aussichtslos; ein Zähler wäre Zugabe |
-| Eigentümer löscht Konto: geteilte Kategorien verschwinden für alle | Dokumentiertes Verhalten; Übergabe der Eigentümerschaft wäre ein Feature |
-| Android: `allowBackup` an, Release fällt ohne `key.properties` auf den Debug-Schlüssel zurück | Backup bewusst gelassen (lokale Daten sind sonst mit dem Handy weg); Android-Release steht noch aus |
 
 ## Geprüft und in Ordnung
 

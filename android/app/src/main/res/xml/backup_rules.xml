@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android bis 11: Sicherung ohne flutter_secure_storage (Sitzung). Dessen Schlüssel liegen im
+     Android Keystore und kommen bei einer Wiederherstellung nicht mit – die Daten wären unlesbar. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml"/>
+    <exclude domain="sharedpref" path="FlutterSecureStorageConfiguration.xml"/>
+</full-backup-content>

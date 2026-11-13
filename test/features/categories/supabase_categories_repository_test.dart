@@ -29,9 +29,14 @@ void main() {
       expect(error.message, WriteRejected.cloudRequired);
     });
 
+    test('zu viele Fehlversuche (P0065): too_many_attempts', () {
+      final error = SupabaseCategoriesRepository.inviteError(const PostgrestException(message: 'too_many_attempts', code: 'P0065'));
+      expect(error.message, WriteRejected.tooManyAttempts);
+    });
+
     test('alles andere: Code ungültig', () {
       final error = SupabaseCategoriesRepository.inviteError(const PostgrestException(message: 'Einladung ungültig oder abgelaufen', code: 'P0002'));
-      expect(error.message, isNot(WriteRejected.cloudRequired));
+      expect(error.message, WriteRejected.invalidInvite);
     });
   });
 
