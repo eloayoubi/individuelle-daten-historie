@@ -25,6 +25,20 @@ Fünf Durchgänge, jeder nur lesend: Datenbank (RLS, RPCs, Rechte), Edge Functio
 | 17 | Niedrig | Alte Exportdateien (alle Daten im Klartext) blieben im temporären Ordner. | Vor jedem Export gelöscht |
 | 18 | Mittel (nur Konfiguration) | `config.toml`: Registrierung mit Passwort ohne Bestätigung der Adresse. | `enable_confirmations` und `secure_password_change` an – **wirkt erst nach `supabase config push`** |
 
+### Zweite Runde (13.11.2026)
+
+| # | Schwere | Befund | Korrektur |
+|---|---|---|---|
+| 19 | Niedrig–Mittel | Realtime meldete gelöschte Zeilen (Ids von Kategorie, Nutzer, Eintrag) an jeden angemeldeten Abonnenten – RLS filtert DELETE nicht. | DELETE wird nicht mehr veröffentlicht; Löschungen kommen über eine Marke je Mitglied an (`change_marks`, Migration `20261113120000`) |
+| 20 | Mittel | Scheiterte das Entfernen einer Beleg-Datei beim Löschen, blieb sie im Bucket – ohne Kategorie für niemanden mehr löschbar. Auch bei mehr als 1000 Belegen einer Kategorie. | Jeder gelöschte Beleg landet in `storage_orphans`; die Function `purge-attachments` räumt nach, die App stößt sie nach dem Löschen an |
+| 21 | Mittel | Meldete sich ein anderes Konto am Gerät an, gingen die noch nicht gesendeten Einträge des vorigen verloren – auch nach einem Neustart mit dem anderen Konto. | Sie werden je Konto beiseitegelegt und gehen raus, sobald sich das Konto wieder anmeldet (`offline_categories_repository.dart`) |
+| 22 | Mittel | Bekam ein Gesamtbetrag mit Teilbeträgen ein anderes Zeitverhalten, zählten weder er noch die Teile: Kosten verschwanden still. | Ein Teilbetrag zählt nur als Teil, wenn das Gesamtfeld dasselbe Zeitverhalten hat (`Tracker.isPart`) |
+| 23 | Mittel | Übersicht: Wer Kategorien wählte, verschob oder einen Fund ausblendete, während ein Abruf lief, bekam den Stand von davor zurück. | Der Abruf überschreibt Auswahl und Ausgeblendetes nicht mehr (`home_cubit.dart`) |
+| 24 | Mittel | Antworten überholten sich: Kam ein älterer Abruf zuletzt an, zeigten die Ansichten kurz wieder alte Daten. | Die Offline-Schicht übernimmt nur die Antwort des zuletzt gestarteten Abrufs |
+| 25 | Niedrig | GitHub Actions hingen an Tags, die sich umhängen lassen. | Auf Commit-SHAs festgelegt |
+| 26 | Niedrig | Einladungscode 10 Zeichen. | 12 Zeichen (48 Bit) |
+| 27 | Niedrig | PDF wurde ganz eingelesen, bevor die Größe geprüft war. | Größe zuerst |
+
 ## Offen – braucht dich oder eine eigene Aufgabe
 
 | Thema | Warum offen |
@@ -32,12 +46,13 @@ Fünf Durchgänge, jeder nur lesend: Datenbank (RLS, RPCs, Rechte), Edge Functio
 | **Zum Start: `APPLE_ALLOW_SANDBOX=false`** und Prüfkonto in `APPLE_SANDBOX_USERS` | Steht in der Testphase bewusst auf `true`. Siehe `docs/SETUP.md`, Schritt 5 |
 | **`supabase config push`** | Bringt Punkt 18 und die Mail-Vorlagen nach Produktion; hängt am eigenen SMTP (Implementierungsplan M7) |
 | Rechtstexte mit Platzhaltern (`assets/legal/*.md`), `example.com` in den Store-Texten | Braucht deine Angaben (Name, Anschrift, E-Mail, URLs) |
-| Dateien im Bucket bleiben, wenn Eintrag oder Kategorie gelöscht wird | SQL kann Storage nicht löschen; braucht eine Warteschlange und eine geplante Funktion. Betrifft DSGVO Art. 17 und Speicherkosten |
-| Realtime meldet gelöschte Zeilen (nur Ids) an alle angemeldeten Abonnenten | Bekanntes Verhalten von `postgres_changes`; Abhilfe wäre der Umbau auf private Broadcast-Kanäle |
-| GitHub Actions auf Tags statt Commit-SHAs, Secrets ohne geschütztes Environment | Härtung der Lieferkette; Environment-Schutz stellst du in GitHub ein |
-| Einladungscode 40 Bit ohne Zähler für Fehlversuche | Raten ist bei 7 Tagen Gültigkeit praktisch aussichtslos; ein Zähler wäre Zugabe |
+| Secrets der Workflows ohne geschütztes GitHub-Environment | Stellst du in GitHub ein (Settings → Environments, Freigabe erforderlich) |
+| „Abo hinzufügen“ legt Tracker und Felder in mehreren Schritten an; scheitert einer, bleibt ein halber Tracker | Bräuchte einen RPC wie `create_category`, der alles in einer Transaktion anlegt |
+| Zwei Einträge am selben Tag: Welcher als „letzter“ gilt, hängt von der Reihenfolge der Antwort ab | Bräuchte `created_at` in der Abfrage und eine feste Reihenfolge |
+| Neue Tracker und Felder bekommen `sort` = Anzahl sichtbarer; nach dem Archivieren kann das doppelt sein | Kosmetisch; `max(sort) + 1` wäre richtig |
+| Teilen-Seite zeigt eine inzwischen gelöschte Kategorie weiter; abgewählte Felder kommen beim Wechsel des Antriebs zurück; Löschen bei abgelaufenem Abo zählt als „abgelehnt“ statt „wartet“ | Niedrig, kein Datenverlust |
+| Einladungscode ohne Zähler für Fehlversuche | Raten ist bei 48 Bit und 7 Tagen Gültigkeit aussichtslos; ein Zähler wäre Zugabe |
 | Eigentümer löscht Konto: geteilte Kategorien verschwinden für alle | Dokumentiertes Verhalten; Übergabe der Eigentümerschaft wäre ein Feature |
-| Wartende Einträge von Konto A gehen verloren, wenn sich B am selben Gerät anmeldet | Beim Abmelden warnt die App davor; je Konto getrennte Warteschlangen wären der saubere Weg |
 | Android: `allowBackup` an, Release fällt ohne `key.properties` auf den Debug-Schlüssel zurück | Backup bewusst gelassen (lokale Daten sind sonst mit dem Handy weg); Android-Release steht noch aus |
 
 ## Geprüft und in Ordnung

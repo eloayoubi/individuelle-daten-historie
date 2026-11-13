@@ -287,8 +287,9 @@ class Tracker extends Equatable {
   FieldDefinition? firstWithRole(FieldRole role) => withRole(role).firstOrNull;
 
   /// Teilbetrag eines vorhandenen Gesamtfelds? Dann zählt er nicht extra. Ist das Gesamtfeld weg
-  /// (archiviert), zählt er wieder selbst.
-  bool isPart(FieldDefinition f) => f.partOf != null && fields.any((total) => total.id == f.partOf);
+  /// (archiviert) oder hat es ein anderes Zeitverhalten bekommen (aus der Warmmiete wurde ein
+  /// Stammdatum), zählt er wieder selbst – sonst zählten weder Gesamtbetrag noch Teile.
+  bool isPart(FieldDefinition f) => f.partOf != null && fields.any((total) => total.id == f.partOf && total.role == f.role);
 
   /// Teilbeträge von [fieldId] (Kaltmiete, Betriebskosten, Heizkosten in der Warmmiete).
   List<FieldDefinition> partsOf(String fieldId) => [for (final f in fields) if (f.partOf == fieldId) f];

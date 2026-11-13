@@ -106,6 +106,7 @@ Die Publikation `supabase_realtime` enthält `categories`, `category_members`, `
 | `app-store-notifications` | aus – Apple ruft ohne Supabase-Token auf, die Funktion prüft Apples Signatur | App Store Server Notifications V2 (Verlängerung, Ablauf, Erstattung, Widerruf) → `apply_plus_transaction` | `APPLE_BUNDLE_ID`, `APPLE_ALLOW_SANDBOX` |
 | `delete-account` | an | löscht die Belege im Storage, widerruft Sign in with Apple, dann den Auth-Nutzer (die Kaskade löscht alle Daten); wiederholbar | optional `APPLE_TEAM_ID`, `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_KEY`, `APPLE_BUNDLE_ID` |
 | `apple-token` | an | tauscht den Apple-Autorisierungscode gegen ein Refresh-Token und speichert es in `apple_tokens` | `APPLE_TEAM_ID`, `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_KEY`, `APPLE_BUNDLE_ID` |
+| `purge-attachments` | an | entfernt die Dateien gelöschter Belege aus dem Bucket (Warteschlange `storage_orphans`, je Aufruf 40); die App ruft sie nach dem Löschen eines Eintrags oder einer Kategorie auf | – |
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY` und `SUPABASE_SERVICE_ROLE_KEY` setzt Supabase selbst. Die übrigen Secrets kommen per `supabase secrets set` (siehe „Einspielen“), nie ins Repo:
 

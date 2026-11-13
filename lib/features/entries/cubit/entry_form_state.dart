@@ -176,8 +176,9 @@ class EntryFormState extends Equatable {
     EntryFormMode.contract => tracker.contractFields,
   };
 
-  /// Teilbetrag, der in diesem Formular unter seinem Gesamtfeld steht.
-  bool isPart(FieldDefinition f) => f.partOf != null && fields.any((total) => total.id == f.partOf);
+  /// Teilbetrag, der in diesem Formular unter seinem Gesamtfeld steht (wie [Tracker.isPart]: nur bei
+  /// gleichem Zeitverhalten).
+  bool isPart(FieldDefinition f) => f.partOf != null && fields.any((total) => total.id == f.partOf && total.role == f.role);
 
   /// Teilbeträge von [total] in diesem Formular.
   List<FieldDefinition> partsOf(FieldDefinition total) => [for (final f in fields) if (f.partOf == total.id) f];

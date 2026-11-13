@@ -1,8 +1,10 @@
 // Regressionstests zum Audit vom 12.11.2026 – je Befund der Fall, der vorher falsch lief.
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kostenkurve/core/config/app_config.dart';
+import 'package:kostenkurve/core/utils/cost_engine.dart';
 import 'package:kostenkurve/core/utils/json_store.dart';
 import 'package:kostenkurve/core/utils/numbers.dart';
 import 'package:kostenkurve/features/categories/cubit/field_editor_cubit.dart';
@@ -10,6 +12,8 @@ import 'package:kostenkurve/features/categories/data/categories_repository.dart'
 import 'package:kostenkurve/features/categories/data/local_categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/mock_categories_repository.dart';
 import 'package:kostenkurve/features/categories/data/offline_categories_repository.dart';
+import 'package:kostenkurve/features/home/cubit/home_cubit.dart';
+import 'package:kostenkurve/features/home/data/home_categories_store.dart';
 import 'package:kostenkurve/features/reminders/data/notification_gateway.dart';
 import 'package:kostenkurve/features/reminders/data/reminder_service.dart';
 import 'package:kostenkurve/features/settings/data/data_export.dart';
@@ -22,10 +26,17 @@ import 'package:kostenkurve/l10n/generated/app_localizations.dart';
 class _Server extends MockCategoriesRepository {
   var online = true;
 
+  /// Hält den nächsten Abruf an, nachdem er den Stand gelesen hat (Antwort unterwegs).
+  Completer<void>? hold;
+
   @override
   Future<List<Category>> loadCategories() async {
     if (!online) throw Exception('offline');
-    return super.loadCategories();
+    final snapshot = await super.loadCategories();
+    final wait = hold;
+    hold = null;
+    await wait?.future;
+    return snapshot;
   }
 
   @override
@@ -156,6 +167,73 @@ void main() {
       expect(entries.map((e) => e.id), contains('neu-2'));
     });
 
+    Future<List<String>> onServer() async => [for (final e in (await server.loadCategory('c-strom'))!.trackers.single.entries) e.id];
+
+    test('anderes Konto meldet sich an: wartende Einträge bleiben liegen und gehen später fürs eigene Konto raus', () async {
+      var user = 'a';
+      final mine = OfflineCategoriesRepository(server, cache: cache, queue: queue, userId: () => user, retryEvery: const Duration(hours: 1));
+      await mine.loadCategories();
+      server.online = false;
+      await mine.saveEntry('t-strom', reading('neu-1', 47100));
+      await pumpEventQueue();
+      expect(mine.syncState.pending, 1);
+
+      // Konto b am selben Gerät, mit Netz: sieht und sendet den Eintrag von a nicht.
+      server.online = true;
+      user = 'b';
+      final forB = await mine.loadCategories();
+      expect(mine.syncState.pending, 0);
+      expect(forB.expand((c) => c.trackers).expand((t) => t.entries).map((e) => e.id), isNot(contains('neu-1')));
+      expect(await onServer(), isNot(contains('neu-1')));
+      expect(((await queue.read())! as Map)['parked'], {'a': hasLength(1)});
+
+      // Konto a ist zurück: Der Eintrag geht raus.
+      user = 'a';
+      await mine.loadCategories();
+      expect(await onServer(), contains('neu-1'));
+      expect(mine.syncState.pending, 0);
+      expect((await queue.read())! as Map, isNot(contains('parked')));
+    });
+
+    test('App startet mit einem anderen Konto: dessen erste Änderung überschreibt die fremde Warteschlange nicht', () async {
+      final a = OfflineCategoriesRepository(server, cache: cache, queue: queue, userId: () => 'a', retryEvery: const Duration(hours: 1));
+      await a.loadCategories();
+      server.online = false;
+      await a.saveEntry('t-strom', reading('neu-1', 47100));
+      await a.saveEntry('t-strom', reading('neu-1', 47150));
+      await pumpEventQueue();
+
+      server.online = true;
+      final b = OfflineCategoriesRepository(server, cache: MemoryJsonStore(), queue: queue, userId: () => 'b', retryEvery: const Duration(hours: 1));
+      await b.loadCategories();
+      await b.saveEntry('t-strom', reading('von-b', 1));
+      expect(await onServer(), allOf(contains('von-b'), isNot(contains('neu-1'))));
+
+      final again = OfflineCategoriesRepository(server, cache: MemoryJsonStore(), queue: queue, userId: () => 'a', retryEvery: const Duration(hours: 1));
+      await again.loadCategories();
+      final sent = (await server.loadCategory('c-strom'))!.trackers.single.entries.where((e) => e.id == 'neu-1');
+      expect(sent.single.values['f-strom-stand'], 47150, reason: 'die letzte Änderung am Eintrag gilt');
+      expect(again.syncState.pending, 0);
+    });
+
+    test('eine überholte Antwort überschreibt den neueren Stand nicht', () async {
+      final mine = repo();
+      await mine.loadCategories();
+      // Abruf 1 liest den Stand und bleibt unterwegs hängen.
+      final hold = server.hold = Completer<void>();
+      final early = mine.loadCategories();
+      await pumpEventQueue();
+      // Inzwischen ändert sich etwas, Abruf 2 holt es.
+      await server.saveEntry('t-strom', reading('danach', 47300));
+      final fresh = await mine.loadCategories();
+      List<String> ids(List<Category> all) => [for (final e in all.firstWhere((c) => c.id == 'c-strom').trackers.single.entries) e.id];
+      expect(ids(fresh), contains('danach'));
+      // Jetzt erst kommt Abruf 1 an – mit dem Stand von vorher.
+      hold.complete();
+      expect(ids(await early), contains('danach'));
+      expect(ids([(await mine.loadCategory('c-strom'))!]), contains('danach'));
+    });
+
     test('meldet, ob der Stand vom Server kam oder aus dem Cache', () async {
       final offline = repo();
       await offline.loadCategories();
@@ -178,6 +256,49 @@ void main() {
       server.online = true;
       await transfer.download();
       expect(await local.loadCategories(), hasLength(MockCategoriesRepository.categories.length));
+    });
+  });
+
+  group('Teilbeträge', () {
+    test('bekommt das Gesamtfeld ein anderes Zeitverhalten, zählen die Teile wieder selbst', () {
+      const kalt = FieldDefinition(id: 'kalt', name: 'Kaltmiete', kind: FieldKind.currency, role: FieldRole.recurringCost, partOf: 'warm');
+      Tracker wohnung(FieldRole role) => Tracker(
+        id: 't',
+        name: 'Wohnung',
+        fields: [FieldDefinition(id: 'warm', name: 'Warmmiete', kind: FieldKind.currency, role: role), kalt],
+        entries: [Entry(id: 'e', date: DateTime.utc(2026), values: const {'warm': 900, 'kalt': 600})],
+      );
+      double year(Tracker t) => CostEngine(t, today: DateTime.utc(2026, 6)).costInYear(2026);
+
+      expect(wohnung(FieldRole.recurringCost).isPart(kalt), isTrue);
+      expect(year(wohnung(FieldRole.recurringCost)), closeTo(12 * 900, 1e-6));
+      // Vorher: Warmmiete als Stammdatum zählt nicht, die Kaltmiete galt weiter als Teil – 0 € im Jahr.
+      expect(wohnung(FieldRole.info).isPart(kalt), isFalse);
+      expect(year(wohnung(FieldRole.info)), closeTo(12 * 600, 1e-6));
+    });
+  });
+
+  group('Übersicht', () {
+    DateTime now() => DateTime(2026, 10, 22, 9, 30);
+
+    test('Auswahl und Ausblenden während eines laufenden Abrufs bleiben', () async {
+      final server = _Server();
+      final cubit = HomeCubit(server, pins: HomeCategoriesStore(MemoryJsonStore()), now: now);
+      await cubit.load();
+      final findings = cubit.state.radar!.findings;
+      expect(findings, hasLength(greaterThan(1)));
+
+      final hold = server.hold = Completer<void>();
+      final loading = cubit.load();
+      await pumpEventQueue();
+      await cubit.setPinned(['c-strom', 'c-auto']);
+      await cubit.dismissFinding(findings.first.id);
+      hold.complete();
+      await loading;
+
+      expect(cubit.state.pinned, ['c-strom', 'c-auto']);
+      expect(cubit.state.radar!.findings.map((f) => f.id), isNot(contains(findings.first.id)));
+      await cubit.close();
     });
   });
 

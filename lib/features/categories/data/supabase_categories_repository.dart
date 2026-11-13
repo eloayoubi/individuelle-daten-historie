@@ -22,7 +22,9 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   void Function()? _unsubscribe;
   Timer? _debounce;
 
-  static const _liveTables = ['categories', 'category_members', 'trackers', 'fields', 'entries', 'entry_values'];
+  /// `change_marks`: Gelöschte Zeilen veröffentlicht der Server nicht (RLS filtert DELETE nicht, die Ids
+  /// gingen an alle). Stattdessen ändert er beim Löschen die Marke jedes Mitglieds – die sieht nur es selbst.
+  static const _liveTables = ['categories', 'category_members', 'trackers', 'fields', 'entries', 'entry_values', 'change_marks'];
 
   void _listenLive() {
     _unsubscribe ??= _api.onChanges(_liveTables, () {
@@ -103,14 +105,21 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   /// Belege zuerst: Ihre Dateien darf nur entfernen, wer die Kategorie bearbeiten kann – danach gibt
   /// es sie nicht mehr. Zeilen von Trackern, Einträgen und Belegen gehen per Cascade mit.
   @override
-  Future<void> deleteCategory(String id) => _write(() async {
-    final paths = [for (final row in await _api.table('attachments').select('storage_path').like('storage_path', '$id/%')) row['storage_path'] as String];
-    if (paths.isNotEmpty) await _api.remove(AttachmentsRepository.bucket, paths).catchError((Object _) {});
-    await confirmDeleted(
-      await _api.table('categories').delete().eq('id', id).select('id'),
-      () async => await _api.table('categories').select('id').eq('id', id).maybeSingle() != null,
-    );
-  });
+  Future<void> deleteCategory(String id) async {
+    await _write(() async {
+      final paths = [for (final row in await _api.table('attachments').select('storage_path').like('storage_path', '$id/%')) row['storage_path'] as String];
+      if (paths.isNotEmpty) await _api.remove(AttachmentsRepository.bucket, paths).catchError((Object _) {});
+      await confirmDeleted(
+        await _api.table('categories').delete().eq('id', id).select('id'),
+        () async => await _api.table('categories').select('id').eq('id', id).maybeSingle() != null,
+      );
+    });
+    _purgeFiles();
+  }
+
+  /// Der Server merkt sich die Datei jedes gelöschten Belegs (`storage_orphans`). Hat das Entfernen
+  /// oben nicht geklappt, räumt `purge-attachments` nach – im Hintergrund, ein Fehler stört nicht.
+  void _purgeFiles() => unawaited(_api.invoke('purge-attachments').then((_) {}, onError: (Object _) {}));
 
   @override
   Future<void> reorderCategories(List<String> ids) => _write(() => _api.rpc<void>('reorder_categories', params: {'p_ids': ids}));
@@ -178,20 +187,23 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
   );
 
   @override
-  Future<void> deleteEntry(String trackerId, String entryId) => _write(
-    () => _rejectable(
-      () => deleteWithFiles(
-        files: () async => [
-          for (final row in await _api.table('attachments').select('storage_path').eq('entry_id', entryId)) row['storage_path'] as String,
-        ],
-        delete: () async => confirmDeleted(
-          await _api.table('entries').delete().eq('id', entryId).select('id'),
-          () async => await _api.table('entries').select('id').eq('id', entryId).maybeSingle() != null,
+  Future<void> deleteEntry(String trackerId, String entryId) async {
+    await _write(
+      () => _rejectable(
+        () => deleteWithFiles(
+          files: () async => [
+            for (final row in await _api.table('attachments').select('storage_path').eq('entry_id', entryId)) row['storage_path'] as String,
+          ],
+          delete: () async => confirmDeleted(
+            await _api.table('entries').delete().eq('id', entryId).select('id'),
+            () async => await _api.table('entries').select('id').eq('id', entryId).maybeSingle() != null,
+          ),
+          remove: (paths) => _api.remove(AttachmentsRepository.bucket, paths),
         ),
-        remove: (paths) => _api.remove(AttachmentsRepository.bucket, paths),
       ),
-    ),
-  );
+    );
+    _purgeFiles();
+  }
 
   @override
   Future<String> createInvite(String categoryId, MemberRole role) => _write(
