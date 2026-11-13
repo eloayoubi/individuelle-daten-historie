@@ -438,6 +438,10 @@ verify_jwt = true
 [functions.apple-token]
 verify_jwt = true
 
+# Dateien gelöschter Belege aus dem Bucket entfernen (Warteschlange storage_orphans) – nur angemeldet.
+[functions.purge-attachments]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

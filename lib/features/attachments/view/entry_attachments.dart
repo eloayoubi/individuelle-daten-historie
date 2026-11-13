@@ -92,6 +92,8 @@ class _AttachmentsView extends StatelessWidget {
         _Source.photos => await _pickImage(ImageSource.gallery),
       };
       if (bytes != null) await cubit.add(bytes, mimeType);
+    } on AttachmentRejected {
+      if (context.mounted) AppToast.show(context, l10n.attachmentsTooLarge, icon: CupertinoIcons.exclamationmark_circle_fill);
     } catch (_) {
       // Kein Zugriff auf Kamera oder Fotos: das System hat schon gefragt.
       if (context.mounted) AppToast.show(context, l10n.attachmentsNoAccess, icon: CupertinoIcons.exclamationmark_circle_fill);
@@ -108,6 +110,8 @@ class _AttachmentsView extends StatelessWidget {
   static Future<(Uint8List?, String)> _pickPdf() async {
     final file = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: const ['pdf']);
     if (file == null) return (null, '');
+    // Größe vor dem Einlesen prüfen: Ein riesiges PDF läge sonst erst ganz im Speicher.
+    if ((file.lengthSync() ?? 0) > AttachmentsRepository.maxBytes) throw const AttachmentRejected(AttachmentProblem.tooLarge);
     return (await file.readAsBytes(), AttachmentsRepository.pdf);
   }
 

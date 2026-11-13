@@ -40,9 +40,12 @@ class HomeCubit extends Cubit<HomeState> {
     // Vorhandene Übersicht bleibt beim Neuladen stehen; nur nach einem Fehler wieder „lädt“.
     if (state.overview == null && state.status != HomeStatus.loading) emit(state.copyWith(status: HomeStatus.loading));
     try {
-      final pinned = _pinsLoaded ? state.pinned : await _pins.load();
+      // Auswahl und Ausgeblendetes nur beim ersten Laden aus dem Speicher. Danach gilt der Stand im
+      // Cubit zum Zeitpunkt des Emit: Wählt, verschiebt oder blendet der Nutzer aus, während der Abruf
+      // läuft, überschriebe ihn sonst der Stand von davor.
+      final stored = _pinsLoaded ? null : await _pins.load();
       _pinsLoaded = true;
-      final dismissed = _dismissed ??= await _radar.load();
+      _dismissed ??= await _radar.load();
       final categories = [for (final c in await _categories.loadCategories()) if (!c.isArchived) c];
       if (isClosed) return;
       _loaded = categories;
@@ -51,9 +54,9 @@ class HomeCubit extends Cubit<HomeState> {
         state.copyWith(
           status: HomeStatus.ready,
           overview: HomeOverview.build(categories, now),
-          radar: _buildRadar(categories, now, dismissed),
+          radar: _buildRadar(categories, now, _dismissed ?? const {}),
           sync: _categories.syncState,
-          pinned: pinned,
+          pinned: stored,
         ),
       );
     } catch (_) {

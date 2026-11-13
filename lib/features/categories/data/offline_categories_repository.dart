@@ -48,9 +48,10 @@ class PendingDelete extends PendingWrite {
 ///   erlaubt** ([WriteHeld], z. B. Abo abgelaufen) bleibt liegen, die übrigen gehen weiter raus.
 ///   Bei anderen Fehlern (kein Netz) hält die Warteschlange an und versucht es später erneut.
 /// - Kategorien, Tracker und Felder ändern geht nur online (direkt an [_remote]).
-/// - Cache und Warteschlange gehören dem angemeldeten Konto; nach einem Wechsel werden sie verworfen.
-///   Nach dem Abmelden verschwindet der Cache vom Gerät; noch nicht gesendete Einträge bleiben und
-///   gehen raus, sobald sich dasselbe Konto wieder anmeldet.
+/// - Cache und Warteschlange gehören dem angemeldeten Konto. Nach dem Abmelden oder einem Wechsel
+///   verschwindet der Cache vom Gerät. Noch nicht gesendete Einträge bleiben: Meldet sich ein anderes
+///   Konto an, werden sie für ihr Konto beiseitegelegt ([_parked]) – nicht gezeigt, nicht gesendet –
+///   und gehen raus, sobald sich dieses Konto wieder anmeldet.
 class OfflineCategoriesRepository implements CategoriesRepository {
   OfflineCategoriesRepository(
     this._remote, {
@@ -105,6 +106,10 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   var _fetches = 0;
   final _sentDuringFetch = <PendingWrite>[];
 
+  /// Zähler der gestarteten Abrufe und der zuletzt übernommene ([loadCategories]).
+  var _fetchStarted = 0;
+  var _fetchApplied = 0;
+
   /// Gerade gespeicherte Einträge, deren erster Sendeversuch noch läuft. Solange zeigen alle
   /// Ansichten den Stand auf dem Gerät, statt aufs Netz zu warten.
   var _sendingNew = 0;
@@ -134,11 +139,18 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     if (_sendingNew > 0 && _cached != null) return _overlay(_cached!);
     await sync();
     final mark = _beginFetch();
+    final started = ++_fetchStarted;
     try {
-      _cached = _endFetch(mark, await _remote.loadCategories());
+      final fresh = _endFetch(mark, await _remote.loadCategories());
       _servedFromServer = true;
-      _owner = _userId();
-      _quietly(_persistCache());
+      // Antworten können sich überholen: Kommt die eines früher gestarteten Abrufs zuletzt an, bleibt
+      // der neuere Stand – sonst zeigten alle Ansichten kurz wieder den alten Namen oder Eintrag.
+      if (started > _fetchApplied) {
+        _fetchApplied = started;
+        _cached = fresh;
+        _owner = _userId();
+        _quietly(_persistCache());
+      }
     } catch (_) {
       if (_cached == null) rethrow;
     } finally {
@@ -147,15 +159,38 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     return _overlay(_cached!);
   }
 
-  /// Ein anderes Konto ist angemeldet: dessen Daten nicht zeigen, wartende Einträge verwerfen.
+  /// Wartende Einträge anderer Konten auf diesem Gerät, je Konto-Id, so wie sie in der Datei stehen.
+  /// Es gibt sie nur hier – verwerfen hieße, sie zu verlieren.
+  final _parked = <String, List<Object?>>{};
+
+  /// Ein anderes Konto ist angemeldet: die Daten des vorigen nicht zeigen, dessen wartende Einträge
+  /// beiseitelegen und die eigenen von früher wieder aufnehmen.
   void _forgetOtherAccount() {
     final current = _userId();
     if (current == null || _owner == null || current == _owner) return;
     _cached = null;
-    _pending = [];
+    _park(_owner!, [for (final p in _pending) p.toJson()]);
+    _pending = _unpark(current);
+    _heldIds = {};
     _owner = current;
     _quietly(_persistQueue());
     _quietly(_cacheStore.write(null));
+    _scheduleRetry();
+  }
+
+  void _park(String owner, List<Object?> writes) {
+    if (writes.isNotEmpty) _parked[owner] = [...?_parked[owner], ...writes];
+  }
+
+  /// Beiseitegelegte Einträge von [owner], älteste zuerst; je Eintrag gilt die letzte Änderung.
+  List<PendingWrite> _unpark(String owner) {
+    final latest = <String, PendingWrite>{};
+    for (final write in [for (final json in _parked.remove(owner) ?? const <Object?>[]) ?_writeFrom(json)]) {
+      latest
+        ..remove(write.entryId)
+        ..[write.entryId] = write;
+    }
+    return [...latest.values];
   }
 
   /// Abgemeldet: keine Cloud-Daten mehr auf dem Gerät lesbar lassen.
@@ -300,15 +335,29 @@ class OfflineCategoriesRepository implements CategoriesRepository {
       // Kaputter Cache: beim nächsten Abruf neu.
     }
     try {
-      if (await _queueStore.read() case {'userId': final String? owner, 'writes': final List queued} when current == null || owner == current) {
-        // Je Eintrag: Ein einzelner unlesbarer (beschädigte Datei, unbekannte Art) kostet nicht die
-        // übrigen – die gäbe es nur hier, die nächste Änderung überschriebe die Datei ohne sie.
-        _pending = [for (final q in queued) ?_writeFrom(q)];
-        _owner ??= owner;
+      final stored = await _queueStore.read();
+      if (stored case {'parked': final Map parked}) {
+        for (final MapEntry(:key, :value) in parked.entries) {
+          if (key is String && value is List) _park(key, value);
+        }
+      }
+      if (stored case {'userId': final String? owner, 'writes': final List queued}) {
+        if (current == null || owner == current) {
+          // Je Eintrag: Ein einzelner unlesbarer (beschädigte Datei, unbekannte Art) kostet nicht die
+          // übrigen – die gäbe es nur hier, die nächste Änderung überschriebe die Datei ohne sie.
+          _pending = [for (final q in queued) ?_writeFrom(q)];
+          _owner ??= owner;
+        } else if (owner != null) {
+          // Die Datei gehört einem anderen Konto (App mit neuem Konto gestartet): beiseitelegen, sonst
+          // überschriebe die erste eigene Änderung dessen wartende Einträge.
+          _park(owner, queued);
+        }
       }
     } catch (_) {
       _pending = [];
     }
+    // Eigene Einträge von früher, die während eines anderen Kontos beiseitelagen.
+    if (current != null && _parked.containsKey(current)) _pending = [..._unpark(current), ..._pending];
     _owner ??= current;
     _scheduleRetry();
   }();
@@ -392,7 +441,13 @@ class OfflineCategoriesRepository implements CategoriesRepository {
     if (--_fetches == 0) _sentDuringFetch.clear();
   }
 
-  Future<void> _persistQueue() => _queueStore.write({'userId': _owner ?? _userId(), 'writes': [for (final p in _pending) p.toJson()]}).catchError((Object _) {});
+  Future<void> _persistQueue() => _queueStore
+      .write({
+        'userId': _owner ?? _userId(),
+        'writes': [for (final p in _pending) p.toJson()],
+        if (_parked.isNotEmpty) 'parked': _parked,
+      })
+      .catchError((Object _) {});
 
   Future<void> _persistCache() => _cacheStore.write({'userId': _owner, 'categories': [for (final c in _cached ?? const <Category>[]) TrackingCodec.category(c)]});
 
