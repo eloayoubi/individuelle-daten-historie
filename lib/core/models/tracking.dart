@@ -202,6 +202,23 @@ class FieldDefinition extends Equatable {
   List<Object?> get props => [id, name, kind, role, unit, consumptionUnit, factor, intervalMonths, choices, formula, summary, meterGroup, partOf];
 }
 
+/// Einträge nach Datum, bei gleichem Tag in der Reihenfolge der Liste – die Repositories liefern sie
+/// in der Reihenfolge des Anlegens. `List.sort` ist in Dart nicht stabil, darum mit Index.
+extension EntryOrder on Iterable<Entry> {
+  /// Älteste zuerst; am selben Tag der zuerst angelegte zuerst.
+  List<Entry> byDate() {
+    final sorted = [...indexed]
+      ..sort((a, b) {
+        final byDay = a.$2.date.compareTo(b.$2.date);
+        return byDay != 0 ? byDay : a.$1.compareTo(b.$1);
+      });
+    return [for (final (_, e) in sorted) e];
+  }
+
+  /// Neueste zuerst; am selben Tag der zuletzt angelegte zuerst.
+  List<Entry> newestFirst() => [...byDate().reversed];
+}
+
 /// Ein Eintrag zu einem Datum; trägt Werte für einige oder alle Felder des [Tracker]s.
 class Entry extends Equatable {
   const Entry({
@@ -334,7 +351,7 @@ class Tracker extends Equatable {
     Entry? latest;
     for (final e in entries) {
       if (e.number(field.id) == null || e.date.isAfter(today)) continue;
-      if (latest == null || e.date.isAfter(latest.date)) latest = e;
+      if (latest == null || !e.date.isBefore(latest.date)) latest = e;
     }
     return latest == null ? null : (field, latest.number(field.id)!);
   }
@@ -382,7 +399,7 @@ class Tracker extends Equatable {
     if (field == null) return false;
     Entry? latest;
     for (final e in entries) {
-      if (e.values.containsKey(field.id) && (latest == null || e.date.isAfter(latest.date))) latest = e;
+      if (e.values.containsKey(field.id) && (latest == null || !e.date.isBefore(latest.date))) latest = e;
     }
     return latest != null && isBill(latest);
   }
@@ -392,7 +409,7 @@ class Tracker extends Equatable {
   Object? detailValue(String fieldId) {
     Entry? latest;
     for (final e in entries) {
-      if (e.values.containsKey(fieldId) && (latest == null || e.date.isAfter(latest.date))) latest = e;
+      if (e.values.containsKey(fieldId) && (latest == null || !e.date.isBefore(latest.date))) latest = e;
     }
     return latest?.values[fieldId];
   }

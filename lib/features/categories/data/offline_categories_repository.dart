@@ -289,6 +289,10 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   Future<String> createTracker(String categoryId, String name, {required int sort}) => _remote.createTracker(categoryId, name, sort: sort);
 
   @override
+  Future<({String tracker, List<String> fields})> createTrackerWithFields(String categoryId, TrackerDraft draft) =>
+      _remote.createTrackerWithFields(categoryId, draft);
+
+  @override
   Future<void> renameTracker(String id, String name) => _remote.renameTracker(id, name);
 
   @override
@@ -470,13 +474,21 @@ class OfflineCategoriesRepository implements CategoriesRepository {
   static Tracker _apply(Tracker tracker, List<PendingWrite> all) {
     final writes = [for (final p in all) if (p.trackerId == tracker.id) p];
     if (writes.isEmpty) return tracker;
-    final touched = {for (final w in writes) w.entryId};
+    // Je Eintrag zählt der letzte Schreibvorgang. Bearbeitete bleiben an ihrer Stelle, neue kommen
+    // hinten dazu – so bleibt am selben Tag die Reihenfolge des Anlegens erhalten.
+    final last = {for (final w in writes) w.entryId: w};
+    final known = {for (final e in tracker.entries) e.id};
     return tracker.copyWith(
       entries: [
-        ...tracker.entries.where((e) => !touched.contains(e.id)),
-        for (final w in writes)
-          if (w case PendingSave(:final entry)) entry,
-      ]..sort((a, b) => a.date.compareTo(b.date)),
+        for (final e in tracker.entries)
+          switch (last[e.id]) {
+            null => e,
+            PendingSave(:final entry) => entry,
+            _ => null,
+          },
+        for (final w in last.values)
+          if (w case PendingSave(:final entry) when !known.contains(entry.id)) entry,
+      ].nonNulls.byDate(),
     );
   }
 

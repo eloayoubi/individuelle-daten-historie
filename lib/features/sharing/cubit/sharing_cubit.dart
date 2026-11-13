@@ -20,7 +20,8 @@ class SharingCubit extends Cubit<SharingState> {
   Future<void> load() async {
     try {
       final category = await _repository.loadCategory(categoryId);
-      if (!isClosed) emit(state.copyWith(category: category, loaded: true));
+      // `null`: gelöscht oder kein Mitglied mehr – die Seite zeigt das, nicht den alten Stand.
+      if (!isClosed) emit(state.copyWith(category: () => category, loaded: true));
     } catch (_) {
       if (!isClosed) emit(state.copyWith(loaded: true));
     }

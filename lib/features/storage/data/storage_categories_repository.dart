@@ -67,6 +67,10 @@ class StorageCategoriesRepository implements CategoriesRepository {
   Future<String> createTracker(String categoryId, String name, {required int sort}) => _active.createTracker(categoryId, name, sort: sort);
 
   @override
+  Future<({String tracker, List<String> fields})> createTrackerWithFields(String categoryId, TrackerDraft draft) =>
+      _active.createTrackerWithFields(categoryId, draft);
+
+  @override
   Future<void> renameTracker(String id, String name) => _active.renameTracker(id, name);
 
   @override

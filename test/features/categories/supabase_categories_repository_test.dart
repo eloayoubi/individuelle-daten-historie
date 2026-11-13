@@ -40,6 +40,24 @@ void main() {
       await expectLater(SupabaseCategoriesRepository.confirmDeleted(const [], () async => true), throwsA(isA<WriteRejected>()));
     });
 
+    test('nichts gelöscht, Rolle darf bearbeiten: nur das Abo fehlt, bleibt liegen', () async {
+      await expectLater(
+        SupabaseCategoriesRepository.confirmDeleted(const [], () async => true, mayEdit: () async => true),
+        throwsA(isA<WriteHeld>()),
+      );
+    });
+
+    test('nichts gelöscht, Rolle darf nicht (viewer) oder Prüfung scheitert: abgelehnt', () async {
+      await expectLater(
+        SupabaseCategoriesRepository.confirmDeleted(const [], () async => true, mayEdit: () async => false),
+        throwsA(isA<WriteRejected>()),
+      );
+      await expectLater(
+        SupabaseCategoriesRepository.confirmDeleted(const [], () async => true, mayEdit: () async => throw Exception('offline')),
+        throwsA(isA<WriteRejected>()),
+      );
+    });
+
     test('nichts gelöscht, Zeile schon weg: erledigt', () async {
       await expectLater(SupabaseCategoriesRepository.confirmDeleted(const [], () async => false), completes);
     });

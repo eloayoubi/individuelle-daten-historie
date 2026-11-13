@@ -134,6 +134,18 @@ class MemoryCategoriesRepository implements CategoriesRepository {
   }
 
   @override
+  Future<({String tracker, List<String> fields})> createTrackerWithFields(String categoryId, TrackerDraft draft) async {
+    await ready();
+    final ids = [for (final _ in draft.fields) id('f')];
+    final fields = [
+      for (final (i, f) in draft.fields.indexed) f.withPartOf(switch (draft.parts[i]) { final int total => ids[total], null => null }).withId(ids[i]),
+    ];
+    final tracker = Tracker(id: id('t'), name: draft.name, fields: fields);
+    updateCategoryWith(categoryId, (c) => c.copyWith(trackers: [...c.trackers, tracker]));
+    return (tracker: tracker.id, fields: ids);
+  }
+
+  @override
   Future<void> renameTracker(String id, String name) async {
     await ready();
     _updateTracker(id, (t) => t.copyWith(name: name));
@@ -188,7 +200,10 @@ class MemoryCategoriesRepository implements CategoriesRepository {
     await ready();
     _updateTracker(
       trackerId,
-      (t) => t.copyWith(entries: [...t.entries.where((e) => e.id != entry.id), entry]..sort((a, b) => a.date.compareTo(b.date))),
+      // Bearbeitet: an seiner Stelle; neu: hinten – so bleibt die Reihenfolge des Anlegens erhalten.
+      (t) => t.copyWith(
+        entries: (t.entries.any((e) => e.id == entry.id) ? [for (final e in t.entries) e.id == entry.id ? entry : e] : [...t.entries, entry]).byDate(),
+      ),
     );
   }
 

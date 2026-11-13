@@ -255,6 +255,11 @@ abstract interface class CategoriesRepository {
 
   Future<String> createTracker(String categoryId, String name, {required int sort});
 
+  /// Tracker samt Feldern in einem Schritt: Scheitert etwas, bleibt nichts zurück. Neue Tracker
+  /// kommen hinter alle vorhandenen. Gibt die Ids der Felder in der Reihenfolge von
+  /// [TrackerDraft.fields] zurück.
+  Future<({String tracker, List<String> fields})> createTrackerWithFields(String categoryId, TrackerDraft draft);
+
   Future<void> renameTracker(String id, String name);
 
   Future<void> archiveTracker(String id);

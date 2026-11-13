@@ -39,7 +39,30 @@ void main() {
     expect(cubit.state.draft.trackers.single.fields.firstWhere((f) => f.name == 'Geladen').unit, 'kWh');
   });
 
-  test('ohne Fahrzeug kein Antrieb', () => expect(CategorySetupCubit(MockCategoriesRepository(), strom).state.drive, isNull));
+  test('Auto: abgewählte Felder kommen über einen anderen Antrieb nicht zurück', () {
+    final auto = CategoryTemplates.all(lookupAppLocalizations(const Locale('de'))).firstWhere((t) => t.key == CategoryTemplates.autoKey);
+    final cubit = CategorySetupCubit(MockCategoriesRepository(), auto);
+    List<String> fields() => [for (final f in cubit.state.draft.trackers.single.fields) f.name];
+    int at(String name) => cubit.state.trackers.single.fields.indexWhere((f) => f.name == name);
+    final getankt = at('Getankt');
+    cubit
+      ..toggleField(0, at('Tanken')) // der Betrag
+      ..toggleField(0, getankt)
+      ..setDrive(VehicleDrive.electric);
+    expect(fields(), isNot(contains('Laden')), reason: 'Betrag heißt anders, bleibt aber abgewählt');
+    cubit.setDrive(VehicleDrive.fuel);
+    expect(fields(), isNot(contains('Getankt')));
+    expect(fields(), isNot(contains('Tanken')));
+
+    final index = cubit.state.trackers.single.fields.indexWhere((f) => f.name == 'Getankt');
+    cubit
+      ..toggleField(0, index) // doch wieder dabei
+      ..setDrive(VehicleDrive.electric)
+      ..setDrive(VehicleDrive.fuel);
+    expect(fields(), contains('Getankt'));
+  });
+
+  test('ohne Fahrzeug kein Antrieb',() => expect(CategorySetupCubit(MockCategoriesRepository(), strom).state.drive, isNull));
 
   test('eigene Kategorie startet leer und ohne Tracker', () {
     final state = CategorySetupCubit(MockCategoriesRepository(), null).state;
