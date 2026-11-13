@@ -8,7 +8,8 @@ plugins {
 }
 
 // Release-Signatur aus android/key.properties (nie im Repo, siehe README › Android). Ohne die Datei
-// signiert Release mit dem Debug-Schlüssel, damit `flutter run --release` lokal geht.
+// signiert Release mit dem Debug-Schlüssel, damit `flutter run --release` lokal geht – ein App Bundle
+// für den Play Store (bundleRelease) bricht dann aber ab (siehe unten).
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -65,4 +66,12 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+// Kein Store-Upload mit dem Debug-Schlüssel: Den könnte jeder nachbauen, und Google bindet die App
+// dauerhaft an den ersten Upload-Schlüssel.
+gradle.taskGraph.whenReady {
+    if (!keystorePropertiesFile.exists() && allTasks.any { it.name == "bundleRelease" }) {
+        throw GradleException("android/key.properties fehlt – App Bundle nur mit Release-Schlüssel (README › Android).")
+    }
 }

@@ -226,17 +226,26 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
 
   @override
   Future<String> acceptInvite(String code) => _write(() async {
+    final String? id;
     try {
-      return await _api.rpc<String>('accept_category_invite', params: {'p_code': code.trim()});
+      id = await _api.rpc<String?>('accept_category_invite', params: {'p_code': code.trim()});
     } on PostgrestException catch (e) {
       throw inviteError(e);
     }
+    // null: Code unbekannt, abgelaufen oder schon benutzt – als Ergebnis statt Fehler, damit der
+    // Server den Fehlversuch zählen kann (ein Fehler rollte den Zähler zurück).
+    if (id == null) throw const WriteRejected(WriteRejected.invalidInvite);
+    return id;
   });
 
   /// Eigentümer ohne Cloud-Abo (P0064): Der Code bleibt gültig, Beitreten geht erst wieder mit Abo.
-  /// Alles andere heißt: Code unbekannt, abgelaufen oder schon benutzt.
+  /// Zu viele Fehlversuche (P0065): für eine Stunde gesperrt. Alles andere: Code ungültig.
   @visibleForTesting
-  static WriteRejected inviteError(PostgrestException e) => WriteRejected(e.code == 'P0064' ? WriteRejected.cloudRequired : e.message);
+  static WriteRejected inviteError(PostgrestException e) => WriteRejected(switch (e.code) {
+    'P0064' => WriteRejected.cloudRequired,
+    'P0065' => WriteRejected.tooManyAttempts,
+    _ => WriteRejected.invalidInvite,
+  });
 
   @override
   Future<void> setMemberRole(String categoryId, String userId, MemberRole role) =>

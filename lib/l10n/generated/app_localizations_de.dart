@@ -1505,6 +1505,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wer die Kategorie geteilt hat, hat gerade kein Cloud-Abo. Der Code bleibt gültig – versuch es später noch einmal.';
 
   @override
+  String get joinTooMany =>
+      'Zu viele falsche Codes. Versuch es in einer Stunde noch einmal.';
+
+  @override
   String get joinBody =>
       'Gib den Code aus der Einladung ein. Danach siehst du die Kategorie und je nach Rolle erfasst du mit.';
 
@@ -1527,7 +1531,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get accountDeleteBody =>
-      'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht – auch für alle, mit denen du sie teilst. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.';
+      'Dein Konto und deine Cloud-Kategorien mit allen Einträgen und Belegen werden sofort gelöscht. Geteilte Kategorien übernimmt jemand, mit dem du sie teilst – deine Belege darin werden gelöscht. Das lässt sich nicht rückgängig machen. Ein Cloud-Abo kündigst du separat in den iOS-Einstellungen.';
 
   @override
   String accountDeletePending(int count) {

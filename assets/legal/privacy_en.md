@@ -36,7 +36,7 @@ If you share a category, invited people see its content including entries, recei
 
 ## Retention and deletion
 
-Local data stays on your device only; you delete it by deleting the app. We keep cloud data as long as your account exists. In the app under Settings › Account › Delete account you delete your account immediately: your account, your own categories with all entries and receipts and your memberships. Entries you recorded in other people's categories stay there without your name. Copies in backups are overwritten after 30 days at the latest.
+Local data stays on your device only; you delete it by deleting the app. We keep cloud data as long as your account exists. In the app under Settings › Account › Delete account you delete your account immediately: your account, your own categories with all entries and receipts and your memberships. If you shared a category, someone you share it with takes it over; your receipts in it are deleted. Entries you recorded in other people's categories stay there without your name. Copies in backups are overwritten after 30 days at the latest.
 
 ## Your rights
 

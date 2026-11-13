@@ -1496,6 +1496,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The person who shared this category has no cloud subscription right now. The code stays valid – try again later.';
 
   @override
+  String get joinTooMany => 'Too many wrong codes. Try again in an hour.';
+
+  @override
   String get joinBody =>
       'Enter the code from the invite. Afterwards you see the category and, depending on your role, record along.';
 
@@ -1518,7 +1521,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountDeleteBody =>
-      'Your account and your cloud categories with all entries and receipts are deleted immediately – also for everyone you share them with. This cannot be undone. Cancel a cloud subscription separately in iOS Settings.';
+      'Your account and your cloud categories with all entries and receipts are deleted immediately. Shared categories are taken over by someone you share them with – your receipts in them are deleted. This cannot be undone. Cancel a cloud subscription separately in iOS Settings.';
 
   @override
   String accountDeletePending(int count) {
