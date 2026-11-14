@@ -392,7 +392,7 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       templateKey: row['template_key'] as String?,
       dashboard: CategoryDashboard.fromJson(row['dashboard']),
       archivedAt: switch (row['archived_at']) {
-        final String iso => DateTime.parse(iso),
+        final String iso => DateTime.tryParse(iso),
         _ => null,
       },
       myRole: mine == null ? MemberRole.viewer : _enum(MemberRole.values, mine['role'] as String, MemberRole.viewer),
@@ -409,6 +409,10 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     );
   }
 
+  /// Nur für Tests: eine Tracker-Zeile samt Feldern und Einträgen wie aus der Datenbank.
+  @visibleForTesting
+  static Tracker trackerFromRow(Map<String, dynamic> row) => _tracker(row);
+
   static Tracker _tracker(Map<String, dynamic> row) {
     final fields = [...(row['fields'] as List).cast<Map<String, dynamic>>()]..sort(_bySort);
     return Tracker(
@@ -417,7 +421,10 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
       includedIn: row['included_in'] as String?,
       icon: CategoryIcon.values.asNameMap()[row['icon']],
       fields: [for (final f in fields) _field(f)],
-      entries: [for (final e in [...(row['entries'] as List).cast<Map<String, dynamic>>()]..sort(_byCreation)) _entry(e)],
+      entries: [
+        for (final e in [...(row['entries'] as List).cast<Map<String, dynamic>>()]..sort(_byCreation))
+          ?_entry(e),
+      ],
     );
   }
 
@@ -428,7 +435,10 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     role: _enum(FieldRole.values, row['role'] as String, FieldRole.info),
     unit: row['unit'] as String?,
     consumptionUnit: row['consumption_unit'] as String?,
-    factor: (row['factor'] as num?)?.toDouble() ?? 1,
+    factor: switch (row['factor']) {
+      final num f when f.isFinite && f > 0 => f.toDouble(),
+      _ => 1,
+    },
     intervalMonths: (row['interval_months'] as num?)?.toInt() ?? 1,
     choices: [for (final c in (row['choices'] as List?) ?? const []) c as String],
     formula: row['formula'] as String?,
@@ -437,38 +447,40 @@ class SupabaseCategoriesRepository implements CategoriesRepository {
     partOf: row['part_of'] as String?,
   );
 
-  static Entry _entry(Map<String, dynamic> row) => Entry(
-    id: row['id'] as String,
-    date: _date(row['occurred_on'] as String),
-    note: row['note'] as String?,
-    meterChange: row['meter_change'] as bool? ?? false,
-    periodStart: switch (row['period_start']) {
-      final String d => _date(d),
-      _ => null,
-    },
-    periodEnd: switch (row['period_end']) {
-      final String d => _date(d),
-      _ => null,
-    },
-    createdBy: row['created_by'] as String?,
-    values: {
-      for (final v in (row['entry_values'] as List).cast<Map<String, dynamic>>())
-        if (_value(v) case final Object value) v['field_id'] as String: value,
-    },
-  );
+  /// Werte, die die Datenbank inzwischen ablehnt (NaN, 'infinity', Daten vor Christus – Migration
+  /// 20261116120000), kommen als Text. Sie dürfen das Laden nicht für alle Mitglieder abbrechen: ein
+  /// Eintrag ohne lesbares Datum fällt weg, ein solcher Wert auch.
+  static Entry? _entry(Map<String, dynamic> row) {
+    final date = _tryDate(row['occurred_on']);
+    if (date == null) return null;
+    return Entry(
+      id: row['id'] as String,
+      date: date,
+      note: row['note'] as String?,
+      meterChange: row['meter_change'] as bool? ?? false,
+      periodStart: _tryDate(row['period_start']),
+      periodEnd: _tryDate(row['period_end']),
+      createdBy: row['created_by'] as String?,
+      values: {
+        for (final v in (row['entry_values'] as List).cast<Map<String, dynamic>>())
+          if (_value(v) case final Object value) v['field_id'] as String: value,
+      },
+    );
+  }
 
   /// Genau eine der typisierten Spalten ist gesetzt.
   static Object? _value(Map<String, dynamic> v) => switch (v) {
-    {'num': final num n} => n,
+    {'num': final num n} when n.isFinite => n,
     {'txt': final String s} => s,
-    {'dat': final String d} => _date(d),
+    {'dat': final Object d} => _tryDate(d),
     {'flag': final bool b} => b,
     _ => null,
   };
 
-  static DateTime _date(String iso) {
-    final d = DateTime.parse(iso);
-    return DateTime.utc(d.year, d.month, d.day);
+  static DateTime? _tryDate(Object? iso) {
+    if (iso is! String) return null;
+    final d = DateTime.tryParse(iso);
+    return d == null ? null : DateTime.utc(d.year, d.month, d.day);
   }
 
   static int _bySort(Map<String, dynamic> a, Map<String, dynamic> b) => ((a['sort'] as num?) ?? 0).compareTo((b['sort'] as num?) ?? 0);

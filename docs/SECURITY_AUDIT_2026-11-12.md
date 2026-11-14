@@ -62,6 +62,18 @@ Tests: `supabase/tests/tracker_create.sql`, `test/features/audit_optional_test.d
 
 Migration `20261115120000_invite_attempts_handover.sql`, Test `supabase/tests/invite_attempts_handover.sql`.
 
+## Fünfte Runde – erneutes Audit (14.11.2026)
+
+Geprüft in Produktion (Systemkataloge): jede Tabelle mit RLS; keine Security-Definer-Funktion für `anon` aufrufbar, alle mit festem `search_path`; keine Policy für `public`, nur `app_releases` liest jeder; Bucket privat mit Größen- und Typgrenze; neue Tabellen (`invite_attempts`, `storage_orphans`, `apple_tokens`) ohne Client-Zugriff. Dazu die Änderungen seit Runde 2 (Runde 3 und 4), Edge Functions, `config.toml`, Abhängigkeiten (keine Sicherheitshinweise von pub) und neue Commits auf Geheimnisse.
+
+| # | Befund | Behebung |
+|---|---|---|
+| 37 | **Mittel:** Ein editor konnte eine geteilte Kategorie für alle Mitglieder unbenutzbar machen. Über die API ließen sich `NaN`/`Infinity` in `entry_values.num` und `fields.factor` speichern (`'NaN' > 0` ist in Postgres wahr) und `'infinity'` oder Daten v. Chr. in Datumsspalten. PostgREST liefert sie als Text, die App brach das Laden ab. Lokal nachgestellt: ohne die Behebung nimmt die Datenbank `NaN` an | Checks: Zahlen `abs(num) < 1e18`, `factor < 1e9`, Daten 1900–2199, `archived_at` und `attachments.created_at` 2000–2200 (Migration `20261116120000_value_bounds.sql`). Die App überspringt solche Werte beim Laden statt abzubrechen |
+| 38 | Auswahl-Optionen (`fields.choices`) ohne Grenze | Höchstens 50 Optionen mit 1–60 Zeichen (`choices_fit`); der Feld-Editor nimmt nach 50 keine weitere an, Faktor unter einer Milliarde |
+| 39 | `set_updated_at` ohne festen `search_path` (Supabase-Linter) | `search_path = ''` |
+
+Test: `supabase/tests/value_bounds.sql`, Ergänzungen in `supabase_categories_repository_test.dart` und `field_editor_cubit_test.dart`.
+
 ## Offen – braucht dich oder eine eigene Aufgabe
 
 | Thema | Warum offen |
@@ -70,6 +82,7 @@ Migration `20261115120000_invite_attempts_handover.sql`, Test `supabase/tests/in
 | **`supabase config push`** | Bringt Punkt 18 und die Mail-Vorlagen nach Produktion; hängt am eigenen SMTP (Implementierungsplan M7) |
 | Rechtstexte mit Platzhaltern (`assets/legal/*.md`), `example.com` in den Store-Texten | Braucht deine Angaben (Name, Anschrift, E-Mail, URLs) |
 | Secrets der Workflows ohne geschütztes GitHub-Environment | Stellst du in GitHub ein (Settings → Environments, Freigabe erforderlich) |
+| Edge Functions laden `jsr:@supabase/supabase-js@2` ohne feste Unterversion | Beim Deploy kommt die jeweils neueste 2.x; feste Version wäre reproduzierbarer, ist aber kein akutes Risiko |
 
 ## Geprüft und in Ordnung
 

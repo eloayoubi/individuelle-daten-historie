@@ -74,6 +74,9 @@ class FieldEditorState extends Equatable {
   static const maxMeterGroup = 40;
   static const maxChoice = 40;
 
+  /// Höchstens so viele Optionen (Server: fields_choices_fit, 50).
+  static const maxChoices = 50;
+
   final bool isNew;
   final FieldKind? originalKind;
   final bool hasValues;
@@ -127,7 +130,8 @@ class FieldEditorState extends Equatable {
 
   double? get factor {
     final value = parseDecimal(factorText);
-    return value != null && value > 0 ? value : null;
+    // Server: factor > 0 und < 1e9 (fields_factor_finite).
+    return value != null && value > 0 && value < 1e9 ? value : null;
   }
 
   bool get factorValid => role != FieldRole.meterReading || factor != null;
