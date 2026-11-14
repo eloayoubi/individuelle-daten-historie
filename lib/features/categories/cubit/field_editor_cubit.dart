@@ -68,7 +68,7 @@ class FieldEditorCubit extends Cubit<FieldEditorState> {
 
   void addChoice(String choice) {
     final value = choice.trim();
-    if (value.isEmpty || state.choices.contains(value)) return;
+    if (value.isEmpty || state.choices.contains(value) || state.choices.length >= FieldEditorState.maxChoices) return;
     emit(state.copyWith(choices: [...state.choices, value]));
   }
 

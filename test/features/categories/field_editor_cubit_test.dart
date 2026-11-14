@@ -82,6 +82,25 @@ void main() {
       expect(cubit.state.draft.choices, ['3 Monate']);
     });
 
+    test('höchstens 50 Optionen, Faktor unter einer Milliarde (Grenzen des Servers)', () {
+      final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't'))
+        ..setName('Art')
+        ..setKind(FieldKind.choice);
+      for (var i = 1; i <= 51; i++) {
+        cubit.addChoice('Option $i');
+      }
+      expect(cubit.state.choices, hasLength(FieldEditorState.maxChoices));
+      expect(cubit.state.choices.last, 'Option 50');
+
+      cubit
+        ..setKind(FieldKind.number)
+        ..setRole(FieldRole.meterReading)
+        ..setFactor('1000000000');
+      expect(cubit.state.factor, isNull);
+      cubit.setFactor('999999999');
+      expect(cubit.state.factor, 999999999);
+    });
+
     test('Umrechnungsfaktor mit Komma, nur für Zählerstände', () {
       final cubit = FieldEditorCubit(repo, const FieldEditorArgs(trackerId: 't'))
         ..setName('Gas')

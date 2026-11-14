@@ -85,7 +85,7 @@ class SupabaseAttachmentsRepository implements AttachmentsRepository {
     path: row['storage_path'] as String,
     mimeType: row['mime_type'] as String,
     sizeBytes: (row['size_bytes'] as num).toInt(),
-    createdAt: DateTime.parse(row['created_at'] as String),
+    createdAt: DateTime.tryParse(row['created_at'] as String) ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
     createdBy: row['created_by'] as String?,
   );
 }

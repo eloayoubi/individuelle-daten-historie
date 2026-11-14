@@ -23,6 +23,38 @@ void main() {
     });
   });
 
+  group('Laden mit Werten, die die Datenbank inzwischen ablehnt', () {
+    Map<String, dynamic> entry(String id, String date, List<Map<String, dynamic>> values) =>
+        {'id': id, 'occurred_on': date, 'created_at': '2026-11-01T10:00:00Z', 'entry_values': values};
+
+    test('NaN, infinity und v. Chr. brechen das Laden nicht ab', () {
+      final tracker = SupabaseCategoriesRepository.trackerFromRow({
+        'id': 't1',
+        'name': 'Strom',
+        'fields': [
+          {'id': 'f1', 'name': 'Zähler', 'kind': 'number', 'role': 'meter_reading', 'factor': 'NaN', 'sort': 0},
+          {'id': 'f2', 'name': 'Ende', 'kind': 'date', 'role': 'deadline', 'factor': 'Infinity', 'sort': 1},
+        ],
+        'entries': [
+          entry('e1', '2026-11-01', [
+            {'field_id': 'f1', 'num': 'NaN'},
+            {'field_id': 'f2', 'dat': 'infinity'},
+          ]),
+          entry('e2', 'infinity', const []),
+          entry('e3', '0044-03-15 BC', const []),
+          entry('e4', '2026-11-02', [
+            {'field_id': 'f1', 'num': 1234.5},
+          ]),
+        ],
+      });
+
+      expect(tracker.fields.map((f) => f.factor), [1, 1]);
+      expect(tracker.entries.map((e) => e.id), ['e1', 'e4']);
+      expect(tracker.entries.first.values, isEmpty);
+      expect(tracker.entries.last.values, {'f1': 1234.5});
+    });
+  });
+
   group('Einladung annehmen', () {
     test('Eigentümer ohne Cloud-Abo (P0064): cloud_required', () {
       final error = SupabaseCategoriesRepository.inviteError(const PostgrestException(message: 'cloud_required', code: 'P0064'));
